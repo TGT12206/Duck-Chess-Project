@@ -1,10 +1,13 @@
 namespace DuckChess
 {
     /// <summary>
-    /// 
+    /// Represents a board state.
     /// </summary>
     public class Board {
-        // This array stores what exactly is on each square.
+        /// <summary>
+        /// This array stores what exactly is on each square.
+        /// A square could contain no pieces or contain a piece.
+        /// </summary>
         public int[] Squares;
 
         #region Piece Locations
@@ -37,6 +40,9 @@ namespace DuckChess
             Squares = new int[64];
         }
 
+        /// <summary>
+        /// Loads the starting position onto the board.
+        /// </summary>
         public void LoadStartPosition()
         {
             // Set the pawns
@@ -108,6 +114,13 @@ namespace DuckChess
             Squares[4] = Piece.White | Piece.King;
             BlackKing = 60;
             Squares[60] = Piece.Black | Piece.King;
+        }
+        public void MakeMove(Move move)
+        {
+            int startSquare = move.StartSquare;
+            int targetSquare = move.TargetSquare;
+            Squares[targetSquare] = Squares[startSquare];
+            Squares[startSquare] = Piece.None;
         }
     }
 }

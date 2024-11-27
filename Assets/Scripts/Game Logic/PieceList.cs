@@ -11,7 +11,7 @@ public class PieceList
     public int[] occupiedSquares;
 
     /// <summary>
-    /// A mapping from square (int 0-63) to the index with that square in occupiedSquares
+    /// A mapping from square (0-63) to the index with that square in occupiedSquares
     /// </summary>
     int[] map;
 
