@@ -17,6 +17,7 @@ namespace DuckChess
             public const int PromoteToRook = 5;
             public const int PromoteToBishop = 6;
             public const int PawnTwoForward = 7;
+            public const int FirstDuckMove = 8;
         }
 
         readonly int moveValue;
@@ -103,7 +104,15 @@ namespace DuckChess
 
         public static bool SameMove(Move a, Move b)
         {
-            return a.moveValue == b.moveValue;
+            if (a.StartSquare != b.StartSquare)
+            {
+                return false;
+            }
+            if (a.TargetSquare != b.TargetSquare)
+            {
+                return false;
+            }
+            return true;
         }
 
         public int Value

@@ -9,34 +9,14 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     public BoardUI boardUI;
     public Board board;
 
-    /// <summary>
-    /// The color of the player whose turn it is to move.
-    /// </summary>
-    private int turnColor;
-
-    /// <summary>
-    /// Whether or not it is a duck turn.
-    /// </summary>
-    private bool duckTurn;
-
-    public bool IsDuckPly()
-    {
-        return duckTurn;
-    }
-
     public bool IsGameOver()
     {
         throw new System.NotImplementedException();
     }
 
-    public bool IsWhiteToMove()
-    {
-        return turnColor == Piece.White;
-    }
-
     public void MakeMove(Move move)
     {
-        turnColor = turnColor == Piece.White ? Piece.Black : Piece.White;
+        board.turnColor = board.turnColor == Piece.White ? Piece.Black : Piece.White;
         board.MakeMove(move);
     }
 
@@ -48,7 +28,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
 
         // Load the start position
         board.LoadStartPosition();
-        turnColor = Piece.White;
+        board.turnColor = Piece.White;
 
         // Create the appropriate player types
         // placeholder
@@ -63,7 +43,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     // Update is called once per frame
     void Update()
     {
-        PlayerToMove = turnColor == Piece.White ? WhitePlayer : BlackPlayer;
+        PlayerToMove = board.turnColor == Piece.White ? WhitePlayer : BlackPlayer;
         PlayerToMove.Update();
     }
 }

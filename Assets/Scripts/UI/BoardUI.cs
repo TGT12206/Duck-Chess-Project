@@ -106,6 +106,12 @@ public class BoardUI : MonoBehaviour
         Pieces[selectedSquare].transform.position = SquareToWorldCoordinates(selectedSquare, PLACE_LAYER);
     }
 
+    public void CancelSelection()
+    {
+        SnapPieceBack();
+        selectedSquare = -1;
+    }
+
     /// <summary>
     /// Loads the start position into the game world.
     /// </summary>

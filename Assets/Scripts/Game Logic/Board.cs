@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace DuckChess
 {
     /// <summary>
@@ -10,20 +12,79 @@ namespace DuckChess
         /// </summary>
         public int[] Squares;
 
+        /// <summary>
+        /// The color of the player whose turn it is to move.
+        /// </summary>
+        public int turnColor;
+
+        /// <summary>
+        /// Whether or not it is a duck turn.
+        /// </summary>
+        public bool duckTurn;
+
+        public int enPassantColumn;
+
+        public List<Move> legalPawnMoves;
+        public List<Move> legalKnightMoves;
+        public List<Move> legalBishopMoves;
+        public List<Move> legalRookMoves;
+        public List<Move> legalQueenMoves;
+        public List<Move> legalKingMoves;
+        public List<Move> legalDuckMoves;
+
         #region Piece Locations
         // Information about (mostly location and number) each piece type
+        /// <summary>
+        /// The location and number of the black bishops
+        /// </summary>
         public PieceList BlackBishops;
+        /// <summary>
+        /// The location and number of the white bishops
+        /// </summary>
         public PieceList WhiteBishops;
+        /// <summary>
+        /// The location of the black king
+        /// </summary>
         public int BlackKing;
+        /// <summary>
+        /// The location and number of the white king
+        /// </summary>
         public int WhiteKing;
+        /// <summary>
+        /// The location and number of the black knights
+        /// </summary>
         public PieceList BlackKnights;
+        /// <summary>
+        /// The location and number of the white knights
+        /// </summary>
         public PieceList WhiteKnights;
+        /// <summary>
+        /// The location and number of the black pawns
+        /// </summary>
         public PieceList BlackPawns;
+        /// <summary>
+        /// The location and number of the white pawns
+        /// </summary>
         public PieceList WhitePawns;
+        /// <summary>
+        /// The location and number of the black queens
+        /// </summary>
         public PieceList BlackQueens;
+        /// <summary>
+        /// The location and number of the white queens
+        /// </summary>
         public PieceList WhiteQueens;
+        /// <summary>
+        /// The location and number of the black rooks
+        /// </summary>
         public PieceList BlackRooks;
+        /// <summary>
+        /// The location and number of the white rooks
+        /// </summary>
         public PieceList WhiteRooks;
+        /// <summary>
+        /// The location and number of the duck
+        /// </summary>
         public int Duck;
         #endregion
 
@@ -38,6 +99,18 @@ namespace DuckChess
         public Board ()
         {
             Squares = new int[64];
+            ResetLegalMoves();
+        }
+
+        private void ResetLegalMoves()
+        {
+            legalPawnMoves = new List<Move>();
+            legalKnightMoves = new List<Move>();
+            legalBishopMoves = new List<Move>();
+            legalRookMoves = new List<Move>();
+            legalQueenMoves = new List<Move>();
+            legalKingMoves = new List<Move>();
+            legalDuckMoves = new List<Move>();
         }
 
         /// <summary>
@@ -45,6 +118,9 @@ namespace DuckChess
         /// </summary>
         public void LoadStartPosition()
         {
+            // Set the en passant column out of bounds
+            enPassantColumn = -1;
+
             // Set the pawns
             WhitePawns = new PieceList(MAX_PAWN_COUNT);
             for (int i = 8; i < 16; i++)
@@ -114,6 +190,10 @@ namespace DuckChess
             Squares[4] = Piece.White | Piece.King;
             BlackKing = 60;
             Squares[60] = Piece.Black | Piece.King;
+
+            // Set the duck
+            Duck = -1;
+            GenerateNormalMoves();
         }
         public void MakeMove(Move move)
         {
@@ -121,6 +201,71 @@ namespace DuckChess
             int targetSquare = move.TargetSquare;
             Squares[targetSquare] = Squares[startSquare];
             Squares[startSquare] = Piece.None;
+            ResetLegalMoves();
+            if (duckTurn)
+            {
+                duckTurn = false;
+                turnColor = turnColor == Piece.White ? Piece.Black : Piece.White;
+                GenerateNormalMoves();
+            } else
+            {
+                duckTurn= true;
+                GenerateDuckMoves();
+            }
         }
+
+        private void GenerateNormalMoves()
+        {
+            LegalMoveGenerator.GeneratePawnMoves(ref legalPawnMoves, this);
+            LegalMoveGenerator.GenerateKnightMoves(ref legalKnightMoves, this);
+            LegalMoveGenerator.GenerateBishopMoves(ref legalBishopMoves, this);
+            LegalMoveGenerator.GenerateRookMoves(ref legalRookMoves, this);
+            LegalMoveGenerator.GenerateQueenMoves(ref legalQueenMoves, this);
+            LegalMoveGenerator.GenerateKingMoves(ref legalKingMoves, this);
+        }
+
+        private void GenerateDuckMoves()
+        {
+            LegalMoveGenerator.GenerateKingMoves(ref legalKingMoves, this);
+        }
+
+        public bool IsMoveLegal(ref Move move)
+        {
+            bool isLegal = false;
+            int pieceType = Piece.PieceType(Squares[move.StartSquare]);
+            switch (pieceType)
+            {
+                case Piece.Pawn:
+                    isLegal = CheckPawnMove(ref move);
+                    break;
+            }
+            return isLegal;
+        }
+
+        public bool CheckPawnMove(ref Move move)
+        {
+            foreach(Move legalMove in legalPawnMoves)
+            {
+                if (Move.SameMove(move, legalMove))
+                {
+                    // It is easier to copy the already calculated flags in legal move
+                    // than to recalculate before calling this method
+                    move = legalMove;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public int GetRowOf(int square)
+        {
+            return square / 8;
+        }
+        public int GetColumnOf(int square)
+        {
+            return square % 8;
+        }
+
+        public int this[int index] => Squares[index];
     }
 }

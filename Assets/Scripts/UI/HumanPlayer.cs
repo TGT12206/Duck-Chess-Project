@@ -109,6 +109,7 @@ public class HumanPlayer : RealTimePlayer
             if (currentState == InputState.DraggingPiece)
             {
                 currentState = InputState.PieceSelected;
+                boardUI.SnapPieceBack();
             } else if (currentState == InputState.PieceSelected)
             {
                 CancelPieceSelection();
@@ -117,13 +118,20 @@ public class HumanPlayer : RealTimePlayer
         {
             targetSquare = mouseSquare;
             currentState = InputState.None;
-            boardUI.PlacePiece(mouseSquare);
-            ChooseMove(new Move(selectedSquare, targetSquare));
+            Move newMove = new Move(selectedSquare, targetSquare);
+            if (board.IsMoveLegal(ref newMove))
+            {
+                boardUI.PlacePiece(mouseSquare);
+                ChooseMove(newMove);
+            } else
+            {
+                boardUI.CancelSelection();
+            }
         }
     }
     private void CancelPieceSelection()
     {
         currentState = InputState.None;
-        boardUI.SnapPieceBack();
+        boardUI.CancelSelection();
     }
 }
