@@ -53,7 +53,16 @@ public class HumanPlayer : RealTimePlayer
         int mouseSquare = BoardUI.GetMouseSquare();
         if (currentState == InputState.None)
         {
-            HandlePieceSelection(mouseSquare);
+            if (board.duckTurn && board.Duck == -1)
+            {
+                mouseSquare = 0;
+                selectedSquare = 0;
+                boardUI.SelectDuckInitially();
+                currentState = InputState.PieceSelected;
+            } else
+            {
+                HandlePieceSelection(mouseSquare);
+            }
         }
         else if (currentState == InputState.DraggingPiece)
         {
@@ -75,7 +84,12 @@ public class HumanPlayer : RealTimePlayer
         if (Input.GetMouseButtonDown(0))
         {
             // If square contains a piece, select that piece for dragging
-            if (Piece.IsColor(board.Squares[mouseSquare], Color))
+            if ((!board.duckTurn &&
+                Piece.IsColor(board[mouseSquare], Color))
+                ||
+                (board.duckTurn &&
+                Piece.PieceType(board[mouseSquare]) == Piece.Duck)
+            )
             {
                 // boardUI.HighlightLegalMoves(board, selectedPieceSquare);
                 selectedSquare = mouseSquare;
@@ -121,7 +135,6 @@ public class HumanPlayer : RealTimePlayer
             Move newMove = new Move(selectedSquare, targetSquare);
             if (board.IsMoveLegal(ref newMove))
             {
-                boardUI.PlacePiece(mouseSquare);
                 ChooseMove(newMove);
             } else
             {

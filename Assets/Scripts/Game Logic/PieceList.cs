@@ -1,3 +1,6 @@
+using DuckChess;
+using UnityEngine;
+
 /// <summary>
 /// A class that stores all of the squares that have a specific piece type on them.
 /// The piece type a given PieceList object cares about is up to the user of this class
@@ -6,7 +9,7 @@
 public class PieceList
 {
     /// <summary>
-    /// A stack that stores squares with the specific piece type
+    /// A list that stores squares with the specific piece type
     /// </summary>
     public int[] occupiedSquares;
 
@@ -24,6 +27,9 @@ public class PieceList
     {
         occupiedSquares = new int[maxPieceCount];
         map = new int[64];
+        foreach (int square in occupiedSquares) {
+            map[square] = -1;
+        }
         numPieces = 0;
     }
 
@@ -44,17 +50,25 @@ public class PieceList
 
     public void RemovePieceAtSquare(int square)
     {
-        int pieceIndex = map[square]; // get the index of this element in the occupiedSquares array
-        occupiedSquares[pieceIndex] = occupiedSquares[numPieces - 1]; // move last element in array to the place of the removed element
-        map[occupiedSquares[pieceIndex]] = pieceIndex; // update map to point to the moved element's new location in the array
+        int pieceIndex = map[square];
+        Debug.Log("Removed " + occupiedSquares[pieceIndex]);
+        for (int i = square; i < occupiedSquares.Length - 1; i++)
+        {
+            occupiedSquares[i] = occupiedSquares[i + 1];
+        }
+        occupiedSquares[occupiedSquares.Length - 1] = -1;
+        map[square] = -1;
         numPieces--;
     }
 
-    public void MovePiece(int startSquare, int targetSquare)
+    public void MovePiece(Move move)
     {
+        int startSquare = move.StartSquare;
+        int targetSquare = move.TargetSquare;
         int pieceIndex = map[startSquare]; // get the index of this element in the occupiedSquares array
         occupiedSquares[pieceIndex] = targetSquare;
         map[targetSquare] = pieceIndex;
+        map[startSquare] = -1;
     }
 
     public int this[int index] => occupiedSquares[index];

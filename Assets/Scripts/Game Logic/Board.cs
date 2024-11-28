@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System.ComponentModel;
+using JetBrains.Annotations;
+using UnityEngine;
 
 namespace DuckChess
 {
@@ -23,6 +26,8 @@ namespace DuckChess
         public bool duckTurn;
 
         public int enPassantColumn;
+
+        public const int NOT_ON_BOARD = -2;
 
         public List<Move> legalPawnMoves;
         public List<Move> legalKnightMoves;
@@ -191,6 +196,10 @@ namespace DuckChess
             BlackKing = 60;
             Squares[60] = Piece.Black | Piece.King;
 
+            // Set the turn color
+            turnColor = Piece.White;
+            duckTurn = false;
+
             // Set the duck
             Duck = -1;
             GenerateNormalMoves();
@@ -199,8 +208,24 @@ namespace DuckChess
         {
             int startSquare = move.StartSquare;
             int targetSquare = move.TargetSquare;
-            Squares[targetSquare] = Squares[startSquare];
-            Squares[startSquare] = Piece.None;
+            if (duckTurn && Duck == -1)
+            {
+                MoveDuck(move);
+                Squares[targetSquare] = Piece.Duck;
+            } else
+            {
+                int pieceType = Piece.PieceType(Squares[startSquare]);
+                switch (pieceType)
+                {
+                    case Piece.Pawn:
+                        MovePawn(move);
+                        break;
+                    case Piece.Duck:
+                        MoveDuck(move);
+                        break;
+                }
+                SwapSquares(move);
+            }
             ResetLegalMoves();
             if (duckTurn)
             {
@@ -212,6 +237,46 @@ namespace DuckChess
                 duckTurn= true;
                 GenerateDuckMoves();
             }
+        }
+        private void SwapSquares(Move move)
+        {
+            Squares[move.TargetSquare] = Squares[move.StartSquare];
+            Squares[move.StartSquare] = Piece.None;
+        }
+        private void MovePawn(Move move)
+        {
+            bool isWhite = turnColor == Piece.White;
+            PieceList friendlyPawns = isWhite ? WhitePawns : BlackPawns;
+
+            friendlyPawns.MovePiece(move);
+
+            if (move.MoveFlag == Move.Flag.PawnTwoForward)
+            {
+                enPassantColumn = GetColumnOf(move.StartSquare);
+            } else if (move.MoveFlag == Move.Flag.EnPassantCapture)
+            {
+                EnPassant(move, isWhite);
+            } else
+            {
+                enPassantColumn = NOT_ON_BOARD;
+            }
+        }
+
+        private void MoveDuck(Move move)
+        {
+            Duck = move.TargetSquare;
+        }
+
+        private void EnPassant(Move move, bool isWhite)
+        {
+            PieceList enemyPawns = isWhite ? BlackPawns : WhitePawns;
+            Debug.Log("En Passant");
+            int enemyPawnSquare = isWhite ? -8 : 8;
+            enemyPawnSquare += move.TargetSquare;
+
+            enemyPawns.RemovePieceAtSquare(enemyPawnSquare);
+            Squares[enemyPawnSquare] = Piece.None;
+            Debug.Log("Was piece removed " + Squares[enemyPawnSquare]);
         }
 
         private void GenerateNormalMoves()
@@ -226,15 +291,25 @@ namespace DuckChess
 
         private void GenerateDuckMoves()
         {
-            LegalMoveGenerator.GenerateKingMoves(ref legalKingMoves, this);
+            LegalMoveGenerator.GenerateDuckMoves(ref legalDuckMoves, this);
         }
 
         public bool IsMoveLegal(ref Move move)
         {
             bool isLegal = false;
-            int pieceType = Piece.PieceType(Squares[move.StartSquare]);
+            int pieceType;
+            if (duckTurn)
+            {
+                pieceType = Piece.Duck;
+            } else
+            {
+                pieceType = Piece.PieceType(Squares[move.StartSquare]);
+            }
             switch (pieceType)
             {
+                case Piece.Duck:
+                    isLegal = CheckDuckMove(ref move);
+                    break;
                 case Piece.Pawn:
                     isLegal = CheckPawnMove(ref move);
                     break;
@@ -244,12 +319,25 @@ namespace DuckChess
 
         public bool CheckPawnMove(ref Move move)
         {
-            foreach(Move legalMove in legalPawnMoves)
+            foreach (Move legalMove in legalPawnMoves)
             {
                 if (Move.SameMove(move, legalMove))
                 {
                     // It is easier to copy the already calculated flags in legal move
                     // than to recalculate before calling this method
+                    move = legalMove;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool CheckDuckMove(ref Move move)
+        {
+            foreach (Move legalMove in legalDuckMoves)
+            {
+                if (Move.SameMove(move, legalMove))
+                {
                     move = legalMove;
                     return true;
                 }

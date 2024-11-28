@@ -16,7 +16,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
 
     public void MakeMove(Move move)
     {
-        board.turnColor = board.turnColor == Piece.White ? Piece.Black : Piece.White;
+        boardUI.MakeMove(move);
         board.MakeMove(move);
     }
 
@@ -28,6 +28,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
 
         // Load the start position
         board.LoadStartPosition();
+        boardUI.LoadPosition(ref board);
         board.turnColor = Piece.White;
 
         // Create the appropriate player types
