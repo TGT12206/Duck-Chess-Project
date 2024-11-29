@@ -29,7 +29,7 @@ namespace DuckChess
             int pawnSpot;
             if (board.turnColor == Piece.White)
             {
-                for (int i = 0; i < board.BlackPawns.Count; i++)
+                for (int i = 0; i < board.WhitePawns.Count; i++)
                 {
                     pawnSpot = board.WhitePawns[i];
                     // Forward pawn moves
@@ -90,9 +90,7 @@ namespace DuckChess
                     int pawnCol = Board.GetColumnOf(pawnSpot);
                     if (pawnCol < 7)
                     {
-                        if (Piece.PieceType(board[pawnSpot + 9]) != Piece.None &&
-                            Piece.Color(board[pawnSpot + 9]) == Piece.Black &&
-                            Piece.PieceType(board[pawnSpot + 9]) != Piece.Duck)
+                        if (Piece.Color(board[pawnSpot + 9]) == Piece.Black)
                         {
                             if (Board.GetRowOf(pawnSpot) == 6)
                             {
@@ -118,9 +116,7 @@ namespace DuckChess
                     }
                     if (pawnCol > 0)
                     {
-                        if (Piece.PieceType(board[pawnSpot + 7]) != Piece.None &&
-                            Piece.Color(board[pawnSpot + 7]) == Piece.Black &&
-                            Piece.PieceType(board[pawnSpot + 7]) != Piece.Duck)
+                        if (Piece.Color(board[pawnSpot + 7]) == Piece.Black)
                         {
                             if (Board.GetRowOf(pawnSpot) == 6)
                             {
@@ -210,9 +206,7 @@ namespace DuckChess
                     int pawnCol = Board.GetColumnOf(pawnSpot);
                     if (pawnCol > 0)
                     {
-                        if (Piece.PieceType(board[pawnSpot - 9]) != Piece.None &&
-                            Piece.Color(board[pawnSpot - 9]) == Piece.White &&
-                            Piece.PieceType(board[pawnSpot - 9]) != Piece.Duck)
+                        if (Piece.Color(board[pawnSpot - 9]) == Piece.White)
                         {
                             if (Board.GetRowOf(pawnSpot) == 1)
                             {
@@ -231,16 +225,14 @@ namespace DuckChess
                                 #endregion
                             } else
                             {
-                                Move move = new Move(pawnSpot, pawnSpot + 9);
+                                Move move = new Move(pawnSpot, pawnSpot - 9);
                                 generatedMoves.Add(move);
                             }
                         }
                     }
                     if (pawnCol < 7)
                     {
-                        if (Piece.PieceType(board[pawnSpot - 7]) != Piece.None &&
-                            Piece.Color(board[pawnSpot - 7]) == Piece.White &&
-                            Piece.PieceType(board[pawnSpot - 7]) != Piece.Duck)
+                        if (Piece.Color(board[pawnSpot - 7]) == Piece.White)
                         {
                             if (Board.GetRowOf(pawnSpot) == 1)
                             {

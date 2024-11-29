@@ -551,7 +551,45 @@ namespace DuckChess
                 int row = i * 8;
                 for (int j = 0; j < 8; j++)
                 {
-                    boardString += Piece.PieceType(Squares[row + j]) + " ";
+                    int piece = Squares[row + j];
+                    int pieceType = Piece.PieceType(piece);
+                    char pieceTypeChar = '-';
+                    switch (pieceType)
+                    {
+                        case Piece.Pawn:
+                            pieceTypeChar = 'P';
+                            break;
+                        case Piece.Knight:
+                            pieceTypeChar = 'N';
+                            break;
+                        case Piece.Bishop:
+                            pieceTypeChar = 'B';
+                            break;
+                        case Piece.Rook:
+                            pieceTypeChar = 'R';
+                            break;
+                        case Piece.Queen:
+                            pieceTypeChar = 'Q';
+                            break;
+                        case Piece.King:
+                            pieceTypeChar = 'K';
+                            break;
+                        case Piece.Duck:
+                            pieceTypeChar = 'D';
+                            break;
+                    }
+                    int color = Piece.Color(piece);
+                    char colorChar = ' ';
+                    switch(color)
+                    {
+                        case Piece.Black:
+                            colorChar = 'B';
+                            break;
+                        case Piece.White:
+                            colorChar = 'W';
+                            break;
+                    }
+                    boardString += colorChar + pieceTypeChar + " ";
                 }
                 boardString += "\n";
             }

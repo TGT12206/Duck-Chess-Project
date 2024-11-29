@@ -55,6 +55,7 @@ public class PieceList
 
     public void RemovePieceAtSquare(int square)
     {
+        Debug.Log("PieceList Before Remove\n" + this.ToString());
         int pieceIndex = map[square];
         for (int i = pieceIndex; i < numPieces - 1; i++)
         {
@@ -64,16 +65,19 @@ public class PieceList
         occupiedSquares[numPieces - 1] = -1;
         map[square] = -1;
         numPieces--;
+        Debug.Log("PieceList After Remove\n" + this.ToString());
     }
 
     public void MovePiece(Move move)
     {
+        Debug.Log("PieceList Before move\n" + this.ToString());
         int startSquare = move.StartSquare;
         int targetSquare = move.TargetSquare;
         int pieceIndex = map[startSquare]; // get the index of this element in the occupiedSquares array
         occupiedSquares[pieceIndex] = targetSquare;
         map[targetSquare] = pieceIndex;
         map[startSquare] = -1;
+        Debug.Log("PieceList After move\n" + this.ToString());
     }
 
     public int this[int index] => occupiedSquares[index];
