@@ -106,7 +106,9 @@ namespace DuckChess
 
         public static bool SameMove(Move a, Move b)
         {
-            Debug.Log("Same Move Check " + a.moveValue + " " + b.moveValue);
+            Debug.Log("Same Move Check Value" + a.moveValue + " " + b.moveValue);
+            Debug.Log("Start " + a.StartSquare + " " + b.StartSquare);
+            Debug.Log("Target " + a.TargetSquare + " " + b.TargetSquare);
             return a.moveValue == b.moveValue;
         }
 
@@ -124,6 +126,13 @@ namespace DuckChess
             {
                 return moveValue == 0;
             }
+        }
+
+        public override string ToString()
+        {
+            string moveString = "";
+            moveString += StartSquare + " to " + TargetSquare + " flag: " + MoveFlag;
+            return moveString;
         }
 
         //public string Name

@@ -411,7 +411,175 @@ namespace DuckChess
         /// <param name="board"></param>
         public static void GenerateBishopMoves(ref List<Move> generatedMoves, Board board)
         {
+            bool isWhite = board.turnColor == Piece.White;
+            PieceList friendlyBishopSpots = isWhite ? board.WhiteBishops : board.BlackBishops;
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
+            for (int i = 0; i < friendlyBishopSpots.Count; i++)
+            {
+                int bishopSpot = friendlyBishopSpots[i];
+                GenerateDiagonalMoves(ref generatedMoves, board, bishopSpot, enemyColor);
+            }
+        }
 
+        private static void GenerateDiagonalMoves(ref List<Move> generatedMoves, Board board, int spotOfPieceMoving, int enemyColor)
+        {
+            // Up left
+            int potentialTarget = spotOfPieceMoving;
+            int rowOfPiece = Board.GetRowOf(spotOfPieceMoving);
+            int colOfPiece = Board.GetColumnOf(spotOfPieceMoving);
+            for (int i = 0; i < 8; i++)
+            {
+                // If the piece itself is on one of these edges,
+                // there are no moves in this direction.
+                if (rowOfPiece == 7 || colOfPiece == 0)
+                {
+                    break;
+                }
+
+                potentialTarget += 7;
+
+                int rowOfTarget = Board.GetRowOf(potentialTarget);
+                int colOfTarget = Board.GetColumnOf(potentialTarget);
+
+                // If the target is out of bounds, stop
+                if (potentialTarget > 63 || colOfTarget > colOfPiece)
+                {
+                    break;
+                }
+
+                int pieceAtTarget = board[potentialTarget];
+                bool targetIsEmpty = Piece.PieceType(pieceAtTarget) == Piece.None;
+                bool targetHasEnemy = Piece.Color(pieceAtTarget) == enemyColor;
+
+                if (targetIsEmpty || targetHasEnemy)
+                {
+                    Move move = new Move(spotOfPieceMoving, potentialTarget);
+                    generatedMoves.Add(move);
+                }
+
+                // If the target is on the edge or we've encountered a piece, stop
+                if (rowOfTarget == 7 || colOfTarget == 0 || !targetIsEmpty)
+                {
+                    break;
+                }
+            }
+
+            potentialTarget = spotOfPieceMoving;
+            // Up right
+            for (int i = 0; i < 8; i++)
+            {
+                // If the piece itself is on one of these edges,
+                // there are no moves in this direction.
+                if (rowOfPiece == 7 || colOfPiece == 7)
+                {
+                    break;
+                }
+
+                potentialTarget += 9;
+
+                int rowOfTarget = Board.GetRowOf(potentialTarget);
+                int colOfTarget = Board.GetColumnOf(potentialTarget);
+
+                // If the target is out of bounds, stop
+                if (potentialTarget > 63 || colOfTarget < colOfPiece)
+                {
+                    break;
+                }
+
+                int pieceAtTarget = board[potentialTarget];
+                bool targetIsEmpty = Piece.PieceType(pieceAtTarget) == Piece.None;
+                bool targetHasEnemy = Piece.Color(pieceAtTarget) == enemyColor;
+
+                if (targetIsEmpty || targetHasEnemy)
+                {
+                    Move move = new Move(spotOfPieceMoving, potentialTarget);
+                    generatedMoves.Add(move);
+                }
+
+                // If the target is on the edge or we've encountered a piece, stop
+                if (rowOfTarget == 7 || colOfTarget == 7 || !targetIsEmpty)
+                {
+                    break;
+                }
+            }
+
+            potentialTarget = spotOfPieceMoving;
+            // Down left
+            for (int i = 0; i < 8; i++)
+            {
+                // If the piece itself is on one of these edges,
+                // there are no moves in this direction.
+                if (rowOfPiece == 0 || colOfPiece == 0)
+                {
+                    break;
+                }
+
+                potentialTarget -= 9;
+
+                int rowOfTarget = Board.GetRowOf(potentialTarget);
+                int colOfTarget = Board.GetColumnOf(potentialTarget);
+
+                // If the target is out of bounds, stop
+                if (potentialTarget < 0 || colOfTarget > colOfPiece)
+                {
+                    break;
+                }
+
+                int pieceAtTarget = board[potentialTarget];
+                bool targetIsEmpty = Piece.PieceType(pieceAtTarget) == Piece.None;
+                bool targetHasEnemy = Piece.Color(pieceAtTarget) == enemyColor;
+
+                if (targetIsEmpty || targetHasEnemy)
+                {
+                    Move move = new Move(spotOfPieceMoving, potentialTarget);
+                    generatedMoves.Add(move);
+                }
+
+                // If the target is on the edge or we've encountered a piece, stop
+                if (rowOfTarget == 0 || colOfTarget == 0 || !targetIsEmpty)
+                {
+                    break;
+                }
+            }
+
+            potentialTarget = spotOfPieceMoving;
+            // Down right
+            for (int i = 0; i < 8; i++)
+            {
+                // If the piece itself is on one of these edges,
+                // there are no moves in this direction.
+                if (rowOfPiece == 0 || colOfPiece == 7)
+                {
+                    break;
+                }
+
+                potentialTarget -= 7;
+
+                int rowOfTarget = Board.GetRowOf(potentialTarget);
+                int colOfTarget = Board.GetColumnOf(potentialTarget);
+
+                // If the target is out of bounds, stop
+                if (potentialTarget < 0 || colOfTarget < colOfPiece)
+                {
+                    break;
+                }
+
+                int pieceAtTarget = board[potentialTarget];
+                bool targetIsEmpty = Piece.PieceType(pieceAtTarget) == Piece.None;
+                bool targetHasEnemy = Piece.Color(pieceAtTarget) == enemyColor;
+
+                if (targetIsEmpty || targetHasEnemy)
+                {
+                    Move move = new Move(spotOfPieceMoving, potentialTarget);
+                    generatedMoves.Add(move);
+                }
+
+                // If the target is on the edge or we've encountered a piece, stop
+                if (rowOfTarget == 7 || colOfTarget == 0 || !targetIsEmpty)
+                {
+                    break;
+                }
+            }
         }
 
         /// <summary>
@@ -422,8 +590,173 @@ namespace DuckChess
         /// <param name="board"></param>
         public static void GenerateRookMoves(ref List<Move> generatedMoves, Board board)
         {
-
+            bool isWhite = board.turnColor == Piece.White;
+            PieceList friendlyRookSpots = isWhite ? board.WhiteRooks : board.BlackRooks;
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
+            Debug.Log(friendlyRookSpots.Count);
+            for (int i = 0; i < friendlyRookSpots.Count; i++)
+            {
+                int rookSpot = friendlyRookSpots[i];
+                GenerateOrthogonalMoves(ref generatedMoves, board, rookSpot, enemyColor);
+            }
         }
+
+        private static void GenerateOrthogonalMoves(ref List<Move> generatedMoves, Board board, int spotOfPieceMoving, int enemyColor)
+        {
+            int potentialTarget = spotOfPieceMoving;
+            int rowOfPiece = Board.GetRowOf(spotOfPieceMoving);
+            int colOfPiece = Board.GetColumnOf(spotOfPieceMoving);
+
+            // Up
+            for (int i = 0; i < 8; i++)
+            {
+                // If the piece itself is on this edge,
+                // there are no moves in this direction.
+                if (rowOfPiece == 7)
+                {
+                    break;
+                }
+
+                potentialTarget += 8;
+
+                // If the target is out of bounds, stop
+                if (potentialTarget > 63)
+                {
+                    break;
+                }
+
+                int rowOfTarget = Board.GetRowOf(potentialTarget);
+                int pieceAtTarget = board[potentialTarget];
+                bool targetIsEmpty = Piece.PieceType(pieceAtTarget) == Piece.None;
+                bool targetHasEnemy = Piece.Color(pieceAtTarget) == enemyColor;
+
+                if (targetIsEmpty || targetHasEnemy)
+                {
+                    Move move = new Move(spotOfPieceMoving, potentialTarget);
+                    generatedMoves.Add(move);
+                }
+
+                // If the target is on the edge or we've encountered a piece, stop
+                if (rowOfTarget == 7 || !targetIsEmpty)
+                {
+                    break;
+                }
+            }
+
+            potentialTarget = spotOfPieceMoving;
+            // Down
+            for (int i = 0; i < 8; i++)
+            {
+                // If the piece itself is on this edge,
+                // there are no moves in this direction.
+                if (rowOfPiece == 0)
+                {
+                    break;
+                }
+
+                potentialTarget -= 8;
+
+                // If the target is out of bounds, stop
+                if (potentialTarget < 0)
+                {
+                    break;
+                }
+
+                int rowOfTarget = Board.GetRowOf(potentialTarget);
+                int pieceAtTarget = board[potentialTarget];
+                bool targetIsEmpty = Piece.PieceType(pieceAtTarget) == Piece.None;
+                bool targetHasEnemy = Piece.Color(pieceAtTarget) == enemyColor;
+
+                if (targetIsEmpty || targetHasEnemy)
+                {
+                    Move move = new Move(spotOfPieceMoving, potentialTarget);
+                    generatedMoves.Add(move);
+                }
+
+                // If the target is on the edge or we've encountered a piece, stop
+                if (rowOfTarget == 0 || !targetIsEmpty)
+                {
+                    break;
+                }
+            }
+
+            potentialTarget = spotOfPieceMoving;
+            // Left
+            for (int i = 0; i < 8; i++)
+            {
+                // If the piece itself is on this edge,
+                // there are no moves in this direction.
+                if (colOfPiece == 0)
+                {
+                    break;
+                }
+
+                potentialTarget -= 1;
+
+                int colOfTarget = Board.GetColumnOf(potentialTarget);
+
+                // If the target is out of bounds, stop
+                if (colOfTarget > colOfPiece)
+                {
+                    break;
+                }
+
+                int pieceAtTarget = board[potentialTarget];
+                bool targetIsEmpty = Piece.PieceType(pieceAtTarget) == Piece.None;
+                bool targetHasEnemy = Piece.Color(pieceAtTarget) == enemyColor;
+
+                if (targetIsEmpty || targetHasEnemy)
+                {
+                    Move move = new Move(spotOfPieceMoving, potentialTarget);
+                    generatedMoves.Add(move);
+                }
+
+                // If the target is on the edge or we've encountered a piece, stop
+                if (colOfTarget == 0 || !targetIsEmpty)
+                {
+                    break;
+                }
+            }
+
+            potentialTarget = spotOfPieceMoving;
+            // Right
+            for (int i = 0; i < 8; i++)
+            {
+                // If the piece itself is on this edge,
+                // there are no moves in this direction.
+                if (colOfPiece == 7)
+                {
+                    break;
+                }
+
+                potentialTarget += 1;
+
+                int colOfTarget = Board.GetColumnOf(potentialTarget);
+
+                // If the target is out of bounds, stop
+                if (colOfTarget < colOfPiece)
+                {
+                    break;
+                }
+
+                int pieceAtTarget = board[potentialTarget];
+                bool targetIsEmpty = Piece.PieceType(pieceAtTarget) == Piece.None;
+                bool targetHasEnemy = Piece.Color(pieceAtTarget) == enemyColor;
+
+                if (targetIsEmpty || targetHasEnemy)
+                {
+                    Move move = new Move(spotOfPieceMoving, potentialTarget);
+                    generatedMoves.Add(move);
+                }
+
+                // If the target is on the edge or we've encountered a piece, stop
+                if (colOfTarget == 7 || !targetIsEmpty)
+                {
+                    break;
+                }
+            }
+        }
+
 
         /// <summary>
         /// Generate all the queen moves for the color of the board
@@ -433,7 +766,15 @@ namespace DuckChess
         /// <param name="board"></param>
         public static void GenerateQueenMoves(ref List<Move> generatedMoves, Board board)
         {
-
+            bool isWhite = board.turnColor == Piece.White;
+            PieceList friendlyQueenSpots = isWhite ? board.WhiteQueens : board.BlackQueens;
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
+            for (int i = 0; i < friendlyQueenSpots.Count; i++)
+            {
+                int queenSpot = friendlyQueenSpots[i];
+                GenerateDiagonalMoves(ref generatedMoves, board, queenSpot, enemyColor);
+                GenerateOrthogonalMoves(ref generatedMoves, board, queenSpot, enemyColor);
+            }
         }
 
         /// <summary>
@@ -444,7 +785,94 @@ namespace DuckChess
         /// <param name="board"></param>
         public static void GenerateKingMoves(ref List<Move> generatedMoves, Board board)
         {
-
+            bool isWhite = board.turnColor == Piece.White;
+            int kingSpot = isWhite ? board.WhiteKing : board.BlackKing;
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
+            bool isOnTopEdge = Board.GetRowOf(kingSpot) == 7;
+            bool isOnBottomEdge = Board.GetRowOf(kingSpot) == 0;
+            bool isOnLeftEdge = Board.GetColumnOf(kingSpot) == 0;
+            bool isOnRightEdge = Board.GetColumnOf(kingSpot) == 7;
+            int potentialTarget = kingSpot + 7;
+            if (
+                !(isOnTopEdge || isOnLeftEdge) &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot + 8;
+            if (
+                !isOnTopEdge &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot + 9;
+            if (
+                !(isOnTopEdge || isOnRightEdge) &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot + 1;
+            if (
+                !isOnRightEdge &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot - 7;
+            if (
+                !(isOnBottomEdge || isOnRightEdge) &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot - 8;
+            if (
+                !isOnBottomEdge &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot - 9;
+            if (
+                !(isOnBottomEdge || isOnLeftEdge) &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot - 1;
+            if (
+                !isOnLeftEdge &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            // Remember to add castling
         }
 
         /// <summary>

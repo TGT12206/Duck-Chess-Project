@@ -228,6 +228,18 @@ namespace DuckChess
                     case Piece.Knight:
                         MoveKnight(move, isWhite);
                         break;
+                    case Piece.Bishop:
+                        MoveBishop(move, isWhite);
+                        break;
+                    case Piece.Rook:
+                        MoveRook(move, isWhite);
+                        break;
+                    case Piece.Queen:
+                        MoveQueen(move, isWhite);
+                        break;
+                    case Piece.King:
+                        MoveKing(move, isWhite);
+                        break;
                     case Piece.Duck:
                         MoveDuck(move);
                         break;
@@ -282,6 +294,39 @@ namespace DuckChess
             enPassantSquare = NOT_ON_BOARD;
         }
 
+        private void MoveBishop(Move move, bool isWhite)
+        {
+            PieceList friendlyBishops = isWhite ? WhiteBishops : BlackBishops;
+            friendlyBishops.MovePiece(move);
+            enPassantSquare = NOT_ON_BOARD;
+        }
+
+        private void MoveRook(Move move, bool isWhite)
+        {
+            PieceList friendlyRooks = isWhite ? WhiteRooks : BlackRooks;
+            friendlyRooks.MovePiece(move);
+            enPassantSquare = NOT_ON_BOARD;
+        }
+
+        private void MoveQueen(Move move, bool isWhite)
+        {
+            PieceList friendlyQueens = isWhite ? WhiteQueens : BlackQueens;
+            friendlyQueens.MovePiece(move);
+            enPassantSquare = NOT_ON_BOARD;
+        }
+
+        private void MoveKing(Move move, bool isWhite)
+        {
+            int kingSpot = isWhite ? WhiteKing : BlackKing;
+            kingSpot = move.TargetSquare;
+            enPassantSquare = NOT_ON_BOARD;
+        }
+
+        private void MoveDuck(Move move)
+        {
+            Duck = move.TargetSquare;
+        }
+
         private void CapturePieceNormally(Move move, bool isWhite)
         {
             int capturedPiece = Squares[move.TargetSquare];
@@ -311,14 +356,8 @@ namespace DuckChess
             CapturedTypeEnemyPieces.RemovePieceAtSquare(move.TargetSquare);
         }
 
-        private void MoveDuck(Move move)
-        {
-            Duck = move.TargetSquare;
-        }
-
         private void PromotePawn(Move move, PieceList friendlyPawns, bool isWhite)
         {
-            Debug.Log("Board Promote Pawn");
             friendlyPawns.RemovePieceAtSquare(move.TargetSquare);
             switch(move.PromotionPieceType)
             {
@@ -349,25 +388,24 @@ namespace DuckChess
         private void EnPassant(Move move, bool isWhite)
         {
             PieceList enemyPawns = isWhite ? BlackPawns : WhitePawns;
-            Debug.Log("En Passant");
             int enemyPawnSquare = isWhite ? -8 : 8;
             enemyPawnSquare += move.TargetSquare;
 
             enemyPawns.RemovePieceAtSquare(enemyPawnSquare);
             Squares[enemyPawnSquare] = Piece.None;
-            Debug.Log("Was piece removed " + Squares[enemyPawnSquare]);
         }
 
         private void GenerateNormalMoves()
         {
             LegalMoveGenerator.GeneratePawnMoves(ref legalPawnMoves, this);
             LegalMoveGenerator.GenerateKnightMoves(ref legalKnightMoves, this);
-            foreach (Move legalMove in legalKnightMoves)
-            {
-                Debug.Log("Knight Legal Move " + legalMove.StartSquare + " " + legalMove.TargetSquare + " " + legalMove.MoveFlag);
-            }
             LegalMoveGenerator.GenerateBishopMoves(ref legalBishopMoves, this);
             LegalMoveGenerator.GenerateRookMoves(ref legalRookMoves, this);
+            Debug.Log("Reached: ------------------------------------------");
+            foreach (Move move in legalRookMoves)
+            {
+                Debug.Log("Legal Rook Move: " + move.ToString() + "\n");
+            }
             LegalMoveGenerator.GenerateQueenMoves(ref legalQueenMoves, this);
             LegalMoveGenerator.GenerateKingMoves(ref legalKingMoves, this);
         }
@@ -379,8 +417,6 @@ namespace DuckChess
 
         public bool IsMoveLegal(ref Move move)
         {
-            Debug.Log("Board IsLegal Move " + move.StartSquare + " " + move.TargetSquare + " " + move.MoveFlag);
-            bool isLegal = false;
             int pieceType;
             if (duckTurn)
             {
@@ -389,65 +425,35 @@ namespace DuckChess
             {
                 pieceType = Piece.PieceType(Squares[move.StartSquare]);
             }
+            List<Move> legalMoves = null;
             switch (pieceType)
             {
                 case Piece.Duck:
-                    isLegal = CheckDuckMove(ref move);
+                    legalMoves = legalDuckMoves;
                     break;
                 case Piece.Pawn:
-                    isLegal = CheckPawnMove(ref move);
+                    legalMoves = legalPawnMoves;
                     break;
                 case Piece.Knight:
-                    isLegal = CheckKnightMove(ref move);
+                    legalMoves = legalKnightMoves;
                     break;
                 case Piece.Bishop:
+                    legalMoves = legalBishopMoves;
                     break;
                 case Piece.Rook:
+                    legalMoves = legalRookMoves;
                     break;
                 case Piece.Queen:
+                    legalMoves = legalQueenMoves;
                     break;
                 case Piece.King:
+                    legalMoves = legalKingMoves;
                     break;
             }
-            return isLegal;
-        }
-
-        public bool CheckPawnMove(ref Move move)
-        {
-            foreach (Move legalMove in legalPawnMoves)
-            {
-                Debug.Log("Board Legal Move " + legalMove.StartSquare + " " + legalMove.TargetSquare + " " + legalMove.MoveFlag);
-                if (Move.SameMove(move, legalMove))
-                {
-                    // It is easier to copy the already calculated flags in legal move
-                    // than to recalculate before calling this method
-                    move = legalMove;
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public bool CheckKnightMove(ref Move move)
-        {
-            foreach (Move legalMove in legalKnightMoves)
-            {
-                Debug.Log("Board Legal Move " + legalMove.StartSquare + " " + legalMove.TargetSquare + " " + legalMove.MoveFlag);
-                if (Move.SameMove(move, legalMove))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public bool CheckDuckMove(ref Move move)
-        {
-            foreach (Move legalMove in legalDuckMoves)
+            foreach (Move legalMove in legalMoves)
             {
                 if (Move.SameMove(move, legalMove))
                 {
-                    move = legalMove;
                     return true;
                 }
             }
@@ -468,7 +474,7 @@ namespace DuckChess
         public override string ToString()
         {
             string boardString = "";
-            for (int i = 0; i < 8; i++)
+            for (int i = 7; i >= 0; i--)
             {
                 int row = i * 8;
                 for (int j = 0; j < 8; j++)
