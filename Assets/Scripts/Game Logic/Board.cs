@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using JetBrains.Annotations;
@@ -25,17 +26,29 @@ namespace DuckChess
         /// </summary>
         public bool duckTurn;
 
+        /// <summary>
+        /// The square behind a pawn that just moved two spaces forward.
+        /// </summary>
         public int enPassantSquare;
 
+        /// <summary>
+        /// Used by variables that represent a space on the board, but
+        /// sometimes don't exist on a given turn.
+        /// </summary>
         public const int NOT_ON_BOARD = -2;
 
-        public List<Move> legalPawnMoves;
-        public List<Move> legalKnightMoves;
-        public List<Move> legalBishopMoves;
-        public List<Move> legalRookMoves;
-        public List<Move> legalQueenMoves;
-        public List<Move> legalKingMoves;
-        public List<Move> legalDuckMoves;
+        public bool CastleKingSideW;
+        public bool CastleQueenSideW;
+        public bool CastleKingSideB;
+        public bool CastleQueenSideB;
+
+        private List<Move> legalPawnMoves;
+        private List<Move> legalKnightMoves;
+        private List<Move> legalBishopMoves;
+        private List<Move> legalRookMoves;
+        private List<Move> legalQueenMoves;
+        private List<Move> legalKingMoves;
+        private List<Move> legalDuckMoves;
 
         #region Piece Locations
         // Information about (mostly location and number) each piece type
@@ -105,6 +118,10 @@ namespace DuckChess
         {
             Squares = new int[64];
             ResetLegalMoves();
+            CastleKingSideW = true;
+            CastleQueenSideW = true;
+            CastleKingSideB = true;
+            CastleQueenSideB = true;
         }
 
         private void ResetLegalMoves()
@@ -123,6 +140,12 @@ namespace DuckChess
         /// </summary>
         public void LoadStartPosition()
         {
+            // All the castling can still happen
+            CastleKingSideW = true;
+            CastleQueenSideW = true;
+            CastleKingSideB = true;
+            CastleQueenSideB = true;
+
             // Set the en passant square out of bounds
             enPassantSquare = -1;
 
@@ -201,14 +224,14 @@ namespace DuckChess
             duckTurn = false;
 
             // Set the duck
-            Duck = -1;
+            Duck = NOT_ON_BOARD;
             GenerateNormalMoves();
         }
         public void MakeMove(Move move)
         {
             int startSquare = move.StartSquare;
             int targetSquare = move.TargetSquare;
-            if (duckTurn && Duck == -1)
+            if (duckTurn && Duck == NOT_ON_BOARD)
             {
                 MoveDuck(move);
                 Squares[targetSquare] = Piece.Duck;
@@ -305,6 +328,33 @@ namespace DuckChess
         {
             PieceList friendlyRooks = isWhite ? WhiteRooks : BlackRooks;
             friendlyRooks.MovePiece(move);
+            if (isWhite)
+            {
+                switch (move.StartSquare)
+                {
+                    case 0:
+                        CastleQueenSideW = false;
+                        break;
+                    case 7:
+                        CastleKingSideW = false;
+                        break;
+                    default:
+                        break;
+                }
+            } else
+            {
+                switch (move.StartSquare)
+                {
+                    case 56:
+                        CastleQueenSideB = false;
+                        break;
+                    case 63:
+                        CastleKingSideB = false;
+                        break;
+                    default:
+                        break;
+                }
+            }
             enPassantSquare = NOT_ON_BOARD;
         }
 
@@ -319,6 +369,32 @@ namespace DuckChess
         {
             int kingSpot = isWhite ? WhiteKing : BlackKing;
             kingSpot = move.TargetSquare;
+            if (isWhite)
+            {
+                CastleQueenSideW = false;
+                CastleKingSideW = false;
+            } else
+            {
+                CastleQueenSideB = false;
+                CastleKingSideB = false;
+            }
+            if (move.MoveFlag == Move.Flag.Castling)
+            {
+                bool isKingSide = move.TargetSquare - move.StartSquare > 0;
+
+                int rookSpot = move.StartSquare;
+                rookSpot += isKingSide ? + 3 : -4;
+
+                int newRookSpot = move.StartSquare;
+                newRookSpot += isKingSide ? 1 : -1;
+
+                PieceList friendlyRooks = isWhite ? WhiteRooks : BlackRooks;
+
+                Move moveRook = new Move(rookSpot, newRookSpot);
+
+                friendlyRooks.MovePiece(moveRook);
+                SwapSquares(moveRook);
+            }
             enPassantSquare = NOT_ON_BOARD;
         }
 
@@ -401,11 +477,6 @@ namespace DuckChess
             LegalMoveGenerator.GenerateKnightMoves(ref legalKnightMoves, this);
             LegalMoveGenerator.GenerateBishopMoves(ref legalBishopMoves, this);
             LegalMoveGenerator.GenerateRookMoves(ref legalRookMoves, this);
-            Debug.Log("Reached: ------------------------------------------");
-            foreach (Move move in legalRookMoves)
-            {
-                Debug.Log("Legal Rook Move: " + move.ToString() + "\n");
-            }
             LegalMoveGenerator.GenerateQueenMoves(ref legalQueenMoves, this);
             LegalMoveGenerator.GenerateKingMoves(ref legalKingMoves, this);
         }
@@ -464,6 +535,7 @@ namespace DuckChess
         {
             return square / 8;
         }
+
         public static int GetColumnOf(int square)
         {
             return square % 8;

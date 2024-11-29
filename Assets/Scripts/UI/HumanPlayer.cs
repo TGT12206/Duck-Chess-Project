@@ -53,7 +53,7 @@ public class HumanPlayer : RealTimePlayer
         int mouseSquare = BoardUI.GetMouseSquare();
         if (currentState == InputState.None)
         {
-            if (board.duckTurn && board.Duck == -1)
+            if (board.duckTurn && board.Duck == Board.NOT_ON_BOARD)
             {
                 mouseSquare = 0;
                 selectedSquare = 0;
@@ -134,7 +134,7 @@ public class HumanPlayer : RealTimePlayer
             targetSquare = mouseSquare;
             currentState = InputState.None;
             Move newMove;
-            if (board.duckTurn && board.Duck == -1)
+            if (board.duckTurn && board.Duck == Board.NOT_ON_BOARD)
             {
                 newMove = new Move(0, targetSquare, Move.Flag.FirstDuckMove);
             } else if (
@@ -143,7 +143,6 @@ public class HumanPlayer : RealTimePlayer
                 Piece.PieceType(board[selectedSquare]) == Piece.Pawn
             )
             {
-                Debug.Log("HumanPlayer Promote Pawn");
                 newMove = new Move(selectedSquare, targetSquare, Move.Flag.PromoteToQueen);
             } else if (
                 targetSquare == board.enPassantSquare &&
@@ -157,15 +156,20 @@ public class HumanPlayer : RealTimePlayer
             )
             {
                 newMove = new Move(selectedSquare, targetSquare, Move.Flag.PawnTwoForward);
-            } else
+            } else if (
+                Mathf.Abs(targetSquare - selectedSquare) == 2 &&
+                Piece.PieceType(board[selectedSquare]) == Piece.King
+            )
+            {
+                newMove = new Move(selectedSquare, targetSquare, Move.Flag.Castling);
+            }
+            else
             {
                 newMove = new Move(selectedSquare, targetSquare);
             }
-            Debug.Log("Player Move " + newMove.StartSquare + " " + newMove.TargetSquare + " " + newMove.MoveFlag + "===============================================================================");
-            Debug.Log("Moving " + Piece.PieceType(board[selectedSquare]));
+
             if (board.IsMoveLegal(ref newMove))
             {
-                Debug.Log("Passed Is Legal");
                 ChooseMove(newMove);
             } else
             {

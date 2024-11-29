@@ -593,7 +593,6 @@ namespace DuckChess
             bool isWhite = board.turnColor == Piece.White;
             PieceList friendlyRookSpots = isWhite ? board.WhiteRooks : board.BlackRooks;
             int enemyColor = isWhite ? Piece.Black : Piece.White;
-            Debug.Log(friendlyRookSpots.Count);
             for (int i = 0; i < friendlyRookSpots.Count; i++)
             {
                 int rookSpot = friendlyRookSpots[i];
@@ -873,6 +872,31 @@ namespace DuckChess
                 generatedMoves.Add(move);
             }
             // Remember to add castling
+            bool kingSideCastle = isWhite ? board.CastleKingSideW : board.CastleKingSideB;
+            bool queenSideCastle = isWhite ? board.CastleQueenSideW : board.CastleQueenSideB;
+            if (kingSideCastle)
+            {
+                if (
+                    Piece.PieceType(board[kingSpot + 1]) == Piece.None &&
+                    Piece.PieceType(board[kingSpot + 2]) == Piece.None
+                )
+                {
+                    Move move = new Move(kingSpot, kingSpot + 2, Move.Flag.Castling);
+                    generatedMoves.Add(move);
+                }
+            }
+            if (queenSideCastle)
+            {
+                if (
+                    Piece.PieceType(board[kingSpot - 1]) == Piece.None &&
+                    Piece.PieceType(board[kingSpot - 2]) == Piece.None &&
+                    Piece.PieceType(board[kingSpot - 3]) == Piece.None
+                )
+                {
+                    Move move = new Move(kingSpot, kingSpot - 2, Move.Flag.Castling);
+                    generatedMoves.Add(move);
+                }
+            }
         }
 
         /// <summary>
@@ -884,7 +908,7 @@ namespace DuckChess
         {
             int firstDuckMoveFlag = Move.Flag.None;
             int startSquare = board.Duck;
-            if (startSquare == -1)
+            if (startSquare == Board.NOT_ON_BOARD)
             {
                 startSquare = 0;
                 firstDuckMoveFlag = Move.Flag.FirstDuckMove;

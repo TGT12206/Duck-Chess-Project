@@ -27,8 +27,13 @@ public class PieceList
     {
         occupiedSquares = new int[maxPieceCount];
         map = new int[64];
-        foreach (int square in occupiedSquares) {
-            map[square] = -1;
+        for (int i = 0; i < maxPieceCount; i++)
+        {
+            occupiedSquares[i] = -1;
+        }
+        for (int i = 0; i < 64; i++)
+        {
+            map[i] = -1;
         }
         numPieces = 0;
     }
@@ -51,12 +56,12 @@ public class PieceList
     public void RemovePieceAtSquare(int square)
     {
         int pieceIndex = map[square];
-        Debug.Log("Removed " + occupiedSquares[pieceIndex]);
-        for (int i = square; i < occupiedSquares.Length - 1; i++)
+        for (int i = pieceIndex; i < numPieces - 1; i++)
         {
             occupiedSquares[i] = occupiedSquares[i + 1];
+            map[occupiedSquares[i]] = i;
         }
-        occupiedSquares[occupiedSquares.Length - 1] = -1;
+        occupiedSquares[numPieces - 1] = -1;
         map[square] = -1;
         numPieces--;
     }
@@ -72,5 +77,27 @@ public class PieceList
     }
 
     public int this[int index] => occupiedSquares[index];
+
+    public override string ToString()
+    {
+        string output = "Occupied Squares:\n";
+        for (int i = 0; i < occupiedSquares.Length; i++)
+        {
+            output += occupiedSquares[i] + " ";
+            output += i == numPieces - 1 ? "| " : "";
+        }
+        output += "\n" + numPieces;
+        output += "\nMap:\n";
+        for (int i = 7; i >= 0; i--)
+        {
+            int row = i * 8;
+            for (int j = 0; j < 8; j++)
+            {
+                output += map[row + j] + " ";
+            }
+            output += "\n";
+        }
+        return output;
+    }
 
 }

@@ -85,7 +85,6 @@ public class BoardUI : MonoBehaviour
 
     public void MakeMove(Move move)
     {
-        Debug.Log("UI Move " + move.StartSquare + " " + move.TargetSquare + " " + move.MoveFlag);
         int newSquare = move.TargetSquare;
         int squareToCapture = newSquare;
         bool isWhite = board.turnColor == Piece.White;
@@ -102,8 +101,8 @@ public class BoardUI : MonoBehaviour
         }
         if (move.IsPromotion)
         {
-            Destroy(Pieces[selectedSquare]);
-            Pieces[selectedSquare] = null;
+            Destroy(Pieces[move.StartSquare]);
+            Pieces[move.StartSquare] = null;
             GameObject newPiece = null;
             switch(move.MoveFlag)
             {
@@ -120,15 +119,28 @@ public class BoardUI : MonoBehaviour
                     newPiece = isWhite ? QueenW : QueenB;
                     break;
             }
-            Pieces[selectedSquare] = Instantiate(newPiece);
+            Pieces[move.StartSquare] = Instantiate(newPiece);
         }
-        if (board.duckTurn && board.Duck == -1)
+        if (move.MoveFlag == Move.Flag.Castling)
+        {
+            bool isKingSide = move.TargetSquare - move.StartSquare > 0;
+
+            int rookSpot = move.StartSquare;
+            rookSpot += isKingSide ? +3 : -4;
+
+            int newRookSpot = move.StartSquare;
+            newRookSpot += isKingSide ? 1 : -1;
+
+            Move moveRooks = new Move(rookSpot, newRookSpot);
+            MakeMove(moveRooks);
+        }
+        if (board.duckTurn && board.Duck == Board.NOT_ON_BOARD)
         {
             Pieces[newSquare] = Instantiate(Duck);
         } else
         {
-            Pieces[newSquare] = Pieces[selectedSquare];
-            Pieces[selectedSquare] = null;
+            Pieces[newSquare] = Pieces[move.StartSquare];
+            Pieces[move.StartSquare] = null;
         }
         Vector3 newPosition = SquareToWorldCoordinates(newSquare, PLACE_LAYER);
         Pieces[newSquare].transform.position = newPosition;
@@ -232,7 +244,7 @@ public class BoardUI : MonoBehaviour
         Pieces[board.BlackKing].transform.position = SquareToWorldCoordinates(board.BlackKing, PLACE_LAYER);
 
         // Place the duck
-        if (board.Duck != -1)
+        if (board.Duck != Board.NOT_ON_BOARD)
         {
             Pieces[board.Duck] = Instantiate(Duck);
             Pieces[board.Duck].transform.position = SquareToWorldCoordinates(board.Duck, PLACE_LAYER);
