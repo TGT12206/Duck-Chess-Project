@@ -85,6 +85,7 @@ public class BoardUI : MonoBehaviour
 
     public void MakeMove(Move move)
     {
+        Debug.Log("UI Move " + move.StartSquare + " " + move.TargetSquare + " " + move.MoveFlag);
         int newSquare = move.TargetSquare;
         int squareToCapture = newSquare;
         bool isWhite = board.turnColor == Piece.White;
@@ -98,6 +99,28 @@ public class BoardUI : MonoBehaviour
         {
             Destroy(Pieces[squareToCapture]);
             Pieces[squareToCapture] = null;
+        }
+        if (move.IsPromotion)
+        {
+            Destroy(Pieces[selectedSquare]);
+            Pieces[selectedSquare] = null;
+            GameObject newPiece = null;
+            switch(move.MoveFlag)
+            {
+                case Move.Flag.PromoteToKnight:
+                    newPiece = isWhite ? KnightW : KnightB;
+                    break;
+                case Move.Flag.PromoteToBishop:
+                    newPiece = isWhite ? BishopW : BishopB;
+                    break;
+                case Move.Flag.PromoteToRook:
+                    newPiece = isWhite ? RookW : RookB;
+                    break;
+                case Move.Flag.PromoteToQueen:
+                    newPiece = isWhite ? QueenW : QueenB;
+                    break;
+            }
+            Pieces[selectedSquare] = Instantiate(newPiece);
         }
         if (board.duckTurn && board.Duck == -1)
         {

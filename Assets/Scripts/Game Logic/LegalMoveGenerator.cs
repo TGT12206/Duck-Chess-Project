@@ -35,9 +35,9 @@ namespace DuckChess
                     // Forward pawn moves
                     if (Piece.PieceType(board[pawnSpot + 8]) == Piece.None)
                     {
-                        if (pawnSpot + 8 > 55)
+                        if (Board.GetRowOf(pawnSpot) == 6)
                         {
-                            #region Add pawn promotions
+                            #region Add Forward Pawn Promotions
                             Move move = new Move(pawnSpot, pawnSpot + 8, Move.Flag.PromoteToKnight);
                             generatedMoves.Add(move);
 
@@ -59,7 +59,7 @@ namespace DuckChess
                         }
 
                         // Pawn move two forward
-                        if (board.GetRowOf(pawnSpot) == 1)
+                        if (Board.GetRowOf(pawnSpot) == 1)
                         {
                             if (Piece.PieceType(board[pawnSpot + 16]) == Piece.None)
                             {
@@ -68,17 +68,17 @@ namespace DuckChess
                             }
                         }
                         // En Passant
-                        if (board.GetRowOf(pawnSpot) == 4)
+                        if (Board.GetRowOf(pawnSpot) == 4)
                         {
                             if (
-                                board.GetColumnOf(pawnSpot) == board.enPassantColumn - 1 ||
-                                board.GetColumnOf(pawnSpot) == board.enPassantColumn + 1
+                                pawnSpot + 7 == board.enPassantSquare ||
+                                pawnSpot + 9 == board.enPassantSquare
                             )
                             {
-                                if (board.Duck != 40 + board.enPassantColumn)
+                                if (board.Duck != board.enPassantSquare)
                                 {
                                     Move move = new Move(pawnSpot,
-                                        40 + board.enPassantColumn,
+                                        board.enPassantSquare,
                                         Move.Flag.EnPassantCapture
                                     );
                                     generatedMoves.Add(move);
@@ -87,23 +87,61 @@ namespace DuckChess
                         }
                     }
                     // Normal pawn captures
-                    int pawnCol = board.GetColumnOf(pawnSpot);
+                    int pawnCol = Board.GetColumnOf(pawnSpot);
                     if (pawnCol < 7)
                     {
                         if (Piece.PieceType(board[pawnSpot + 9]) != Piece.None &&
+                            Piece.Color(board[pawnSpot + 9]) == Piece.Black &&
                             Piece.PieceType(board[pawnSpot + 9]) != Piece.Duck)
                         {
-                            Move move = new Move(pawnSpot, pawnSpot + 9);
-                            generatedMoves.Add(move);
+                            if (Board.GetRowOf(pawnSpot) == 6)
+                            {
+                                #region Add Forward Pawn Promotions
+                                Move move = new Move(pawnSpot, pawnSpot + 9, Move.Flag.PromoteToKnight);
+                                generatedMoves.Add(move);
+
+                                move = new Move(pawnSpot, pawnSpot + 9, Move.Flag.PromoteToBishop);
+                                generatedMoves.Add(move);
+
+                                move = new Move(pawnSpot, pawnSpot + 9, Move.Flag.PromoteToRook);
+                                generatedMoves.Add(move);
+
+                                move = new Move(pawnSpot, pawnSpot + 9, Move.Flag.PromoteToQueen);
+                                generatedMoves.Add(move);
+                                #endregion
+                            } else
+                            {
+                                Move move = new Move(pawnSpot, pawnSpot + 9);
+                                generatedMoves.Add(move);
+                            }
                         }
                     }
                     if (pawnCol > 0)
                     {
                         if (Piece.PieceType(board[pawnSpot + 7]) != Piece.None &&
+                            Piece.Color(board[pawnSpot + 7]) == Piece.Black &&
                             Piece.PieceType(board[pawnSpot + 7]) != Piece.Duck)
                         {
-                            Move move = new Move(pawnSpot, pawnSpot + 7);
-                            generatedMoves.Add(move);
+                            if (Board.GetRowOf(pawnSpot) == 6)
+                            {
+                                #region Add Forward Pawn Promotions
+                                Move move = new Move(pawnSpot, pawnSpot + 7, Move.Flag.PromoteToKnight);
+                                generatedMoves.Add(move);
+
+                                move = new Move(pawnSpot, pawnSpot + 7, Move.Flag.PromoteToBishop);
+                                generatedMoves.Add(move);
+
+                                move = new Move(pawnSpot, pawnSpot + 7, Move.Flag.PromoteToRook);
+                                generatedMoves.Add(move);
+
+                                move = new Move(pawnSpot, pawnSpot + 7, Move.Flag.PromoteToQueen);
+                                generatedMoves.Add(move);
+                                #endregion
+                            } else
+                            {
+                                Move move = new Move(pawnSpot, pawnSpot + 7);
+                                generatedMoves.Add(move);
+                            }
                         }
                     }
                 }
@@ -140,7 +178,7 @@ namespace DuckChess
                         }
 
                         // Pawn move two forward
-                        if (board.GetRowOf(pawnSpot) == 6)
+                        if (Board.GetRowOf(pawnSpot) == 6)
                         {
                             if (Piece.PieceType(board[pawnSpot - 16]) == Piece.None)
                             {
@@ -150,17 +188,17 @@ namespace DuckChess
                         }
 
                         // En Passant
-                        if (board.GetRowOf(pawnSpot) == 3)
+                        if (Board.GetRowOf(pawnSpot) == 3)
                         {
                             if (
-                                board.GetColumnOf(pawnSpot) == board.enPassantColumn - 1 ||
-                                board.GetColumnOf(pawnSpot) == board.enPassantColumn + 1
+                                pawnSpot - 7 == board.enPassantSquare ||
+                                pawnSpot - 9 == board.enPassantSquare
                             )
                             {
-                                if (board.Duck != 16 + board.enPassantColumn)
+                                if (board.Duck != board.enPassantSquare)
                                 {
                                     Move move = new Move(pawnSpot,
-                                        16 + board.enPassantColumn,
+                                        board.enPassantSquare,
                                         Move.Flag.EnPassantCapture
                                     );
                                     generatedMoves.Add(move);
@@ -169,23 +207,61 @@ namespace DuckChess
                         }
                     }
                     // Normal pawn captures
-                    int pawnCol = board.GetColumnOf(pawnSpot);
+                    int pawnCol = Board.GetColumnOf(pawnSpot);
                     if (pawnCol > 0)
                     {
                         if (Piece.PieceType(board[pawnSpot - 9]) != Piece.None &&
+                            Piece.Color(board[pawnSpot - 9]) == Piece.White &&
                             Piece.PieceType(board[pawnSpot - 9]) != Piece.Duck)
                         {
-                            Move move = new Move(pawnSpot, pawnSpot - 9);
-                            generatedMoves.Add(move);
+                            if (Board.GetRowOf(pawnSpot) == 1)
+                            {
+                                #region Add Forward Pawn Promotions
+                                Move move = new Move(pawnSpot, pawnSpot - 9, Move.Flag.PromoteToKnight);
+                                generatedMoves.Add(move);
+
+                                move = new Move(pawnSpot, pawnSpot - 9, Move.Flag.PromoteToBishop);
+                                generatedMoves.Add(move);
+
+                                move = new Move(pawnSpot, pawnSpot - 9, Move.Flag.PromoteToRook);
+                                generatedMoves.Add(move);
+
+                                move = new Move(pawnSpot, pawnSpot - 9, Move.Flag.PromoteToQueen);
+                                generatedMoves.Add(move);
+                                #endregion
+                            } else
+                            {
+                                Move move = new Move(pawnSpot, pawnSpot + 9);
+                                generatedMoves.Add(move);
+                            }
                         }
                     }
                     if (pawnCol < 7)
                     {
                         if (Piece.PieceType(board[pawnSpot - 7]) != Piece.None &&
+                            Piece.Color(board[pawnSpot - 7]) == Piece.White &&
                             Piece.PieceType(board[pawnSpot - 7]) != Piece.Duck)
                         {
-                            Move move = new Move(pawnSpot, pawnSpot - 7);
-                            generatedMoves.Add(move);
+                            if (Board.GetRowOf(pawnSpot) == 1)
+                            {
+                                #region Add Forward Pawn Promotions
+                                Move move = new Move(pawnSpot, pawnSpot - 7, Move.Flag.PromoteToKnight);
+                                generatedMoves.Add(move);
+
+                                move = new Move(pawnSpot, pawnSpot - 7, Move.Flag.PromoteToBishop);
+                                generatedMoves.Add(move);
+
+                                move = new Move(pawnSpot, pawnSpot - 7, Move.Flag.PromoteToRook);
+                                generatedMoves.Add(move);
+
+                                move = new Move(pawnSpot, pawnSpot - 7, Move.Flag.PromoteToQueen);
+                                generatedMoves.Add(move);
+                                #endregion
+                            } else
+                            {
+                                Move move = new Move(pawnSpot, pawnSpot - 7);
+                                generatedMoves.Add(move);
+                            }
                         }
                     }
                 }
@@ -200,7 +276,131 @@ namespace DuckChess
         /// <param name="board"></param>
         public static void GenerateKnightMoves(ref List<Move> generatedMoves, Board board)
         {
-            
+            bool isWhite = board.turnColor == Piece.White;
+            PieceList friendlyKnightSpots = isWhite ? board.WhiteKnights : board.BlackKnights;
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
+            for (int i = 0; i < friendlyKnightSpots.Count; i++)
+            {
+                int knightSpot = friendlyKnightSpots[i];
+                int row = Board.GetRowOf(knightSpot);
+                int col = Board.GetColumnOf(knightSpot);
+                
+                // jumps that are up 2 tiles
+                if (row < 6)
+                {
+                    // left
+                    if (col > 0)
+                    {
+                        if (
+                            Piece.PieceType(board[knightSpot + 15]) == Piece.None ||
+                            Piece.Color(board[knightSpot + 15]) == enemyColor
+                        )
+                        {
+                            Move move = new Move(knightSpot, knightSpot + 15);
+                            generatedMoves.Add(move);
+                        }
+                    }
+                    // right
+                    if (col < 7)
+                    {
+                        if (
+                            Piece.PieceType(board[knightSpot + 17]) == Piece.None ||
+                            Piece.Color(board[knightSpot + 17]) == enemyColor
+                        )
+                        {
+                            Move move = new Move(knightSpot, knightSpot + 17);
+                            generatedMoves.Add(move);
+                        }
+                    }
+                }
+
+                // jumps that are down 2 tiles
+                if (row > 1)
+                {
+                    // left
+                    if (col > 0)
+                    {
+                        if (
+                            Piece.PieceType(board[knightSpot - 17]) == Piece.None ||
+                            Piece.Color(board[knightSpot - 17]) == enemyColor
+                        )
+                        {
+                            Move move = new Move(knightSpot, knightSpot - 17);
+                            generatedMoves.Add(move);
+                        }
+                    }
+                    // right
+                    if (col < 7)
+                    {
+                        if (
+                            Piece.PieceType(board[knightSpot - 15]) == Piece.None ||
+                            Piece.Color(board[knightSpot - 15]) == enemyColor
+                        )
+                        {
+                            Move move = new Move(knightSpot, knightSpot - 15);
+                            generatedMoves.Add(move);
+                        }
+                    }
+                }
+
+                // jumps that are left 2 tiles
+                if (col > 1)
+                {
+                    // up
+                    if (row < 7)
+                    {
+                        if (
+                            Piece.PieceType(board[knightSpot + 6]) == Piece.None ||
+                            Piece.Color(board[knightSpot + 6]) == enemyColor
+                        )
+                        {
+                            Move move = new Move(knightSpot, knightSpot + 6);
+                            generatedMoves.Add(move);
+                        }
+                    }
+                    // down
+                    if (row > 0)
+                    {
+                        if (
+                            Piece.PieceType(board[knightSpot - 10]) == Piece.None ||
+                            Piece.Color(board[knightSpot - 10]) == enemyColor
+                        )
+                        {
+                            Move move = new Move(knightSpot, knightSpot - 10);
+                            generatedMoves.Add(move);
+                        }
+                    }
+                }
+
+                // jumps that are right 2 tiles
+                if (col < 6)
+                {
+                    // up
+                    if (row < 7)
+                    {
+                        if (
+                            Piece.PieceType(board[knightSpot + 10]) == Piece.None ||
+                            Piece.Color(board[knightSpot + 10]) == enemyColor
+                        )
+                        {
+                            Move move = new Move(knightSpot, knightSpot + 10);
+                            generatedMoves.Add(move);
+                        }
+                    }
+                    // down
+                    if (row > 0)
+                    {
+                        if (
+                            Piece.PieceType(board[knightSpot - 6]) == Piece.None ||
+                            Piece.Color(board[knightSpot - 6]) == enemyColor
+                        )
+                        {
+                            Move move = new Move(knightSpot, knightSpot - 6);
+                            generatedMoves.Add(move);
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>

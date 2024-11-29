@@ -46,5 +46,9 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     {
         PlayerToMove = board.turnColor == Piece.White ? WhitePlayer : BlackPlayer;
         PlayerToMove.Update();
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            Debug.Log(board.ToString());
+        }
     }
 }

@@ -25,7 +25,7 @@ namespace DuckChess
         /// </summary>
         public bool duckTurn;
 
-        public int enPassantColumn;
+        public int enPassantSquare;
 
         public const int NOT_ON_BOARD = -2;
 
@@ -123,8 +123,8 @@ namespace DuckChess
         /// </summary>
         public void LoadStartPosition()
         {
-            // Set the en passant column out of bounds
-            enPassantColumn = -1;
+            // Set the en passant square out of bounds
+            enPassantSquare = -1;
 
             // Set the pawns
             WhitePawns = new PieceList(MAX_PAWN_COUNT);
@@ -215,10 +215,18 @@ namespace DuckChess
             } else
             {
                 int pieceType = Piece.PieceType(Squares[startSquare]);
+                bool isWhite = turnColor == Piece.White;
+                if (Squares[move.TargetSquare] != Piece.None)
+                {
+                    CapturePieceNormally(move, isWhite);
+                }
                 switch (pieceType)
                 {
                     case Piece.Pawn:
-                        MovePawn(move);
+                        MovePawn(move, isWhite);
+                        break;
+                    case Piece.Knight:
+                        MoveKnight(move, isWhite);
                         break;
                     case Piece.Duck:
                         MoveDuck(move);
@@ -243,28 +251,99 @@ namespace DuckChess
             Squares[move.TargetSquare] = Squares[move.StartSquare];
             Squares[move.StartSquare] = Piece.None;
         }
-        private void MovePawn(Move move)
+        private void MovePawn(Move move, bool isWhite)
         {
-            bool isWhite = turnColor == Piece.White;
             PieceList friendlyPawns = isWhite ? WhitePawns : BlackPawns;
+            int findSquareBehind = isWhite ? -8 : 8;
 
             friendlyPawns.MovePiece(move);
 
             if (move.MoveFlag == Move.Flag.PawnTwoForward)
             {
-                enPassantColumn = GetColumnOf(move.StartSquare);
-            } else if (move.MoveFlag == Move.Flag.EnPassantCapture)
-            {
-                EnPassant(move, isWhite);
+                enPassantSquare = move.TargetSquare + findSquareBehind;
             } else
             {
-                enPassantColumn = NOT_ON_BOARD;
+                enPassantSquare = NOT_ON_BOARD;
             }
+            if (move.IsPromotion)
+            {
+                PromotePawn(move, friendlyPawns, isWhite);
+            }
+            else if (move.MoveFlag == Move.Flag.EnPassantCapture)
+            {
+                EnPassant(move, isWhite);
+            }
+        }
+
+        private void MoveKnight(Move move, bool isWhite)
+        {
+            PieceList friendlyKnights = isWhite ? WhiteKnights : BlackKnights;
+            friendlyKnights.MovePiece(move);
+            enPassantSquare = NOT_ON_BOARD;
+        }
+
+        private void CapturePieceNormally(Move move, bool isWhite)
+        {
+            int capturedPiece = Squares[move.TargetSquare];
+            PieceList CapturedTypeEnemyPieces = null;
+            switch (Piece.PieceType(capturedPiece))
+            {
+                case Piece.Pawn:
+                    CapturedTypeEnemyPieces = isWhite ? BlackPawns : WhitePawns;
+                    break;
+                case Piece.Knight:
+                    CapturedTypeEnemyPieces = isWhite ? BlackKnights : WhiteKnights;
+                    break;
+                case Piece.Bishop:
+                    CapturedTypeEnemyPieces = isWhite ? BlackBishops : WhiteBishops;
+                    break;
+                case Piece.Rook:
+                    CapturedTypeEnemyPieces = isWhite ? BlackRooks : WhiteRooks;
+                    break;
+                case Piece.Queen:
+                    CapturedTypeEnemyPieces = isWhite ? BlackQueens : WhiteQueens;
+                    break;
+                case Piece.King:
+                    int capturedKing = isWhite ? BlackKing : WhiteKing;
+                    capturedKing = NOT_ON_BOARD;
+                    return;
+            }
+            CapturedTypeEnemyPieces.RemovePieceAtSquare(move.TargetSquare);
         }
 
         private void MoveDuck(Move move)
         {
             Duck = move.TargetSquare;
+        }
+
+        private void PromotePawn(Move move, PieceList friendlyPawns, bool isWhite)
+        {
+            Debug.Log("Board Promote Pawn");
+            friendlyPawns.RemovePieceAtSquare(move.TargetSquare);
+            switch(move.PromotionPieceType)
+            {
+                case Piece.Knight:
+                    PieceList friendlyKnights = isWhite ? WhiteKnights : BlackKnights;
+                    friendlyKnights.AddPieceAtSquare(move.TargetSquare);
+                    Squares[move.StartSquare] = Piece.Knight;
+                    break;
+                case Piece.Bishop:
+                    PieceList friendlyBishops = isWhite ? WhiteBishops : BlackBishops;
+                    friendlyBishops.AddPieceAtSquare(move.TargetSquare);
+                    Squares[move.StartSquare] = Piece.Bishop;
+                    break;
+                case Piece.Rook:
+                    PieceList friendlyRooks = isWhite ? WhiteRooks : BlackRooks;
+                    friendlyRooks.AddPieceAtSquare(move.TargetSquare);
+                    Squares[move.StartSquare] = Piece.Rook;
+                    break;
+                case Piece.Queen:
+                    PieceList friendlyQueens = isWhite ? WhiteQueens : BlackQueens;
+                    friendlyQueens.AddPieceAtSquare(move.TargetSquare);
+                    Squares[move.StartSquare] = Piece.Queen;
+                    break;
+            }
+            Squares[move.StartSquare] |= isWhite ? Piece.White : Piece.Black;
         }
 
         private void EnPassant(Move move, bool isWhite)
@@ -283,6 +362,10 @@ namespace DuckChess
         {
             LegalMoveGenerator.GeneratePawnMoves(ref legalPawnMoves, this);
             LegalMoveGenerator.GenerateKnightMoves(ref legalKnightMoves, this);
+            foreach (Move legalMove in legalKnightMoves)
+            {
+                Debug.Log("Knight Legal Move " + legalMove.StartSquare + " " + legalMove.TargetSquare + " " + legalMove.MoveFlag);
+            }
             LegalMoveGenerator.GenerateBishopMoves(ref legalBishopMoves, this);
             LegalMoveGenerator.GenerateRookMoves(ref legalRookMoves, this);
             LegalMoveGenerator.GenerateQueenMoves(ref legalQueenMoves, this);
@@ -296,6 +379,7 @@ namespace DuckChess
 
         public bool IsMoveLegal(ref Move move)
         {
+            Debug.Log("Board IsLegal Move " + move.StartSquare + " " + move.TargetSquare + " " + move.MoveFlag);
             bool isLegal = false;
             int pieceType;
             if (duckTurn)
@@ -313,6 +397,17 @@ namespace DuckChess
                 case Piece.Pawn:
                     isLegal = CheckPawnMove(ref move);
                     break;
+                case Piece.Knight:
+                    isLegal = CheckKnightMove(ref move);
+                    break;
+                case Piece.Bishop:
+                    break;
+                case Piece.Rook:
+                    break;
+                case Piece.Queen:
+                    break;
+                case Piece.King:
+                    break;
             }
             return isLegal;
         }
@@ -321,11 +416,25 @@ namespace DuckChess
         {
             foreach (Move legalMove in legalPawnMoves)
             {
+                Debug.Log("Board Legal Move " + legalMove.StartSquare + " " + legalMove.TargetSquare + " " + legalMove.MoveFlag);
                 if (Move.SameMove(move, legalMove))
                 {
                     // It is easier to copy the already calculated flags in legal move
                     // than to recalculate before calling this method
                     move = legalMove;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool CheckKnightMove(ref Move move)
+        {
+            foreach (Move legalMove in legalKnightMoves)
+            {
+                Debug.Log("Board Legal Move " + legalMove.StartSquare + " " + legalMove.TargetSquare + " " + legalMove.MoveFlag);
+                if (Move.SameMove(move, legalMove))
+                {
                     return true;
                 }
             }
@@ -345,15 +454,30 @@ namespace DuckChess
             return false;
         }
 
-        public int GetRowOf(int square)
+        public static int GetRowOf(int square)
         {
             return square / 8;
         }
-        public int GetColumnOf(int square)
+        public static int GetColumnOf(int square)
         {
             return square % 8;
         }
 
         public int this[int index] => Squares[index];
+
+        public override string ToString()
+        {
+            string boardString = "";
+            for (int i = 0; i < 8; i++)
+            {
+                int row = i * 8;
+                for (int j = 0; j < 8; j++)
+                {
+                    boardString += Piece.PieceType(Squares[row + j]) + " ";
+                }
+                boardString += "\n";
+            }
+            return boardString;
+        }
     }
 }

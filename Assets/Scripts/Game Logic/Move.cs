@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace DuckChess
 {
     public readonly struct Move
@@ -38,14 +40,14 @@ namespace DuckChess
 
         public Move(int startSquare, int targetSquare, int flag)
         {
-            moveValue = (int) (startSquare | targetSquare << 6 | flag << 12);
+            moveValue = startSquare | targetSquare << 6 | flag << 12;
         }
 
         public int StartSquare
         {
             get
             {
-                return (int) (moveValue & startSquareMask);
+                return moveValue & startSquareMask;
             }
         }
 
@@ -53,7 +55,7 @@ namespace DuckChess
         {
             get
             {
-                return (int) ((moveValue & targetSquareMask) >> 6);
+                return (moveValue & targetSquareMask) >> 6;
             }
         }
 
@@ -104,15 +106,8 @@ namespace DuckChess
 
         public static bool SameMove(Move a, Move b)
         {
-            if (a.StartSquare != b.StartSquare)
-            {
-                return false;
-            }
-            if (a.TargetSquare != b.TargetSquare)
-            {
-                return false;
-            }
-            return true;
+            Debug.Log("Same Move Check " + a.moveValue + " " + b.moveValue);
+            return a.moveValue == b.moveValue;
         }
 
         public int Value

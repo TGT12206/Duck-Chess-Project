@@ -84,7 +84,8 @@ public class HumanPlayer : RealTimePlayer
         if (Input.GetMouseButtonDown(0))
         {
             // If square contains a piece, select that piece for dragging
-            if ((!board.duckTurn &&
+            if (
+                (!board.duckTurn &&
                 Piece.IsColor(board[mouseSquare], Color))
                 ||
                 (board.duckTurn &&
@@ -132,9 +133,39 @@ public class HumanPlayer : RealTimePlayer
         {
             targetSquare = mouseSquare;
             currentState = InputState.None;
-            Move newMove = new Move(selectedSquare, targetSquare);
+            Move newMove;
+            if (board.duckTurn && board.Duck == -1)
+            {
+                newMove = new Move(0, targetSquare, Move.Flag.FirstDuckMove);
+            } else if (
+                ((Color == Piece.White && targetSquare > 55) ||
+                (Color == Piece.Black && targetSquare < 8)) &&
+                Piece.PieceType(board[selectedSquare]) == Piece.Pawn
+            )
+            {
+                Debug.Log("HumanPlayer Promote Pawn");
+                newMove = new Move(selectedSquare, targetSquare, Move.Flag.PromoteToQueen);
+            } else if (
+                targetSquare == board.enPassantSquare &&
+                Piece.PieceType(board[selectedSquare]) == Piece.Pawn
+            )
+            {
+                newMove = new Move(selectedSquare, targetSquare, Move.Flag.EnPassantCapture);
+            } else if (
+                Mathf.Abs(targetSquare - selectedSquare) == 16 &&
+                Piece.PieceType(board[selectedSquare]) == Piece.Pawn
+            )
+            {
+                newMove = new Move(selectedSquare, targetSquare, Move.Flag.PawnTwoForward);
+            } else
+            {
+                newMove = new Move(selectedSquare, targetSquare);
+            }
+            Debug.Log("Player Move " + newMove.StartSquare + " " + newMove.TargetSquare + " " + newMove.MoveFlag + "===============================================================================");
+            Debug.Log("Moving " + Piece.PieceType(board[selectedSquare]));
             if (board.IsMoveLegal(ref newMove))
             {
+                Debug.Log("Passed Is Legal");
                 ChooseMove(newMove);
             } else
             {
