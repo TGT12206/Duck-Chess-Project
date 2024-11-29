@@ -42,6 +42,10 @@ namespace DuckChess
         public bool CastleKingSideB;
         public bool CastleQueenSideB;
 
+        public int winnerColor;
+        public bool isGameOver;
+        public int numPlySinceLastEvent;
+
         private List<Move> legalPawnMoves;
         private List<Move> legalKnightMoves;
         private List<Move> legalBishopMoves;
@@ -122,6 +126,10 @@ namespace DuckChess
             CastleQueenSideW = true;
             CastleKingSideB = true;
             CastleQueenSideB = true;
+            turnColor = Piece.NoColor;
+            winnerColor = Piece.NoColor;
+            isGameOver = false;
+            numPlySinceLastEvent = 0;
         }
 
         private void ResetLegalMoves()
@@ -222,6 +230,9 @@ namespace DuckChess
             // Set the turn color
             turnColor = Piece.White;
             duckTurn = false;
+            winnerColor = Piece.NoColor;
+            isGameOver = false;
+            numPlySinceLastEvent = 0;
 
             // Set the duck
             Duck = NOT_ON_BOARD;
@@ -239,10 +250,6 @@ namespace DuckChess
             {
                 int pieceType = Piece.PieceType(Squares[startSquare]);
                 bool isWhite = turnColor == Piece.White;
-                if (Squares[move.TargetSquare] != Piece.None)
-                {
-                    CapturePieceNormally(move, isWhite);
-                }
                 switch (pieceType)
                 {
                     case Piece.Pawn:
@@ -267,6 +274,10 @@ namespace DuckChess
                         MoveDuck(move);
                         break;
                 }
+                if (Squares[move.TargetSquare] != Piece.None)
+                {
+                    CapturePieceNormally(move, isWhite);
+                }
                 SwapSquares(move);
             }
             ResetLegalMoves();
@@ -279,6 +290,11 @@ namespace DuckChess
             {
                 duckTurn= true;
                 GenerateDuckMoves();
+            }
+            if (numPlySinceLastEvent >= 200)
+            {
+                isGameOver = true;
+                winnerColor = Piece.NoColor;
             }
         }
         private void SwapSquares(Move move)
@@ -308,6 +324,7 @@ namespace DuckChess
             {
                 EnPassant(move, isWhite);
             }
+            numPlySinceLastEvent = 0;
         }
 
         private void MoveKnight(Move move, bool isWhite)
@@ -315,6 +332,7 @@ namespace DuckChess
             PieceList friendlyKnights = isWhite ? WhiteKnights : BlackKnights;
             friendlyKnights.MovePiece(move);
             enPassantSquare = NOT_ON_BOARD;
+            numPlySinceLastEvent++;
         }
 
         private void MoveBishop(Move move, bool isWhite)
@@ -322,6 +340,7 @@ namespace DuckChess
             PieceList friendlyBishops = isWhite ? WhiteBishops : BlackBishops;
             friendlyBishops.MovePiece(move);
             enPassantSquare = NOT_ON_BOARD;
+            numPlySinceLastEvent++;
         }
 
         private void MoveRook(Move move, bool isWhite)
@@ -356,6 +375,7 @@ namespace DuckChess
                 }
             }
             enPassantSquare = NOT_ON_BOARD;
+            numPlySinceLastEvent++;
         }
 
         private void MoveQueen(Move move, bool isWhite)
@@ -363,6 +383,7 @@ namespace DuckChess
             PieceList friendlyQueens = isWhite ? WhiteQueens : BlackQueens;
             friendlyQueens.MovePiece(move);
             enPassantSquare = NOT_ON_BOARD;
+            numPlySinceLastEvent++;
         }
 
         private void MoveKing(Move move, bool isWhite)
@@ -396,11 +417,13 @@ namespace DuckChess
                 SwapSquares(moveRook);
             }
             enPassantSquare = NOT_ON_BOARD;
+            numPlySinceLastEvent++;
         }
 
         private void MoveDuck(Move move)
         {
             Duck = move.TargetSquare;
+            numPlySinceLastEvent++;
         }
 
         private void CapturePieceNormally(Move move, bool isWhite)
@@ -427,9 +450,12 @@ namespace DuckChess
                 case Piece.King:
                     int capturedKing = isWhite ? BlackKing : WhiteKing;
                     capturedKing = NOT_ON_BOARD;
+                    isGameOver = true;
+                    winnerColor = turnColor;
                     return;
             }
             CapturedTypeEnemyPieces.RemovePieceAtSquare(move.TargetSquare);
+            numPlySinceLastEvent = 0;
         }
 
         private void PromotePawn(Move move, PieceList friendlyPawns, bool isWhite)

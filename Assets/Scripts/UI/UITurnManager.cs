@@ -44,8 +44,11 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     // Update is called once per frame
     void Update()
     {
-        PlayerToMove = board.turnColor == Piece.White ? WhitePlayer : BlackPlayer;
-        PlayerToMove.Update();
+        if (!board.isGameOver)
+        {
+            PlayerToMove = board.turnColor == Piece.White ? WhitePlayer : BlackPlayer;
+            PlayerToMove.Update();
+        }
         if (Input.GetKeyDown(KeyCode.Q))
         {
             Debug.Log(board.ToString());
