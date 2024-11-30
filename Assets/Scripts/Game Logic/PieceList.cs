@@ -70,15 +70,38 @@ public class PieceList
 
     public void MovePiece(Move move)
     {
+        Debug.Log("Attempting Move: " + move.ToString());
         Debug.Log("PieceList Before move\n" + this.ToString());
+
         int startSquare = move.StartSquare;
         int targetSquare = move.TargetSquare;
+
+        if (startSquare < 0 || startSquare >= map.Length)
+        {
+            Debug.LogError($"Start square index out of range: {startSquare}. Map length: {map.Length}");
+            return;
+        }
+
+        if (targetSquare < 0 || targetSquare >= map.Length)
+        {
+            Debug.LogError($"Target square index out of range: {targetSquare}. Map length: {map.Length}");
+            return;
+        }
+
         int pieceIndex = map[startSquare]; // get the index of this element in the occupiedSquares array
+        if (pieceIndex < 0 || pieceIndex >= occupiedSquares.Length)
+        {
+            Debug.LogError($"Piece index out of range: {pieceIndex}. OccupiedSquares length: {occupiedSquares.Length}");
+            return;
+        }
+
         occupiedSquares[pieceIndex] = targetSquare;
         map[targetSquare] = pieceIndex;
         map[startSquare] = -1;
+
         Debug.Log("PieceList After move\n" + this.ToString());
     }
+
 
     public int this[int index] => occupiedSquares[index];
 
@@ -103,5 +126,15 @@ public class PieceList
         }
         return output;
     }
+
+    public PieceList Clone()
+    {
+        PieceList clone = new PieceList(this.occupiedSquares.Length);
+        clone.numPieces = this.numPieces;
+        this.occupiedSquares.CopyTo(clone.occupiedSquares, 0);
+        this.map.CopyTo(clone.map, 0);
+        return clone;
+    }
+
 
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using JetBrains.Annotations;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace DuckChess
@@ -621,5 +622,38 @@ namespace DuckChess
             }
             return boardString;
         }
+        public Board Clone()
+        {
+            Board copy = new Board();
+            copy.Squares = (int[])this.Squares.Clone();
+            copy.turnColor = this.turnColor;
+            copy.duckTurn = this.duckTurn;
+            copy.enPassantSquare = this.enPassantSquare;
+            copy.CastleKingSideW = this.CastleKingSideW;
+            copy.CastleQueenSideW = this.CastleQueenSideW;
+            copy.CastleKingSideB = this.CastleKingSideB;
+            copy.CastleQueenSideB = this.CastleQueenSideB;
+            copy.winnerColor = this.winnerColor;
+            copy.isGameOver = this.isGameOver;
+            copy.numPlySinceLastEvent = this.numPlySinceLastEvent;
+
+            // Clone piece lists
+            copy.WhitePawns = this.WhitePawns.Clone();
+            copy.BlackPawns = this.BlackPawns.Clone();
+            copy.WhiteKnights = this.WhiteKnights.Clone();
+            copy.BlackKnights = this.BlackKnights.Clone();
+            copy.WhiteBishops = this.WhiteBishops.Clone();
+            copy.BlackBishops = this.BlackBishops.Clone();
+            copy.WhiteRooks = this.WhiteRooks.Clone();
+            copy.BlackRooks = this.BlackRooks.Clone();
+            copy.WhiteQueens = this.WhiteQueens.Clone();
+            copy.BlackQueens = this.BlackQueens.Clone();
+            copy.WhiteKing = this.WhiteKing;
+            copy.BlackKing = this.BlackKing;
+            copy.Duck = this.Duck;
+
+            return copy;
+        }
+
     }
 }
