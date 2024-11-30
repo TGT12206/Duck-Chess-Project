@@ -82,10 +82,23 @@ public class PieceList
     {
         int startSquare = move.StartSquare;
         int targetSquare = move.TargetSquare;
-        int pieceIndex = map[startSquare]; // get the index of this element in the occupiedSquares array
+        int pieceIndex = map[startSquare];
         occupiedSquares[pieceIndex] = targetSquare;
         map[targetSquare] = pieceIndex;
         map[startSquare] = -1;
+    }
+
+    /// <summary>
+    /// Update the locations in memory to undo the given move
+    /// </summary>
+    public void UnmovePiece(Move move)
+    {
+        int startSquare = move.StartSquare;
+        int targetSquare = move.TargetSquare;
+        int pieceIndex = map[targetSquare];
+        occupiedSquares[pieceIndex] = startSquare;
+        map[startSquare] = pieceIndex;
+        map[targetSquare] = -1;
     }
 
     public int this[int index] => occupiedSquares[index];

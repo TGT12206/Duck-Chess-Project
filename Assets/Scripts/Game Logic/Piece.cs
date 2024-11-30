@@ -60,8 +60,8 @@ namespace DuckChess
         /// </summary>
         public const int NoColor = 0;
 
-        const int typeMask =  0b00001111;
-        const int colorMask = 0b00110000;
+        const int typeMask =  0b001111;
+        const int colorMask = 0b110000;
 
         /// <summary>
         /// Whether or not a given piece is the given color

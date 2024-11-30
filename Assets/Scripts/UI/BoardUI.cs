@@ -146,6 +146,77 @@ public class BoardUI : MonoBehaviour
         Pieces[newSquare].transform.position = newPosition;
     }
 
+    public void UnmakeMove(Move move)
+    {
+        bool isWhite = board.turnColor == Piece.White;
+        int currentSquare = move.TargetSquare;
+        int originalSquare = move.StartSquare;
+
+        // En passant
+        if (move.MoveFlag == Move.Flag.EnPassantCapture)
+        {
+            int enemyPawnSpot = isWhite ? -1 : 1;
+            enemyPawnSpot += currentSquare;
+
+            Pieces[enemyPawnSpot] = isWhite ? Instantiate(PawnB) : Instantiate(PawnW);
+            Pieces[enemyPawnSpot].transform.position = SquareToWorldCoordinates(enemyPawnSpot, PLACE_LAYER);
+        }
+
+        // Castling
+        if (move.MoveFlag == Move.Flag.Castling) {
+            int kingSpot = isWhite ? board.WhiteKing : board.BlackKing;
+            bool wasKingSide = Board.GetColumnOf(kingSpot) == 6;
+            int rookSpot = wasKingSide ? -1 : 1;
+            int originalRookSpot = wasKingSide ? 1 : -2;
+            Pieces[originalRookSpot] = Pieces[rookSpot];
+            Pieces[originalRookSpot].transform.position = SquareToWorldCoordinates(originalRookSpot, PLACE_LAYER);
+            Pieces[rookSpot] = null;
+        }
+
+        // Update the squares
+        // Not the first duck move
+        if (board.plyCount != 2)
+        {
+            Pieces[originalSquare] = Pieces[currentSquare];
+            Pieces[originalSquare].transform.position = SquareToWorldCoordinates(originalSquare, PLACE_LAYER);
+        }
+        else
+        {
+            Destroy(Pieces[currentSquare]);
+            Pieces[currentSquare] = null;
+        }
+        GameObject capturedPiecePrefab = null;
+        switch (Piece.PieceType(move.CapturedPiece))
+        {
+            case Piece.Pawn:
+                capturedPiecePrefab = isWhite ? PawnB : PawnW;
+                break;
+            case Piece.Knight:
+                capturedPiecePrefab = isWhite ? KnightB : KnightW;
+                break;
+            case Piece.Bishop:
+                capturedPiecePrefab = isWhite ? BishopB : BishopW;
+                break;
+            case Piece.Rook:
+                capturedPiecePrefab = isWhite ? RookB : RookW;
+                break;
+            case Piece.Queen:
+                capturedPiecePrefab = isWhite ? QueenB : QueenW;
+                break;
+            case Piece.King:
+                capturedPiecePrefab = isWhite ? KingB : KingW;
+                break;
+        }
+        if (capturedPiecePrefab != null)
+        {
+            Pieces[currentSquare] = Instantiate(capturedPiecePrefab);
+            Pieces[currentSquare].transform.position = SquareToWorldCoordinates(currentSquare, PLACE_LAYER);
+        } else
+        {
+            Pieces[currentSquare] = null;
+        }
+    }
+
     public void SnapPieceBack()
     {
         Pieces[selectedSquare].transform.position = SquareToWorldCoordinates(selectedSquare, PLACE_LAYER);

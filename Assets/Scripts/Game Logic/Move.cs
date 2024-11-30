@@ -59,9 +59,10 @@ namespace DuckChess
 
         readonly int moveValue;
 
-        const int startSquareMask =  0b0000000000111111;
-        const int targetSquareMask = 0b0000111111000000;
-        const int flagMask =         0b1111000000000000;
+        const int startSquareMask =   0b0000000000000000111111;
+        const int targetSquareMask =  0b0000000000111111000000;
+        const int flagMask =          0b0000001111000000000000;
+        const int capturedPieceMask = 0b1111110000000000000000;
 
         //public Move(int moveValue)
         //{
@@ -91,6 +92,19 @@ namespace DuckChess
         }
 
         /// <summary>
+        /// Use to add a captured piece to a move. Note that this must be a normal capture,
+        /// not en passant.
+        /// Creates a copy of the given move, but with the data of the captured piece.
+        /// </summary>
+        /// <param name="move">The move to add the captured piece to.
+        /// This move must not have a record of a captured piece already</param>
+        /// <param name="capturedPiece">The piece that was captured by this move</param>
+        public Move(Move move, int capturedPiece)
+        {
+            moveValue = move.moveValue | capturedPiece << 16;
+        }
+
+        /// <summary>
         /// The starting square of this move
         /// </summary>
         public int StartSquare
@@ -109,6 +123,25 @@ namespace DuckChess
             get
             {
                 return (moveValue & targetSquareMask) >> 6;
+            }
+        }
+
+        /// <summary>
+        /// The piece that was captured by this move
+        /// </summary>
+        public int CapturedPiece
+        {
+            get
+            {
+                return (moveValue & capturedPieceMask) >> 16;
+            }
+        }
+
+        public bool IsCapture
+        {
+            get
+            {
+                return Piece.PieceType(CapturedPiece) != Piece.None || MoveFlag == Flag.EnPassantCapture;
             }
         }
 

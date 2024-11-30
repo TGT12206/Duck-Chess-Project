@@ -865,8 +865,21 @@ namespace DuckChess
                     Piece.PieceType(board[kingSpot + 2]) == Piece.None
                 )
                 {
-                    Move move = new Move(kingSpot, kingSpot + 2, Move.Flag.Castling);
-                    generatedMoves.Add(move);
+                    if (Piece.PieceType(board[kingSpot + 3]) == Piece.Rook)
+                    {
+                        Move move = new Move(kingSpot, kingSpot + 2, Move.Flag.Castling);
+                        generatedMoves.Add(move);
+                    } else
+                    {
+                        // The rook was captured, so castling isn't actually valid
+                        if (isWhite)
+                        {
+                            board.CastleKingSideW = false;
+                        } else
+                        {
+                            board.CastleKingSideB = false;
+                        }
+                    }
                 }
             }
             if (queenSideCastle)
@@ -877,8 +890,23 @@ namespace DuckChess
                     Piece.PieceType(board[kingSpot - 3]) == Piece.None
                 )
                 {
-                    Move move = new Move(kingSpot, kingSpot - 2, Move.Flag.Castling);
-                    generatedMoves.Add(move);
+                    if (Piece.PieceType(board[kingSpot - 4]) == Piece.Rook)
+                    {
+                        Move move = new Move(kingSpot, kingSpot - 2, Move.Flag.Castling);
+                        generatedMoves.Add(move);
+                    }
+                    else
+                    {
+                        // The rook was captured, so castling isn't actually valid
+                        if (isWhite)
+                        {
+                            board.CastleQueenSideW = false;
+                        }
+                        else
+                        {
+                            board.CastleQueenSideB = false;
+                        }
+                    }
                 }
             }
         }

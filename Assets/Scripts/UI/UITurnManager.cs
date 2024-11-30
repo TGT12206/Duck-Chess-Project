@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DuckChess;
 using UnityEngine;
 
@@ -8,6 +9,8 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     public RealTimePlayer PlayerToMove;
     public BoardUI boardUI;
     public Board board;
+    public Stack<Move> moveHistory;
+    public Stack<int> significantMoveCounters;
 
     public bool IsGameOver()
     {
@@ -17,7 +20,17 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     public void MakeMove(Move move)
     {
         boardUI.MakeMove(move);
-        board.MakeMove(move);
+        board.MakeMove(ref move);
+        significantMoveCounters.Push(board.numPlySinceLastEvent);
+        moveHistory.Push(move);
+    }
+    public void UnmakeMove()
+    {
+        Move move = moveHistory.Pop();
+        int counter = significantMoveCounters.Pop();
+        PlayerToMove.UnmakeMove();
+        boardUI.UnmakeMove(move);
+        board.UnmakeMove(move, counter);
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -25,6 +38,8 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     {
         // Instantiating fields
         board = new Board();
+        moveHistory = new Stack<Move>();
+        significantMoveCounters = new Stack<int>();
 
         // Load the start position
         board.LoadStartPosition();
@@ -52,6 +67,10 @@ public class UITurnManager : MonoBehaviour, ITurnManager
         if (Input.GetKeyDown(KeyCode.Q))
         {
             Debug.Log(board.ToString());
+        }
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            UnmakeMove();
         }
     }
 }
