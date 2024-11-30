@@ -388,14 +388,14 @@ namespace DuckChess
 
         private void MoveKing(Move move, bool isWhite)
         {
-            int kingSpot = isWhite ? WhiteKing : BlackKing;
-            kingSpot = move.TargetSquare;
             if (isWhite)
             {
+                WhiteKing = move.TargetSquare;
                 CastleQueenSideW = false;
                 CastleKingSideW = false;
             } else
             {
+                BlackKing = move.TargetSquare;
                 CastleQueenSideB = false;
                 CastleKingSideB = false;
             }
@@ -579,40 +579,40 @@ namespace DuckChess
                 {
                     int piece = Squares[row + j];
                     int pieceType = Piece.PieceType(piece);
-                    char pieceTypeChar = '-';
+                    String pieceTypeChar = "  -";
                     switch (pieceType)
                     {
                         case Piece.Pawn:
-                            pieceTypeChar = 'P';
+                            pieceTypeChar = "P";
                             break;
                         case Piece.Knight:
-                            pieceTypeChar = 'N';
+                            pieceTypeChar = "N";
                             break;
                         case Piece.Bishop:
-                            pieceTypeChar = 'B';
+                            pieceTypeChar = "B";
                             break;
                         case Piece.Rook:
-                            pieceTypeChar = 'R';
+                            pieceTypeChar = "R";
                             break;
                         case Piece.Queen:
-                            pieceTypeChar = 'Q';
+                            pieceTypeChar = "Q";
                             break;
                         case Piece.King:
-                            pieceTypeChar = 'K';
+                            pieceTypeChar = "K";
                             break;
                         case Piece.Duck:
-                            pieceTypeChar = 'D';
+                            pieceTypeChar = "D";
                             break;
                     }
                     int color = Piece.Color(piece);
-                    char colorChar = ' ';
+                    string colorChar = " ";
                     switch(color)
                     {
                         case Piece.Black:
-                            colorChar = 'B';
+                            colorChar = "B";
                             break;
                         case Piece.White:
-                            colorChar = 'W';
+                            colorChar = "W";
                             break;
                     }
                     boardString += colorChar + pieceTypeChar + " ";

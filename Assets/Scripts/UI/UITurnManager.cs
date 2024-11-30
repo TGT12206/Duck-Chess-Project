@@ -11,7 +11,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
 
     public bool IsGameOver()
     {
-        throw new System.NotImplementedException();
+        return board.isGameOver;
     }
 
     public void MakeMove(Move move)
