@@ -17,6 +17,13 @@ namespace DuckChess
         public int[] Squares;
 
         /// <summary>
+        /// Used by variables that represent a space on the board, but
+        /// sometimes don't exist on a given turn.
+        /// </summary>
+        public const int NOT_ON_BOARD = -2;
+
+        #region Turn Information
+        /// <summary>
         /// The color of the player whose turn it is to move.
         /// </summary>
         public int turnColor;
@@ -25,34 +32,101 @@ namespace DuckChess
         /// Whether or not it is a duck turn.
         /// </summary>
         public bool duckTurn;
+        #endregion
 
         /// <summary>
         /// The square behind a pawn that just moved two spaces forward.
         /// </summary>
         public int enPassantSquare;
 
+        #region Castling Info
         /// <summary>
-        /// Used by variables that represent a space on the board, but
-        /// sometimes don't exist on a given turn.
+        /// Whether kingside castling as white is still possible
         /// </summary>
-        public const int NOT_ON_BOARD = -2;
-
         public bool CastleKingSideW;
+
+        /// <summary>
+        /// Whether queenside castling as white is still possible
+        /// </summary>
         public bool CastleQueenSideW;
+
+        /// <summary>
+        /// Whether kingside castling as black is still possible
+        /// </summary>
         public bool CastleKingSideB;
+
+        /// <summary>
+        /// Whether queenside castling as black is still possible
+        /// </summary>
         public bool CastleQueenSideB;
+        #endregion
 
+        #region Game End Info
+        /// <summary>
+        /// The color of the winning player.
+        /// If the game is a draw or has not ended, it is
+        /// equal to Piece.NoColor
+        /// </summary>
         public int winnerColor;
-        public bool isGameOver;
-        public int numPlySinceLastEvent;
 
-        private List<Move> legalPawnMoves;
-        private List<Move> legalKnightMoves;
-        private List<Move> legalBishopMoves;
-        private List<Move> legalRookMoves;
-        private List<Move> legalQueenMoves;
-        private List<Move> legalKingMoves;
-        private List<Move> legalDuckMoves;
+        /// <summary>
+        /// Whether the game has ended
+        /// </summary>
+        public bool isGameOver;
+
+        /// <summary>
+        /// The number of moves since the last significant action.
+        /// <br></br>
+        /// Used for the 50 move automatic draw.
+        /// <br></br>
+        /// The draw happens when this value reaches 200.
+        /// </summary>
+        public int numPlySinceLastEvent;
+        #endregion
+
+        #region Lists of Legal Moves
+        /// <summary>
+        /// A list containing all of the legal moves that can be
+        /// made by a pawn in this position and turn.
+        /// </summary>
+        public List<Move> legalPawnMoves;
+
+        /// <summary>
+        /// A list containing all of the legal moves that can be
+        /// made by a knight in this position and turn.
+        /// </summary>
+        public List<Move> legalKnightMoves;
+
+        /// <summary>
+        /// A list containing all of the legal moves that can be
+        /// made by a bishop in this position and turn.
+        /// </summary>
+        public List<Move> legalBishopMoves;
+
+        /// <summary>
+        /// A list containing all of the legal moves that can be
+        /// made by a rook in this position and turn.
+        /// </summary>
+        public List<Move> legalRookMoves;
+
+        /// <summary>
+        /// A list containing all of the legal moves that can be
+        /// made by a queen in this position and turn.
+        /// </summary>
+        public List<Move> legalQueenMoves;
+
+        /// <summary>
+        /// A list containing all of the legal moves that can be
+        /// made by a king in this position and turn.
+        /// </summary>
+        public List<Move> legalKingMoves;
+
+        /// <summary>
+        /// A list containing all of the legal moves that can be
+        /// made by a duck in this position and turn.
+        /// </summary>
+        public List<Move> legalDuckMoves;
+        #endregion
 
         #region Piece Locations
         // Information about (mostly location and number) each piece type
@@ -105,7 +179,7 @@ namespace DuckChess
         /// </summary>
         public PieceList WhiteRooks;
         /// <summary>
-        /// The location and number of the duck
+        /// The location of the duck
         /// </summary>
         public int Duck;
         #endregion
@@ -238,6 +312,11 @@ namespace DuckChess
             Duck = NOT_ON_BOARD;
             GenerateNormalMoves();
         }
+
+        /// <summary>
+        /// Make the given move on the board.
+        /// </summary>
+        /// <param name="move">The move to make</param>
         public void MakeMove(Move move)
         {
             int startSquare = move.StartSquare;
@@ -297,11 +376,13 @@ namespace DuckChess
                 winnerColor = Piece.NoColor;
             }
         }
+
         private void SwapSquares(Move move)
         {
             Squares[move.TargetSquare] = Squares[move.StartSquare];
             Squares[move.StartSquare] = Piece.None;
         }
+
         private void MovePawn(Move move, bool isWhite)
         {
             PieceList friendlyPawns = isWhite ? WhitePawns : BlackPawns;
@@ -512,6 +593,10 @@ namespace DuckChess
             LegalMoveGenerator.GenerateDuckMoves(ref legalDuckMoves, this);
         }
 
+        /// <summary>
+        /// Given a move, check whether or not it is legal in this position.
+        /// </summary>
+        /// <param name="move">The move to check</param>
         public bool IsMoveLegal(ref Move move)
         {
             int pieceType;
@@ -557,11 +642,19 @@ namespace DuckChess
             return false;
         }
 
+        /// <summary>
+        /// Given the index of a square,
+        /// returns the row of the square (from 0-7)
+        /// </summary>
         public static int GetRowOf(int square)
         {
             return square / 8;
         }
 
+        /// <summary>
+        /// Given the index of a square,
+        /// returns the column of the square (from 0-7)
+        /// </summary>
         public static int GetColumnOf(int square)
         {
             return square % 8;
@@ -569,6 +662,9 @@ namespace DuckChess
 
         public int this[int index] => Squares[index];
 
+        /// <summary>
+        /// Returns this board as a formatted string.
+        /// </summary>
         public override string ToString()
         {
             string boardString = "";
