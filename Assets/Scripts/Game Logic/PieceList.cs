@@ -38,6 +38,9 @@ public class PieceList
         numPieces = 0;
     }
 
+    /// <summary>
+    /// The number of this piece type on the board
+    /// </summary>
     public int Count
     {
         get
@@ -46,6 +49,9 @@ public class PieceList
         }
     }
 
+    /// <summary>
+    /// Remember that a piece of this piece type is at the given square
+    /// </summary>
     public void AddPieceAtSquare(int square)
     {
         occupiedSquares[numPieces] = square;
@@ -53,9 +59,11 @@ public class PieceList
         numPieces++;
     }
 
+    /// <summary>
+    /// Remove the piece of this piece type from memory at the given square
+    /// </summary>
     public void RemovePieceAtSquare(int square)
     {
-        Debug.Log("PieceList Before Remove\n" + this.ToString());
         int pieceIndex = map[square];
         for (int i = pieceIndex; i < numPieces - 1; i++)
         {
@@ -65,46 +73,40 @@ public class PieceList
         occupiedSquares[numPieces - 1] = -1;
         map[square] = -1;
         numPieces--;
-        Debug.Log("PieceList After Remove\n" + this.ToString());
     }
 
+    /// <summary>
+    /// Update the locations in memory to reflect the given move
+    /// </summary>
     public void MovePiece(Move move)
     {
-        Debug.Log("Attempting Move: " + move.ToString());
-        Debug.Log("PieceList Before move\n" + this.ToString());
-
         int startSquare = move.StartSquare;
         int targetSquare = move.TargetSquare;
-
-        if (startSquare < 0 || startSquare >= map.Length)
-        {
-            Debug.LogError($"Start square index out of range: {startSquare}. Map length: {map.Length}");
-            return;
-        }
-
-        if (targetSquare < 0 || targetSquare >= map.Length)
-        {
-            Debug.LogError($"Target square index out of range: {targetSquare}. Map length: {map.Length}");
-            return;
-        }
-
-        int pieceIndex = map[startSquare]; // get the index of this element in the occupiedSquares array
-        if (pieceIndex < 0 || pieceIndex >= occupiedSquares.Length)
-        {
-            Debug.LogError($"Piece index out of range: {pieceIndex}. OccupiedSquares length: {occupiedSquares.Length}");
-            return;
-        }
-
+        int pieceIndex = map[startSquare];
         occupiedSquares[pieceIndex] = targetSquare;
         map[targetSquare] = pieceIndex;
         map[startSquare] = -1;
+    }
 
-        Debug.Log("PieceList After move\n" + this.ToString());
+    /// <summary>
+    /// Update the locations in memory to undo the given move
+    /// </summary>
+    public void UnmovePiece(Move move)
+    {
+        int startSquare = move.StartSquare;
+        int targetSquare = move.TargetSquare;
+        int pieceIndex = map[targetSquare];
+        occupiedSquares[pieceIndex] = startSquare;
+        map[startSquare] = pieceIndex;
+        map[targetSquare] = -1;
     }
 
 
     public int this[int index] => occupiedSquares[index];
 
+    /// <summary>
+    /// Returns this Piece List as a formatted string
+    /// </summary>
     public override string ToString()
     {
         string output = "Occupied Squares:\n";

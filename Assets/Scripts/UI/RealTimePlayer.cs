@@ -19,6 +19,11 @@ public abstract class RealTimePlayer : Player
     }
 
     /// <summary>
+    /// Undo a move and reset the variables you used.
+    /// </summary>
+    public abstract void UnmakeMove();
+
+    /// <summary>
     /// Called every frame of this player's turn,
     /// handling what the player does during their turn.
     /// </summary>

@@ -10,20 +10,12 @@ namespace DuckChess
     /// </summary>
     public static class LegalMoveGenerator
     {
-        public static void GenerateAllMoves(ref List<Move> generatedMoves, Board board)
-        {
-            if (board.duckTurn)
-            {
-                GenerateDuckMoves(ref generatedMoves, board);
-            }
-        }
-
         /// <summary>
         /// Generate all the pawn moves for the color of the board
-        /// and places them into the provided list.
+        /// and adds them into the provided list.
         /// </summary>
-        /// <param name="generatedMoves"></param>
-        /// <param name="board"></param>
+        /// <param name="generatedMoves">The list to add the generated moves into</param>
+        /// <param name="board">The board to use while checking for legal moves</param>
         public static void GeneratePawnMoves(ref List<Move> generatedMoves, Board board)
         {
             int pawnSpot;
@@ -262,10 +254,10 @@ namespace DuckChess
 
         /// <summary>
         /// Generate all the knight moves for the color of the board
-        /// and places them into the provided list.
+        /// and adds them into the provided list.
         /// </summary>
-        /// <param name="generatedMoves"></param>
-        /// <param name="board"></param>
+        /// <param name="generatedMoves">The list to add the generated moves into</param>
+        /// <param name="board">The board to use while checking for legal moves</param>
         public static void GenerateKnightMoves(ref List<Move> generatedMoves, Board board)
         {
             bool isWhite = board.turnColor == Piece.White;
@@ -397,10 +389,10 @@ namespace DuckChess
 
         /// <summary>
         /// Generate all the bishop moves for the color of the board
-        /// and places them into the provided list.
+        /// and adds them into the provided list.
         /// </summary>
-        /// <param name="generatedMoves"></param>
-        /// <param name="board"></param>
+        /// <param name="generatedMoves">The list to add the generated moves into</param>
+        /// <param name="board">The board to use while checking for legal moves</param>
         public static void GenerateBishopMoves(ref List<Move> generatedMoves, Board board)
         {
             bool isWhite = board.turnColor == Piece.White;
@@ -576,10 +568,10 @@ namespace DuckChess
 
         /// <summary>
         /// Generate all the rook moves for the color of the board
-        /// and places them into the provided list.
+        /// and adds them into the provided list.
         /// </summary>
-        /// <param name="generatedMoves"></param>
-        /// <param name="board"></param>
+        /// <param name="generatedMoves">The list to add the generated moves into</param>
+        /// <param name="board">The board to use while checking for legal moves</param>
         public static void GenerateRookMoves(ref List<Move> generatedMoves, Board board)
         {
             bool isWhite = board.turnColor == Piece.White;
@@ -751,10 +743,10 @@ namespace DuckChess
 
         /// <summary>
         /// Generate all the queen moves for the color of the board
-        /// and places them into the provided list.
+        /// and adds them into the provided list.
         /// </summary>
-        /// <param name="generatedMoves"></param>
-        /// <param name="board"></param>
+        /// <param name="generatedMoves">The list to add the generated moves into</param>
+        /// <param name="board">The board to use while checking for legal moves</param>
         public static void GenerateQueenMoves(ref List<Move> generatedMoves, Board board)
         {
             bool isWhite = board.turnColor == Piece.White;
@@ -770,10 +762,10 @@ namespace DuckChess
 
         /// <summary>
         /// Generate all the king moves for the color of the board
-        /// and places them into the provided list.
+        /// and adds them into the provided list.
         /// </summary>
-        /// <param name="generatedMoves"></param>
-        /// <param name="board"></param>
+        /// <param name="generatedMoves">The list to add the generated moves into</param>
+        /// <param name="board">The board to use while checking for legal moves</param>
         public static void GenerateKingMoves(ref List<Move> generatedMoves, Board board)
         {
             bool isWhite = board.turnColor == Piece.White;
@@ -873,8 +865,21 @@ namespace DuckChess
                     Piece.PieceType(board[kingSpot + 2]) == Piece.None
                 )
                 {
-                    Move move = new Move(kingSpot, kingSpot + 2, Move.Flag.Castling);
-                    generatedMoves.Add(move);
+                    if (Piece.PieceType(board[kingSpot + 3]) == Piece.Rook)
+                    {
+                        Move move = new Move(kingSpot, kingSpot + 2, Move.Flag.Castling);
+                        generatedMoves.Add(move);
+                    } else
+                    {
+                        // The rook was captured, so castling isn't actually valid
+                        if (isWhite)
+                        {
+                            board.CastleKingSideW = false;
+                        } else
+                        {
+                            board.CastleKingSideB = false;
+                        }
+                    }
                 }
             }
             if (queenSideCastle)
@@ -885,17 +890,33 @@ namespace DuckChess
                     Piece.PieceType(board[kingSpot - 3]) == Piece.None
                 )
                 {
-                    Move move = new Move(kingSpot, kingSpot - 2, Move.Flag.Castling);
-                    generatedMoves.Add(move);
+                    if (Piece.PieceType(board[kingSpot - 4]) == Piece.Rook)
+                    {
+                        Move move = new Move(kingSpot, kingSpot - 2, Move.Flag.Castling);
+                        generatedMoves.Add(move);
+                    }
+                    else
+                    {
+                        // The rook was captured, so castling isn't actually valid
+                        if (isWhite)
+                        {
+                            board.CastleQueenSideW = false;
+                        }
+                        else
+                        {
+                            board.CastleQueenSideB = false;
+                        }
+                    }
                 }
             }
         }
 
         /// <summary>
-        /// Generate all the duck moves and places them into the provided list.
+        /// Generate all the duck moves
+        /// and adds them into the provided list.
         /// </summary>
-        /// <param name="generatedMoves"></param>
-        /// <param name="board"></param>
+        /// <param name="generatedMoves">The list to add the generated moves into</param>
+        /// <param name="board">The board to use while checking for legal moves</param>
         public static void GenerateDuckMoves(ref List<Move> generatedMoves, Board board)
         {
             int firstDuckMoveFlag = Move.Flag.None;
