@@ -1,27 +1,23 @@
+using System;
+using System.Collections.Generic;
+
 namespace DuckChess
 {
-    using System;
-    using System.Collections.Generic;
-    using Unity.VisualScripting;
-    using UnityEditor.Experimental.GraphView;
-    using UnityEngine;
-
     public class AlphaBetaAIPlayer : RealTimePlayer
     {
         public override string Type { get { return "AlphaBetaAIPlayer"; } }
         public override int Color { get; set; }
 
-        private const int numActionsPerFrame = 10000;
+        private const int NumActionsPerFrame = 10000;
 
         private Board board;
-
         private int maxDepth;
-        private Board searchBoard;
         private Move bestMove;
         private bool startSearch;
         private List<Move> legalMoves;
         private Stack<AlphaBetaNode> alphaBetaNodes;
-        public Stack<int> significantMoveCounters;
+        private Stack<int> significantMoveCounters;
+        private Board searchBoard;
         private int currentDepth;
 
         public AlphaBetaAIPlayer(Board board, int color, int maxDepth)
@@ -41,44 +37,49 @@ namespace DuckChess
         {
             if (startSearch)
             {
-                bestMove = new Move();
-                legalMoves = board.legalMoves;
-                searchBoard = board.Clone();
-                alphaBetaNodes = new Stack<AlphaBetaNode>();
-                alphaBetaNodes.Push(new AlphaBetaNode(int.MinValue, int.MaxValue, true, new Move()));
-                significantMoveCounters = new Stack<int>();
-                currentDepth = 1;
-                startSearch = false;
+                InitializeSearch();
             }
-            for (int i = 0; i < numActionsPerFrame; i++)
+
+            for (int i = 0; i < NumActionsPerFrame; i++)
             {
+                if (alphaBetaNodes.Count == 0)
+                {
+                    // Search is complete
+                    ChooseMove(bestMove);
+                    startSearch = true;
+                    return;
+                }
+
                 AlphaBetaNode currentNode = alphaBetaNodes.Peek();
+
                 if (currentDepth < maxDepth && currentNode.indexLeftOffAt < legalMoves.Count)
                 {
                     if (currentNode.ShouldPrune())
                     {
-                        // If we should prune this subtree, then close and skip it
                         CloseNode();
-                    } else
+                    }
+                    else
                     {
-                        // Expand the next node
                         ExpandNode();
                     }
-                } else
+                }
+                else
                 {
-                    if (currentDepth == 1)
-                    {
-                        // If we're back at the top and there are no more legal moves
-                        ChooseMove(bestMove);
-                        startSearch = true;
-                        return;
-                    } else
-                    {
-                        // No more moves in this subtree. Go up a layer
-                        CloseNode();
-                    }
+                    CloseNode();
                 }
             }
+        }
+
+        private void InitializeSearch()
+        {
+            bestMove = new Move();
+            legalMoves = board.legalMoves;
+            searchBoard = board.Clone();
+            alphaBetaNodes = new Stack<AlphaBetaNode>();
+            significantMoveCounters = new Stack<int>();
+            alphaBetaNodes.Push(new AlphaBetaNode(int.MinValue, int.MaxValue, true, new Move()));
+            currentDepth = 1;
+            startSearch = false;
         }
 
         private void ExpandNode()
@@ -87,157 +88,81 @@ namespace DuckChess
             AlphaBetaNode parent = alphaBetaNodes.Peek();
             int indexOfNextMove = parent.indexLeftOffAt;
             Move nextMove = legalMoves[indexOfNextMove];
+
             bool isMaximizing = searchBoard.duckTurn ? !parent.isMaximizing : parent.isMaximizing;
-            AlphaBetaNode node = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, nextMove);
+            AlphaBetaNode newNode = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, nextMove);
+
             searchBoard.MakeMove(ref nextMove);
             legalMoves = searchBoard.legalMoves;
-            significantMoveCounters.Push(board.numPlySinceLastEvent);
-            alphaBetaNodes.Push(node);
+            significantMoveCounters.Push(searchBoard.numPlySinceLastEvent);
+            alphaBetaNodes.Push(newNode);
         }
 
         private void CloseNode()
         {
-            currentDepth--;
             AlphaBetaNode node = alphaBetaNodes.Pop();
+            currentDepth--;
+
+            if (alphaBetaNodes.Count == 0)
+            {
+                // If we've returned to the root, end the search
+                return;
+            }
+
             AlphaBetaNode parent = alphaBetaNodes.Peek();
-            Move moveFromParentToNode = node.moveFromParent;
-            searchBoard.UnmakeMove(moveFromParentToNode, significantMoveCounters.Pop());
+            searchBoard.UnmakeMove(node.moveFromParent, significantMoveCounters.Pop());
             legalMoves = searchBoard.legalMoves;
+
             if (currentDepth == maxDepth || searchBoard.isGameOver)
             {
                 node.value = EvaluateBoard(searchBoard);
             }
-            if (parent.JudgeNewValue(node.value, moveFromParentToNode) &&
-                currentDepth == 1
-            )
+
+            if (parent.JudgeNewValue(node.value, node.moveFromParent) && currentDepth == 1)
             {
-                // If we have come back to the base node and
-                // this new move is better than the previous best one
-                bestMove = moveFromParentToNode;
+                bestMove = node.moveFromParent;
             }
+
             parent.indexLeftOffAt++;
         }
-
-        //private Move GetBestMove()
-        //{
-        //    int alpha = int.MinValue;
-        //    int beta = int.MaxValue;
-        //    Move bestMove = Move.InvalidMove;
-        //    int maxEval = int.MinValue;
-
-        //    List<Move> legalMoves = GetAllLegalMoves(board);
-
-        //    foreach (Move move in legalMoves)
-        //    {
-        //        Debug.Log("Evaluating Move: " + move.ToString());
-
-        //        Board newBoard = board.Clone();
-        //        newBoard.MakeMove(move);
-        //        int eval = AlphaBeta(newBoard, maxDepth - 1, alpha, beta, false);
-
-        //        if (eval > maxEval)
-        //        {
-        //            maxEval = eval;
-        //            bestMove = move;
-        //        }
-        //        alpha = Math.Max(alpha, eval);
-        //    }
-
-        //    Debug.Log("AI Selected Move: " + bestMove.ToString());
-        //    return bestMove;
-        //}
-
-
-        //private int AlphaBeta(Board board, int alpha, int beta, bool maximizingPlayer)
-        //{
-        //    if (maximizingPlayer)
-        //    {
-        //        int maxEval = int.MinValue;
-        //        foreach (Move move in legalMoves)
-        //        {
-        //            Board newBoard = board.Clone();
-        //            newBoard.MakeMove(move);
-        //            int eval = AlphaBeta(newBoard, depth - 1, alpha, beta, false);
-        //            maxEval = Math.Max(maxEval, eval);
-        //            alpha = Math.Max(alpha, eval);
-        //            if (beta <= alpha)
-        //                break;
-        //        }
-        //        return maxEval;
-        //    }
-        //    else
-        //    {
-        //        int minEval = int.MaxValue;
-        //        foreach (Move move in legalMoves)
-        //        {
-        //            Board newBoard = board.Clone();
-        //            newBoard.MakeMove(move);
-        //            int eval = AlphaBeta(newBoard, depth - 1, alpha, beta, true);
-        //            minEval = Math.Min(minEval, eval);
-        //            beta = Math.Min(beta, eval);
-        //            if (beta <= alpha)
-        //                break;
-        //        }
-        //        return minEval;
-        //    }
-        //}
 
         private int EvaluateBoard(Board board)
         {
             if (board.isGameOver)
             {
                 bool isWhite = Color == Piece.White;
-                switch (board.winnerColor)
+                return board.winnerColor switch
                 {
-                    case Piece.NoColor:
-                        return 0;
-                    case Piece.Black:
-                        return isWhite ? int.MinValue : int.MaxValue;
-                    case Piece.White:
-                        return isWhite ? int.MaxValue : int.MinValue;
-                }
+                    Piece.NoColor => 0,
+                    Piece.White => isWhite ? int.MaxValue : int.MinValue,
+                    Piece.Black => isWhite ? int.MinValue : int.MaxValue,
+                    _ => 0
+                };
             }
-            int evaluation = 0;
-            const int pawnValue = 100;
-            const int knightValue = 320;
-            const int bishopValue = 330;
-            const int rookValue = 500;
-            const int queenValue = 900;
-            const int kingValue = 100;
 
-            PieceList allPieces = board.AllPieces;
+            // Material evaluation
+            int evaluation = 0;
+            const int pawnValue = 100, knightValue = 320, bishopValue = 330, rookValue = 500, queenValue = 900, kingValue = 10000;
+
+              PieceList allPieces = board.AllPieces;
 
             for (int i = 0; i < allPieces.Count; i++)
             {
-                int pieceLocation = allPieces[i];
+               
+                 int pieceLocation = allPieces[i];
                 int piece = board[pieceLocation];
                 int pieceType = Piece.PieceType(piece);
                 int pieceColor = Piece.Color(piece);
-                int pieceValue = 0;
-
-                switch (pieceType)
+                int pieceValue = pieceType switch
                 {
-                    case Piece.Pawn:
-                        pieceValue = pawnValue;
-                        break;
-                    case Piece.Knight:
-                        pieceValue = knightValue;
-                        break;
-                    case Piece.Bishop:
-                        pieceValue = bishopValue;
-                        break;
-                    case Piece.Rook:
-                        pieceValue = rookValue;
-                        break;
-                    case Piece.Queen:
-                        pieceValue = queenValue;
-                        break;
-                    case Piece.King:
-                        pieceValue = kingValue;
-                        break;
-                    default:
-                        continue;
-                }
+                    Piece.Pawn => pawnValue,
+                    Piece.Knight => knightValue,
+                    Piece.Bishop => bishopValue,
+                    Piece.Rook => rookValue,
+                    Piece.Queen => queenValue,
+                    Piece.King => kingValue,
+                    _ => 0
+                };
 
                 if (pieceColor == this.Color)
                 {
@@ -257,4 +182,48 @@ namespace DuckChess
             throw new NotImplementedException();
         }
     }
+
+    // public class AlphaBetaNode
+    // {
+    //     public int alpha;
+    //     public int beta;
+    //     public bool isMaximizing;
+    //     public int indexLeftOffAt;
+    //     public Move moveFromParent;
+        // public int value;
+
+    //     public AlphaBetaNode(int alpha, int beta, bool isMaximizing, Move moveFromParent)
+    //     {
+    //         this.alpha = alpha;
+    //         this.beta = beta;
+    //         this.isMaximizing = isMaximizing;
+    //         this.moveFromParent = moveFromParent;
+    //         this.indexLeftOffAt = 0;
+    //         this.value = isMaximizing ? int.MinValue : int.MaxValue;
+    //     }
+
+    //     public bool ShouldPrune()
+    //     {
+    //         return alpha >= beta;
+    //     }
+
+    //     public bool JudgeNewValue(int newValue, Move move)
+    //     {
+    //         if (isMaximizing && newValue > value)
+    //         {
+    //             value = newValue;
+    //             moveFromParent = move;
+    //             alpha = Math.Max(alpha, value);
+    //             return true;
+    //         }
+    //         else if (!isMaximizing && newValue < value)
+    //         {
+    //             value = newValue;
+    //             moveFromParent = move;
+    //             beta = Math.Min(beta, value);
+    //             return true;
+    //         }
+    //         return false;
+    //     }
+    // }
 }
