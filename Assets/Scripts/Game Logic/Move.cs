@@ -139,5 +139,31 @@ namespace DuckChess
         //        return BoardRepresentation.SquareNameFromIndex(StartSquare) + "-" + BoardRepresentation.SquareNameFromIndex(TargetSquare);
         //    }
         //}
+
+        public static bool operator ==(Move a, Move b)
+        {
+            return a.moveValue == b.moveValue;
+        }
+
+        public static bool operator !=(Move a, Move b)
+        {
+            return !(a == b);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Move otherMove)
+            {
+                return this == otherMove;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return moveValue.GetHashCode();
+        }
+
+
     }
 }

@@ -103,6 +103,8 @@ namespace DuckChess
         private int EvaluateBoard(Board board)
         {
             int evaluation = 0;
+
+            // Piece values
             const int pawnValue = 100;
             const int knightValue = 320;
             const int bishopValue = 330;
@@ -110,49 +112,142 @@ namespace DuckChess
             const int queenValue = 900;
             const int kingValue = 20000;
 
+            // Piece-square tables
+            int[] pawnTable = new int[64]
+            {
+        0,  5,  5, -10, -10,  5,  5,  0,
+        0,  10, -5,  0,  0, -5, 10,  0,
+        0,   0,  0, 20, 20,  0,  0,  0,
+        5,   5, 10, 25, 25, 10,  5,  5,
+        10, 10, 20, 30, 30, 20, 10, 10,
+        20, 20, 30, 35, 35, 30, 20, 20,
+        50, 50, 50, 50, 50, 50, 50, 50,
+        0,   0,   0,   0,  0,   0,   0,   0
+            };
+
+            int[] knightTable = new int[64]
+            {
+        -50, -40, -30, -30, -30, -30, -40, -50,
+        -40, -20,   0,   5,   5,   0, -20, -40,
+        -30,   5,  10, 15, 15, 10,   5, -30,
+        -30,   0, 15, 20, 20, 15,   0, -30,
+        -30,   5, 15, 20, 20, 15,   5, -30,
+        -30,   0, 10, 15, 15, 10,   0, -30,
+        -40, -20,   0,   0,   0,   0, -20, -40,
+        -50, -40, -30, -30, -30, -30, -40, -50,
+            };
+
+            int[] bishopTable = new int[64]
+            {
+        -20, -10, -10, -10, -10, -10, -10, -20,
+        -10,   5,   0,   0,   0,   0,   5, -10,
+        -10,  10, 10, 10, 10, 10, 10, -10,
+        -10,   0, 10, 10, 10, 10,   0, -10,
+        -10,   5,  5, 10, 10,  5,   5, -10,
+        -10,   0,  5, 10, 10,  5,   0, -10,
+        -10,   0,   0,   0,   0,   0,   0, -10,
+        -20, -10, -10, -10, -10, -10, -10, -20,
+            };
+
+            int[] rookTable = new int[64]
+            {
+        0,   0,   5, 10, 10,   5,   0,   0,
+        -5,   0,   0,   0,   0,   0,   0,  -5,
+        -5,   0,   0,   0,   0,   0,   0,  -5,
+        -5,   0,   0,   0,   0,   0,   0,  -5,
+        -5,   0,   0,   0,   0,   0,   0,  -5,
+        -5,   0,   0,   0,   0,   0,   0,  -5,
+        5,  10, 10, 10, 10, 10, 10,   5,
+        0,   0,   0,   5,  5,   0,   0,   0
+            };
+
+            int[] queenTable = new int[64]
+            {
+        -20, -10, -10,  -5,  -5, -10, -10, -20,
+        -10,   0,   5,   0,   0,   0,   0, -10,
+        -10,   5,   5,   5,   5,   5,   0, -10,
+        0,   0,   5,   5,   5,   5,   0,  -5,
+        -5,   0,   5,   5,   5,   5,   0,  -5,
+        -10,   0,   5,   5,   5,   5,   0, -10,
+        -10,   0,   0,   0,   0,   0,   0, -10,
+        -20, -10, -10,  -5,  -5, -10, -10, -20
+            };
+
+            int[] kingTable = new int[64]
+            {
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -20, -30, -30, -40, -40, -30, -30, -20,
+        -10, -20, -20, -20, -20, -20, -20, -10,
+        20,  20,   0,   0,   0,   0,  20,  20,
+        20,  30,  10,   0,   0,  10,  30,  20
+            };
+
+            // Mobility, pawn structure, and king safety
+            int mobility = 0;
+            int pawnStructure = 0;
+            int kingSafety = 0;
+
             for (int i = 0; i < 64; i++)
             {
                 int piece = board[i];
                 int pieceType = Piece.PieceType(piece);
                 int pieceColor = Piece.Color(piece);
                 int pieceValue = 0;
+                int positionalValue = 0;
 
                 switch (pieceType)
                 {
                     case Piece.Pawn:
                         pieceValue = pawnValue;
+                        positionalValue = pawnTable[i];
+                        pawnStructure += EvaluatePawnStructure(board, i, pieceColor);
                         break;
                     case Piece.Knight:
                         pieceValue = knightValue;
+                        positionalValue = knightTable[i];
                         break;
                     case Piece.Bishop:
                         pieceValue = bishopValue;
+                        positionalValue = bishopTable[i];
                         break;
                     case Piece.Rook:
                         pieceValue = rookValue;
+                        positionalValue = rookTable[i];
                         break;
                     case Piece.Queen:
                         pieceValue = queenValue;
+                        positionalValue = queenTable[i];
                         break;
                     case Piece.King:
                         pieceValue = kingValue;
+                        positionalValue = kingTable[i];
+                        kingSafety += EvaluateKingSafety(board, i, pieceColor);
                         break;
                     default:
                         continue;
                 }
 
+                int sign = (pieceColor == this.Color) ? 1 : -1;
+
+                evaluation += sign * (pieceValue + positionalValue);
+
+                // Mobility
                 if (pieceColor == this.Color)
                 {
-                    evaluation += pieceValue;
-                }
-                else if (pieceColor != Piece.NoColor)
-                {
-                    evaluation -= pieceValue;
+                    mobility += sign * GetPieceMobility(board, i, pieceType, pieceColor);
                 }
             }
 
+            evaluation += mobility * 10;        // Weight for mobility
+            evaluation += pawnStructure * 10;   // Weight for pawn structure
+            evaluation += kingSafety * 5;       // Weight for king safety
+
             return evaluation;
         }
+
 
         private List<Move> GetAllLegalMoves(Board board)
         {
@@ -172,5 +267,130 @@ namespace DuckChess
             }
             return legalMoves;
         }
+
+        private int EvaluatePawnStructure(Board board, int square, int color)
+        {
+            int score = 0;
+            int row = Board.GetRowOf(square);
+            int col = Board.GetColumnOf(square);
+
+            // Check for doubled pawns
+            for (int i = 0; i < 8; i++)
+            {
+                int index = i * 8 + col;
+                if (index != square && Piece.PieceType(board[index]) == Piece.Pawn && Piece.Color(board[index]) == color)
+                {
+                    score -= 20; // Penalty for doubled pawns
+                    break;
+                }
+            }
+
+            // Check for isolated pawns
+            bool hasNeighbor = false;
+            if (col > 0)
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    int index = i * 8 + (col - 1);
+                    if (Piece.PieceType(board[index]) == Piece.Pawn && Piece.Color(board[index]) == color)
+                    {
+                        hasNeighbor = true;
+                        break;
+                    }
+                }
+            }
+            if (col < 7 && !hasNeighbor)
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    int index = i * 8 + (col + 1);
+                    if (Piece.PieceType(board[index]) == Piece.Pawn && Piece.Color(board[index]) == color)
+                    {
+                        hasNeighbor = true;
+                        break;
+                    }
+                }
+            }
+            if (!hasNeighbor)
+            {
+                score -= 15; // Penalty for isolated pawns
+            }
+
+            return score;
+        }
+
+        private int EvaluateKingSafety(Board board, int square, int color)
+        {
+            int score = 0;
+            int row = Board.GetRowOf(square);
+            int col = Board.GetColumnOf(square);
+
+            // Encourage castling
+            if ((color == Piece.White && row >= 6) || (color == Piece.Black && row <= 1))
+            {
+                score += 20; // Bonus for castled king
+            }
+            else
+            {
+                score -= 20; // Penalty for uncastled king
+            }
+
+            // Check for pawn shield
+            int direction = (color == Piece.White) ? -1 : 1;
+            int pawnRow = row + direction;
+            for (int i = -1; i <= 1; i++)
+            {
+                int file = col + i;
+                if (file >= 0 && file < 8)
+                {
+                    int index = pawnRow * 8 + file;
+                    if (index >= 0 && index < 64)
+                    {
+                        int piece = board[index];
+                        if (Piece.PieceType(piece) == Piece.Pawn && Piece.Color(piece) == color)
+                        {
+                            score += 10; // Bonus for pawn shield
+                        }
+                    }
+                }
+            }
+
+            return score;
+        }
+
+        private int GetPieceMobility(Board board, int square, int pieceType, int color)
+        {
+            List<Move> moves = new List<Move>();
+
+            switch (pieceType)
+            {
+                case Piece.Knight:
+                    LegalMoveGenerator.GenerateKnightMoves(ref moves, board);
+                    break;
+                case Piece.Bishop:
+                    LegalMoveGenerator.GenerateBishopMoves(ref moves, board);
+                    break;
+                case Piece.Rook:
+                    LegalMoveGenerator.GenerateRookMoves(ref moves, board);
+                    break;
+                case Piece.Queen:
+                    LegalMoveGenerator.GenerateQueenMoves(ref moves, board);
+                    break;
+                default:
+                    return 0;
+            }
+
+            int mobility = 0;
+            foreach (var move in moves)
+            {
+                if (move.StartSquare == square)
+                {
+                    mobility++;
+                }
+            }
+
+            return mobility;
+        }
+
     }
 }
