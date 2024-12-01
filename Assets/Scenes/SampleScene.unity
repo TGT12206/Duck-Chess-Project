@@ -434,6 +434,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boardUI: {fileID: 1117467296}
+  haltForError: 0
+  framesWaited: 0
 --- !u!4 &1854159110
 Transform:
   m_ObjectHideFlags: 0

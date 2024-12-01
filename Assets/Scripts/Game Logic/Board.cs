@@ -348,14 +348,17 @@ namespace DuckChess
              * Check duck moves
              */
             bool isWhite = turnColor == Piece.White;
-            MovePieceInPieceLists(move, isWhite);
+            MovePieceInPieceLists(ref move, isWhite);
             MovePieceInSquares(move, isWhite);
 
             SwitchToNextTurn();
+            Debug.Log("end, done move");
+            Debug.Log("captured piece " + move.CapturedPiece);
         }
 
-        private void MovePieceInPieceLists(Move move, bool isWhite)
+        private void MovePieceInPieceLists(ref Move move, bool isWhite)
         {
+            Debug.Log("doing move");
             int startSquare = move.StartSquare;
             int targetSquare = move.TargetSquare;
             // If this is the first duck move, then the piece at the
@@ -483,8 +486,14 @@ namespace DuckChess
             }
             if (isCapture)
             {
-                bool isRookCaptured = false;
                 int capturedPiece = Squares[targetSquare];
+
+                // Update the move to contain the captured piece
+                move = new Move(move, capturedPiece);
+                Debug.Log("doing capture");
+                Debug.Log("captured piece " + move.CapturedPiece);
+
+                bool isRookCaptured = false;
                 PieceList capturedPieceList = null;
                 switch (Piece.PieceType(capturedPiece))
                 {
@@ -616,11 +625,22 @@ namespace DuckChess
              * - swap the target and start squares on the board
              * replace the piece that was captured
              */
+            // If this is the first duck move, then the piece at the
+            // "start" square is actually the rook. Therefore, some of
+            // The following code will break, and we need to return asap.
+            if (move.MoveFlag == Move.Flag.FirstDuckMove)
+            {
+                Squares[move.TargetSquare] = Piece.None;
+                Duck = NOT_ON_BOARD;
+                return;
+            }
             bool isWhite = turnColor == Piece.White;
             int currentSquare = move.TargetSquare;
             int originalSquare = move.StartSquare;
             int piece = Squares[currentSquare];
             int capturedPiece = move.CapturedPiece;
+            Debug.Log("undoing move");
+            Debug.Log("captured piece " + move.CapturedPiece);
             PieceList pieceListToUpdate = null;
 
             // Update the piece lists
@@ -644,7 +664,7 @@ namespace DuckChess
                     break;
             }
             #endregion
-
+            
             # region If no piece list was selected, it is a king or a duck
             if (pieceListToUpdate == null)
             {
@@ -729,6 +749,7 @@ namespace DuckChess
             #region Check if this move was a normal capture
             if (Piece.PieceType(capturedPiece) != Piece.None)
             {
+                Debug.Log("undoing capture");
                 PieceList capturedPieceList = null;
                 switch (Piece.PieceType(capturedPiece))
                 {
@@ -763,11 +784,7 @@ namespace DuckChess
             #endregion
 
             // Update the squares
-            // Not the first duck move
-            if (plyCount != 2)
-            {
-                Squares[originalSquare] = Squares[currentSquare];
-            }
+            Squares[originalSquare] = Squares[currentSquare];
             Squares[currentSquare] = move.CapturedPiece;
 
             // Update the turn info
@@ -782,6 +799,8 @@ namespace DuckChess
             {
                 GenerateNormalMoves();
             }
+            Debug.Log("end, undone move");
+            Debug.Log("captured piece " + move.CapturedPiece);
         }
 
         private void EnPassantInPieceList(Move move, bool isWhite)
@@ -959,7 +978,7 @@ namespace DuckChess
         /// </summary>
         public override string ToString()
         {
-            string boardString = "";
+            string boardString = "Board\n";
             for (int i = 7; i >= 0; i--)
             {
                 int row = i * 8;
@@ -1007,6 +1026,7 @@ namespace DuckChess
                 }
                 boardString += "\n";
             }
+            boardString += "Combined Piece Lists\n" + AllPieces.ToString();
             return boardString;
         }
         public Board Clone()

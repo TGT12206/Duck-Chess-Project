@@ -72,10 +72,23 @@ public class BoardUI : MonoBehaviour
         Circles = new GameObject[64];
         highlightedMoves = new List<Move>();
         board = null;
+        selectedSquare = 0;
+    }
+
+    public void AISelectPiece(Move move)
+    {
+        Circles[selectedSquare].SetActive(false);
+        selectedSquare = move.StartSquare;
+        highlightedMoves.Clear();
+        Circles[move.TargetSquare].SetActive(true);
     }
 
     public void SelectPiece(int square)
     {
+        if (Duck == null)
+        {
+            SelectDuckInitially();
+        }
         selectedSquare = square;
         highlightedMoves.Clear();
         LegalMoveGenerator.GenerateForOnePiece(ref highlightedMoves, board, square);
@@ -87,7 +100,7 @@ public class BoardUI : MonoBehaviour
 
     public void SelectDuckInitially()
     {
-        selectedSquare = -1;
+        selectedSquare = 0;
         highlightedMoves.Clear();
         LegalMoveGenerator.GenerateDuckMoves(ref highlightedMoves, board);
         foreach (Move move in highlightedMoves)
@@ -105,9 +118,9 @@ public class BoardUI : MonoBehaviour
 
     public void MakeMove(Move move)
     {
-        foreach (Move possibleMove in highlightedMoves)
+        foreach (GameObject circle in Circles)
         {
-            Circles[possibleMove.TargetSquare].SetActive(false);
+            circle.SetActive(false);
         }
         highlightedMoves.Clear();
         int newSquare = move.TargetSquare;

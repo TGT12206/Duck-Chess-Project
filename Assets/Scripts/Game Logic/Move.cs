@@ -141,11 +141,14 @@ namespace DuckChess
             }
         }
 
+        /// <summary>
+        /// Note that this is a normal capture not en passant
+        /// </summary>
         public bool IsCapture
         {
             get
             {
-                return Piece.PieceType(CapturedPiece) != Piece.None || MoveFlag == Flag.EnPassantCapture;
+                return Piece.PieceType(CapturedPiece) != Piece.None;
             }
         }
 
@@ -170,7 +173,7 @@ namespace DuckChess
         {
             get
             {
-                return moveValue >> 12;
+                return (moveValue & flagMask) >> 12;
             }
         }
 

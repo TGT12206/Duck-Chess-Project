@@ -10,25 +10,32 @@ namespace DuckChess
         public override string Type { get { return "AlphaBetaAIPlayer"; } }
         public override int Color { get; set; }
 
-        private const int NumActionsPerFrame = 100;
+        private const int NumActionsPerFrame = 1;
 
         private Board board;
+        private BoardUI boardUI;
         private int maxDepth;
         private Move bestMove;
         private bool startSearch;
         private List<Move> legalMoves;
         private Stack<AlphaBetaNode> alphaBetaNodes;
-        private AlphaBetaNode topNode;
         private Stack<int> significantMoveCounters;
         private Board searchBoard;
         private int currentDepth;
 
-        public AlphaBetaAIPlayer(Board board, int color, int maxDepth)
+        // For debugging, but might be useful
+        private AlphaBetaNode topNode;
+
+        // Debugging, can delete
+        private int movesLookedAt;
+
+        public AlphaBetaAIPlayer(Board board, int color, int maxDepth, BoardUI boardUI)
         {
             this.board = board;
             this.Color = color;
             this.maxDepth = maxDepth;
             startSearch = true;
+            this.boardUI = boardUI;
         }
 
         public override void Update()
@@ -39,8 +46,9 @@ namespace DuckChess
             }
             catch (Exception e)
             {
-                Debug.Log("Invalid Move\n" + topNode.ToString() + "\n" + board.ToString() + "\n" + searchBoard.ToString() + "\n");
-                return;
+                Debug.Log("Invalid Move" + movesLookedAt + "\n" + topNode.ToString() + "\n" + board.ToString() + "\n" + searchBoard.ToString() + "\n");
+                Debug.LogException(e);
+                throw e;
             }
         }
 
@@ -84,11 +92,7 @@ namespace DuckChess
         private void FinishSearch()
         {
             // Search is complete
-            if (bestMove.StartSquare == 0 && bestMove.TargetSquare == 0)
-            {
-                Debug.Log("Invalid Move\n" + topNode.ToString() + "\n" + board.ToString() + "\n" + searchBoard.ToString());
-                bestMove = board.legalMoves[0];
-            }
+            Debug.Log("Chose Move" + movesLookedAt + "\n" + topNode.ToString() + "\n" + board.ToString() + "\n" + searchBoard.ToString() + "\n");
             ChooseMove(bestMove);
             startSearch = true;
         }
@@ -104,23 +108,29 @@ namespace DuckChess
             alphaBetaNodes.Push(topNode);
             currentDepth = 1;
             startSearch = false;
+            movesLookedAt = 0;
         }
 
         private void ExpandNode()
         {
             currentDepth++;
+            movesLookedAt++;
             AlphaBetaNode parent = alphaBetaNodes.Peek();
             int indexOfNextMove = parent.indexLeftOffAt;
             Move nextMove = legalMoves[indexOfNextMove];
-            if (searchBoard.duckTurn)
+
+            if (nextMove.StartSquare == 0 && nextMove.TargetSquare == 0)
             {
-                Debug.Log("Legal Duck Move " + nextMove.ToString());
+                Debug.Log("Move: " + nextMove.ToString());
             }
 
             bool isMaximizing = searchBoard.duckTurn ? !parent.isMaximizing : parent.isMaximizing;
-            AlphaBetaNode newNode = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, nextMove, parent);
-
+            
+            // Making a move on a board saves any captured piece onto the move,
+            // so we need to make the move before saving.
             searchBoard.MakeMove(ref nextMove);
+            AlphaBetaNode newNode = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, nextMove, parent);
+            
             legalMoves = searchBoard.legalMoves;
             significantMoveCounters.Push(searchBoard.numPlySinceLastEvent);
             alphaBetaNodes.Push(newNode);
@@ -148,6 +158,7 @@ namespace DuckChess
             if (parent.JudgeNewValue(node.value, node.moveFromParent, node) && currentDepth == 1)
             {
                 bestMove = node.moveFromParent;
+                boardUI.AISelectPiece(bestMove);
             }
 
             parent.indexLeftOffAt++;

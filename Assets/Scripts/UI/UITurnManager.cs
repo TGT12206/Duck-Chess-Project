@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using DuckChess;
 using UnityEngine;
@@ -11,6 +12,9 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     public Board board;
     public Stack<Move> moveHistory;
     public Stack<int> significantMoveCounters;
+    public bool haltForError;
+    public int framesToWait = 50;
+    public int framesWaited = 0;
 
     public bool IsGameOver()
     {
@@ -23,7 +27,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
         board.MakeMove(ref move);
         significantMoveCounters.Push(board.numPlySinceLastEvent);
         moveHistory.Push(move);
-        Debug.Log(board.ToString());
+        Debug.Log("UI\n" + board.ToString());
     }
     public void UnmakeMove()
     {
@@ -49,23 +53,33 @@ public class UITurnManager : MonoBehaviour, ITurnManager
 
         // Create the appropriate player types
         // placeholder
-        WhitePlayer = new HumanPlayer(boardUI, ref board, Piece.White);
+        //WhitePlayer = new HumanPlayer(boardUI, ref board, Piece.White);
         //BlackPlayer = new HumanPlayer(boardUI, ref board, Piece.Black);
-        //WhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 2);
-        BlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 2);
+        WhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 2, boardUI);
+        BlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 2, boardUI);
 
         // Set the MakeMove method to be called whenever either player makes a move
         WhitePlayer.OnMoveChosen.AddListener(MakeMove);
         BlackPlayer.OnMoveChosen.AddListener(MakeMove);
+
+        haltForError = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!board.isGameOver)
+        framesWaited++;
+        if (!board.isGameOver && !haltForError && framesWaited >= framesToWait)
         {
             PlayerToMove = board.turnColor == Piece.White ? WhitePlayer : BlackPlayer;
-            PlayerToMove.Update();
+            try
+            {
+                PlayerToMove.Update();
+            } catch (Exception e)
+            {
+                haltForError = true;
+            }
+            framesWaited = 0;
         }
         if (Input.GetKeyDown(KeyCode.Q))
         {
