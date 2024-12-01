@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DuckChess;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -30,6 +31,7 @@ public class BoardUI : MonoBehaviour
     public GameObject RookB;
     public GameObject RookW;
     public GameObject Duck;
+    public GameObject Circle;
     #endregion
 
     #region References to the actual pieces in the scene
@@ -39,21 +41,25 @@ public class BoardUI : MonoBehaviour
     /// </summary>
     public GameObject[] Pieces;
     public Board board;
+    public GameObject[] Circles;
     #endregion
+
+    public List<Move> highlightedMoves = new List<Move>();
 
     /// <summary>
     /// The z value in unity that I have arbitrarily designated as the
     /// "layer" / position where pieces are placed. This means they are
     /// rendered above the board but below dragged pieces.
     /// </summary>
-    private const int PLACE_LAYER = -1;
+    private const int PLACE_LAYER = -2;
+    private const int SELECT_LAYER = -1;
 
     /// <summary>
     /// The z value in unity that I have arbitrarily designated as the
     /// "layer" / position where pieces are dragged. This means they are
     /// rendered above the board and other pieces.
     /// </summary>
-    private const int DRAG_LAYER = -2;
+    private const int DRAG_LAYER = -3;
 
     private int selectedSquare;
 
@@ -63,17 +69,31 @@ public class BoardUI : MonoBehaviour
     {
         cam = Camera.main;
         Pieces = new GameObject[64];
+        Circles = new GameObject[64];
+        highlightedMoves = new List<Move>();
         board = null;
     }
 
     public void SelectPiece(int square)
     {
         selectedSquare = square;
+        highlightedMoves.Clear();
+        LegalMoveGenerator.GenerateForOnePiece(ref highlightedMoves, board, square);
+        foreach (Move move in highlightedMoves)
+        {
+            Circles[move.TargetSquare].SetActive(true);
+        }
     }
 
     public void SelectDuckInitially()
     {
         selectedSquare = -1;
+        highlightedMoves.Clear();
+        LegalMoveGenerator.GenerateDuckMoves(ref highlightedMoves, board);
+        foreach (Move move in highlightedMoves)
+        {
+            Circles[move.TargetSquare].SetActive(true);
+        }
     }
 
     public void DragPiece()
@@ -85,6 +105,11 @@ public class BoardUI : MonoBehaviour
 
     public void MakeMove(Move move)
     {
+        foreach (Move possibleMove in highlightedMoves)
+        {
+            Circles[possibleMove.TargetSquare].SetActive(false);
+        }
+        highlightedMoves.Clear();
         int newSquare = move.TargetSquare;
         int squareToCapture = newSquare;
         bool isWhite = board.turnColor == Piece.White;
@@ -220,6 +245,11 @@ public class BoardUI : MonoBehaviour
     public void SnapPieceBack()
     {
         Pieces[selectedSquare].transform.position = SquareToWorldCoordinates(selectedSquare, PLACE_LAYER);
+        foreach (Move possibleMove in highlightedMoves)
+        {
+            Circles[possibleMove.TargetSquare].SetActive(false);
+        }
+        highlightedMoves.Clear();
     }
 
     public void CancelSelection()
@@ -235,6 +265,13 @@ public class BoardUI : MonoBehaviour
     {
         // Create a new array and save the board
         Pieces = new GameObject[64];
+        Circles = new GameObject[64];
+        for (int i = 0; i< 64; i++)
+        {
+            Circles[i] = Instantiate(Circle);
+            Circles[i].SetActive(false);
+            Circles[i].transform.position = SquareToWorldCoordinates(i, SELECT_LAYER);
+        }
         this.board = board;
 
         // Place the pawns
