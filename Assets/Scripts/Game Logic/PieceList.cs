@@ -101,6 +101,44 @@ public class PieceList
         map[targetSquare] = -1;
     }
 
+    /// <summary>
+    /// Returns a new piecelist with the combined information.
+    /// It is not possible to add more pieces to this list, so treat it as readonly.
+    /// However, you may still merge it with another list.
+    /// </summary>
+    public static PieceList MergePieceLists(PieceList firstList, PieceList secondList)
+    {
+        int firstPieceCount = firstList.Count;
+        int secondPieceCount = secondList.Count;
+        int total = firstPieceCount + secondPieceCount;
+        PieceList newList = new PieceList(total);
+        for (int i = 0; i < firstPieceCount; i++)
+        {
+            int occupiedSquare = firstList[i];
+            newList.AddPieceAtSquare(occupiedSquare);
+        }
+        for (int i = 0; i < secondPieceCount; i++)
+        {
+            int occupiedSquare = secondList[i];
+            newList.AddPieceAtSquare(occupiedSquare);
+        }
+        return newList;
+    }
+
+    /// <summary>
+    /// Adds the information of the other list into this one. Make sure that
+    /// the maximum capacity of this list is greater than the combined
+    /// total of pieces, or it will result in an index out of bounds.
+    /// </summary>
+    public void MergeWithPieceList(PieceList otherList)
+    {
+        int otherPieceCount = otherList.Count;
+        for (int i = 0; i < otherPieceCount; i++)
+        {
+            int occupiedSquare = otherList[i];
+            AddPieceAtSquare(occupiedSquare);
+        }
+    }
 
     public int this[int index] => occupiedSquares[index];
 
@@ -137,6 +175,4 @@ public class PieceList
         this.map.CopyTo(clone.map, 0);
         return clone;
     }
-
-
 }

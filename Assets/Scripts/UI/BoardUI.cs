@@ -85,6 +85,7 @@ public class BoardUI : MonoBehaviour
 
     public void MakeMove(Move move)
     {
+        Debug.Log("Board UI Make Move: " + move.ToString());
         int newSquare = move.TargetSquare;
         int squareToCapture = newSquare;
         bool isWhite = board.turnColor == Piece.White;

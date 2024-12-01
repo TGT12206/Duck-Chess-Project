@@ -171,6 +171,7 @@ public class HumanPlayer : RealTimePlayer
             if (board.IsMoveLegal(ref newMove))
             {
                 ChooseMove(newMove);
+                currentState = InputState.None;
             } else
             {
                 boardUI.CancelSelection();

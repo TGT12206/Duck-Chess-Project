@@ -18,234 +18,126 @@ namespace DuckChess
         /// <param name="board">The board to use while checking for legal moves</param>
         public static void GeneratePawnMoves(ref List<Move> generatedMoves, Board board)
         {
+            bool isWhite = board.turnColor == Piece.White;
+            PieceList pawnLocations = isWhite ? board.WhitePawns : board.BlackPawns;
             int pawnSpot;
-            if (board.turnColor == Piece.White)
+            int findSpotOneFront = isWhite ? 8 : -8;
+            int rowBeforePromotion = isWhite ? 6 : 1;
+            int startRow = isWhite ? 1 : 6;
+            int findCaptureSpotOnRight = isWhite ? 9 : -7;
+            int findCaptureSpotOnLeft = isWhite ? 9 : -7;
+            for (int i = 0; i < board.WhitePawns.Count; i++)
             {
-                for (int i = 0; i < board.WhitePawns.Count; i++)
+                pawnSpot = pawnLocations[i];
+                // Forward pawn moves
+                int spotInFrontOfPawn = pawnSpot + findSpotOneFront;
+                int spotTwoInFrontOfPawn = spotInFrontOfPawn + findSpotOneFront;
+                int rightCaptureSpot = pawnSpot + findCaptureSpotOnRight;
+                int leftCaptureSpot = pawnSpot + findCaptureSpotOnLeft;
+                if (Piece.PieceType(board[spotInFrontOfPawn]) == Piece.None)
                 {
-                    pawnSpot = board.WhitePawns[i];
-                    // Forward pawn moves
-                    if (Piece.PieceType(board[pawnSpot + 8]) == Piece.None)
+                    if (Board.GetRowOf(pawnSpot) == rowBeforePromotion)
                     {
-                        if (Board.GetRowOf(pawnSpot) == 6)
-                        {
-                            #region Add Forward Pawn Promotions
-                            Move move = new Move(pawnSpot, pawnSpot + 8, Move.Flag.PromoteToKnight);
-                            generatedMoves.Add(move);
+                        #region Add Forward Pawn Promotions
+                        Move move = new Move(pawnSpot, spotInFrontOfPawn, Move.Flag.PromoteToKnight);
+                        generatedMoves.Add(move);
 
-                            move = new Move(pawnSpot, pawnSpot + 8, Move.Flag.PromoteToBishop);
-                            generatedMoves.Add(move);
+                        move = new Move(pawnSpot, spotInFrontOfPawn, Move.Flag.PromoteToBishop);
+                        generatedMoves.Add(move);
 
-                            move = new Move(pawnSpot, pawnSpot + 8, Move.Flag.PromoteToRook);
-                            generatedMoves.Add(move);
+                        move = new Move(pawnSpot, spotInFrontOfPawn, Move.Flag.PromoteToRook);
+                        generatedMoves.Add(move);
 
-                            move = new Move(pawnSpot, pawnSpot + 8, Move.Flag.PromoteToQueen);
-                            generatedMoves.Add(move);
-                            #endregion
-                        }
-                        else
-                        {
-                            // Normal pawn move
-                            Move move = new Move(pawnSpot, pawnSpot + 8);
-                            generatedMoves.Add(move);
-                        }
+                        move = new Move(pawnSpot, spotInFrontOfPawn, Move.Flag.PromoteToQueen);
+                        generatedMoves.Add(move);
+                        #endregion
+                    }
+                    else
+                    {
+                        // Normal pawn move
+                        Move move = new Move(pawnSpot, spotInFrontOfPawn);
+                        generatedMoves.Add(move);
+                    }
 
-                        // Pawn move two forward
-                        if (Board.GetRowOf(pawnSpot) == 1)
+                    // Pawn move two forward
+                    if (Board.GetRowOf(pawnSpot) == startRow)
+                    {
+                        if (Piece.PieceType(board[spotTwoInFrontOfPawn]) == Piece.None)
                         {
-                            if (Piece.PieceType(board[pawnSpot + 16]) == Piece.None)
-                            {
-                                Move move = new Move(pawnSpot, pawnSpot + 16, Move.Flag.PawnTwoForward);
-                                generatedMoves.Add(move);
-                            }
-                        }
-                        // En Passant
-                        if (Board.GetRowOf(pawnSpot) == 4)
-                        {
-                            if (
-                                pawnSpot + 7 == board.enPassantSquare ||
-                                pawnSpot + 9 == board.enPassantSquare
-                            )
-                            {
-                                if (board.Duck != board.enPassantSquare)
-                                {
-                                    Move move = new Move(pawnSpot,
-                                        board.enPassantSquare,
-                                        Move.Flag.EnPassantCapture
-                                    );
-                                    generatedMoves.Add(move);
-                                }
-                            }
+                            Move move = new Move(pawnSpot, spotTwoInFrontOfPawn, Move.Flag.PawnTwoForward);
+                            generatedMoves.Add(move);
                         }
                     }
-                    // Normal pawn captures
-                    int pawnCol = Board.GetColumnOf(pawnSpot);
-                    if (pawnCol < 7)
+                    // En Passant
+                    if (Board.GetRowOf(pawnSpot) == 4)
                     {
-                        if (Piece.Color(board[pawnSpot + 9]) == Piece.Black)
+                        if (
+                            leftCaptureSpot == board.enPassantSquare ||
+                            rightCaptureSpot == board.enPassantSquare
+                        )
                         {
-                            if (Board.GetRowOf(pawnSpot) == 6)
+                            if (board.Duck != board.enPassantSquare)
                             {
-                                #region Add Forward Pawn Promotions
-                                Move move = new Move(pawnSpot, pawnSpot + 9, Move.Flag.PromoteToKnight);
-                                generatedMoves.Add(move);
-
-                                move = new Move(pawnSpot, pawnSpot + 9, Move.Flag.PromoteToBishop);
-                                generatedMoves.Add(move);
-
-                                move = new Move(pawnSpot, pawnSpot + 9, Move.Flag.PromoteToRook);
-                                generatedMoves.Add(move);
-
-                                move = new Move(pawnSpot, pawnSpot + 9, Move.Flag.PromoteToQueen);
-                                generatedMoves.Add(move);
-                                #endregion
-                            } else
-                            {
-                                Move move = new Move(pawnSpot, pawnSpot + 9);
-                                generatedMoves.Add(move);
-                            }
-                        }
-                    }
-                    if (pawnCol > 0)
-                    {
-                        if (Piece.Color(board[pawnSpot + 7]) == Piece.Black)
-                        {
-                            if (Board.GetRowOf(pawnSpot) == 6)
-                            {
-                                #region Add Forward Pawn Promotions
-                                Move move = new Move(pawnSpot, pawnSpot + 7, Move.Flag.PromoteToKnight);
-                                generatedMoves.Add(move);
-
-                                move = new Move(pawnSpot, pawnSpot + 7, Move.Flag.PromoteToBishop);
-                                generatedMoves.Add(move);
-
-                                move = new Move(pawnSpot, pawnSpot + 7, Move.Flag.PromoteToRook);
-                                generatedMoves.Add(move);
-
-                                move = new Move(pawnSpot, pawnSpot + 7, Move.Flag.PromoteToQueen);
-                                generatedMoves.Add(move);
-                                #endregion
-                            } else
-                            {
-                                Move move = new Move(pawnSpot, pawnSpot + 7);
+                                Move move = new Move(pawnSpot,
+                                    board.enPassantSquare,
+                                    Move.Flag.EnPassantCapture
+                                );
                                 generatedMoves.Add(move);
                             }
                         }
                     }
                 }
-            }
-            else
-            {
-                for (int i = 0; i < board.BlackPawns.Count; i++)
+                // Normal pawn captures
+                int pawnCol = Board.GetColumnOf(pawnSpot);
+                if (pawnCol < 7)
                 {
-                    pawnSpot = board.BlackPawns[i];
-                    // Forward pawn moves
-                    if (Piece.PieceType(board[pawnSpot - 8]) == Piece.None)
+                    if (Piece.Color(board[rightCaptureSpot]) == Piece.Black)
                     {
-                        if (pawnSpot - 8 < 8)
+                        if (Board.GetRowOf(pawnSpot) == rowBeforePromotion)
                         {
-                            #region Add pawn promotions
-                            Move move = new Move(pawnSpot, pawnSpot - 8, Move.Flag.PromoteToKnight);
+                            #region Add Forward Pawn Promotions
+                            Move move = new Move(pawnSpot, rightCaptureSpot, Move.Flag.PromoteToKnight);
                             generatedMoves.Add(move);
 
-                            move = new Move(pawnSpot, pawnSpot - 8, Move.Flag.PromoteToBishop);
+                            move = new Move(pawnSpot, rightCaptureSpot, Move.Flag.PromoteToBishop);
                             generatedMoves.Add(move);
 
-                            move = new Move(pawnSpot, pawnSpot - 8, Move.Flag.PromoteToRook);
+                            move = new Move(pawnSpot, rightCaptureSpot, Move.Flag.PromoteToRook);
                             generatedMoves.Add(move);
 
-                            move = new Move(pawnSpot, pawnSpot - 8, Move.Flag.PromoteToQueen);
+                            move = new Move(pawnSpot, rightCaptureSpot, Move.Flag.PromoteToQueen);
                             generatedMoves.Add(move);
                             #endregion
-                        }
-                        else
+                        } else
                         {
-                            // Normal pawn move
-                            Move move = new Move(pawnSpot, pawnSpot - 8);
+                            Move move = new Move(pawnSpot, rightCaptureSpot);
                             generatedMoves.Add(move);
                         }
-
-                        // Pawn move two forward
-                        if (Board.GetRowOf(pawnSpot) == 6)
-                        {
-                            if (Piece.PieceType(board[pawnSpot - 16]) == Piece.None)
-                            {
-                                Move move = new Move(pawnSpot, pawnSpot - 16, Move.Flag.PawnTwoForward);
-                                generatedMoves.Add(move);
-                            }
-                        }
-
-                        // En Passant
-                        if (Board.GetRowOf(pawnSpot) == 3)
-                        {
-                            if (
-                                pawnSpot - 7 == board.enPassantSquare ||
-                                pawnSpot - 9 == board.enPassantSquare
-                            )
-                            {
-                                if (board.Duck != board.enPassantSquare)
-                                {
-                                    Move move = new Move(pawnSpot,
-                                        board.enPassantSquare,
-                                        Move.Flag.EnPassantCapture
-                                    );
-                                    generatedMoves.Add(move);
-                                }
-                            }
-                        }
                     }
-                    // Normal pawn captures
-                    int pawnCol = Board.GetColumnOf(pawnSpot);
-                    if (pawnCol > 0)
+                }
+                if (pawnCol > 0)
+                {
+                    if (Piece.Color(board[leftCaptureSpot]) == Piece.Black)
                     {
-                        if (Piece.Color(board[pawnSpot - 9]) == Piece.White)
+                        if (Board.GetRowOf(pawnSpot) == rowBeforePromotion)
                         {
-                            if (Board.GetRowOf(pawnSpot) == 1)
-                            {
-                                #region Add Forward Pawn Promotions
-                                Move move = new Move(pawnSpot, pawnSpot - 9, Move.Flag.PromoteToKnight);
-                                generatedMoves.Add(move);
+                            #region Add Forward Pawn Promotions
+                            Move move = new Move(pawnSpot, leftCaptureSpot, Move.Flag.PromoteToKnight);
+                            generatedMoves.Add(move);
 
-                                move = new Move(pawnSpot, pawnSpot - 9, Move.Flag.PromoteToBishop);
-                                generatedMoves.Add(move);
+                            move = new Move(pawnSpot, leftCaptureSpot, Move.Flag.PromoteToBishop);
+                            generatedMoves.Add(move);
 
-                                move = new Move(pawnSpot, pawnSpot - 9, Move.Flag.PromoteToRook);
-                                generatedMoves.Add(move);
+                            move = new Move(pawnSpot, leftCaptureSpot, Move.Flag.PromoteToRook);
+                            generatedMoves.Add(move);
 
-                                move = new Move(pawnSpot, pawnSpot - 9, Move.Flag.PromoteToQueen);
-                                generatedMoves.Add(move);
-                                #endregion
-                            } else
-                            {
-                                Move move = new Move(pawnSpot, pawnSpot - 9);
-                                generatedMoves.Add(move);
-                            }
-                        }
-                    }
-                    if (pawnCol < 7)
-                    {
-                        if (Piece.Color(board[pawnSpot - 7]) == Piece.White)
+                            move = new Move(pawnSpot, leftCaptureSpot, Move.Flag.PromoteToQueen);
+                            generatedMoves.Add(move);
+                            #endregion
+                        } else
                         {
-                            if (Board.GetRowOf(pawnSpot) == 1)
-                            {
-                                #region Add Forward Pawn Promotions
-                                Move move = new Move(pawnSpot, pawnSpot - 7, Move.Flag.PromoteToKnight);
-                                generatedMoves.Add(move);
-
-                                move = new Move(pawnSpot, pawnSpot - 7, Move.Flag.PromoteToBishop);
-                                generatedMoves.Add(move);
-
-                                move = new Move(pawnSpot, pawnSpot - 7, Move.Flag.PromoteToRook);
-                                generatedMoves.Add(move);
-
-                                move = new Move(pawnSpot, pawnSpot - 7, Move.Flag.PromoteToQueen);
-                                generatedMoves.Add(move);
-                                #endregion
-                            } else
-                            {
-                                Move move = new Move(pawnSpot, pawnSpot - 7);
-                                generatedMoves.Add(move);
-                            }
+                            Move move = new Move(pawnSpot, leftCaptureSpot);
+                            generatedMoves.Add(move);
                         }
                     }
                 }
@@ -929,10 +821,14 @@ namespace DuckChess
 
             for (int i = 0; i < board.Squares.Length; i++)
             {
-                if (board[i] == Piece.None)
+                if (Piece.PieceType(board[i]) == Piece.None)
                 {
                     int targetSquare = i;
                     Move newMove = new Move(startSquare, targetSquare, firstDuckMoveFlag);
+                    if (newMove.StartSquare == 0 && newMove.TargetSquare == 0)
+                    {
+                        Debug.Log("Generated Invalid Move: " + board.ToString());
+                    }
                     generatedMoves.Add(newMove);
                 }
             }

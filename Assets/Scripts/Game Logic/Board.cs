@@ -110,49 +110,37 @@ namespace DuckChess
         #region Lists of Legal Moves
         /// <summary>
         /// A list containing all of the legal moves that can be
-        /// made by a pawn in this position and turn.
+        /// made in this position and turn.
         /// </summary>
-        public List<Move> legalPawnMoves;
-
-        /// <summary>
-        /// A list containing all of the legal moves that can be
-        /// made by a knight in this position and turn.
-        /// </summary>
-        public List<Move> legalKnightMoves;
-
-        /// <summary>
-        /// A list containing all of the legal moves that can be
-        /// made by a bishop in this position and turn.
-        /// </summary>
-        public List<Move> legalBishopMoves;
-
-        /// <summary>
-        /// A list containing all of the legal moves that can be
-        /// made by a rook in this position and turn.
-        /// </summary>
-        public List<Move> legalRookMoves;
-
-        /// <summary>
-        /// A list containing all of the legal moves that can be
-        /// made by a queen in this position and turn.
-        /// </summary>
-        public List<Move> legalQueenMoves;
-
-        /// <summary>
-        /// A list containing all of the legal moves that can be
-        /// made by a king in this position and turn.
-        /// </summary>
-        public List<Move> legalKingMoves;
-
-        /// <summary>
-        /// A list containing all of the legal moves that can be
-        /// made by a duck in this position and turn.
-        /// </summary>
-        public List<Move> legalDuckMoves;
+        public List<Move> legalMoves;
         #endregion
 
         #region Piece Locations
         // Information about (mostly location and number) each piece type
+        /// <summary>
+        /// A Piecelist that contains the location of every piece on the board.
+        /// </summary>
+        public PieceList AllPieces
+        {
+            get
+            {
+                PieceList allPieces = new PieceList(64);
+                allPieces.MergeWithPieceList(BlackPawns);
+                allPieces.MergeWithPieceList(BlackPawns);
+                allPieces.MergeWithPieceList(WhiteKnights);
+                allPieces.MergeWithPieceList(BlackKnights);
+                allPieces.MergeWithPieceList(WhiteBishops);
+                allPieces.MergeWithPieceList(BlackBishops);
+                allPieces.MergeWithPieceList(WhiteRooks);
+                allPieces.MergeWithPieceList(BlackRooks);
+                allPieces.MergeWithPieceList(WhiteQueens);
+                allPieces.MergeWithPieceList(BlackQueens);
+                allPieces.AddPieceAtSquare(WhiteKing);
+                allPieces.AddPieceAtSquare(BlackKing);
+                allPieces.AddPieceAtSquare(Duck);
+                return allPieces;
+            }
+        }
         /// <summary>
         /// The location and number of the black bishops
         /// </summary>
@@ -236,13 +224,7 @@ namespace DuckChess
 
         private void ResetLegalMoves()
         {
-            legalPawnMoves = new List<Move>();
-            legalKnightMoves = new List<Move>();
-            legalBishopMoves = new List<Move>();
-            legalRookMoves = new List<Move>();
-            legalQueenMoves = new List<Move>();
-            legalKingMoves = new List<Move>();
-            legalDuckMoves = new List<Move>();
+            legalMoves = new List<Move>();
         }
 
         /// <summary>
@@ -793,17 +775,17 @@ namespace DuckChess
 
         private void GenerateNormalMoves()
         {
-            LegalMoveGenerator.GeneratePawnMoves(ref legalPawnMoves, this);
-            LegalMoveGenerator.GenerateKnightMoves(ref legalKnightMoves, this);
-            LegalMoveGenerator.GenerateBishopMoves(ref legalBishopMoves, this);
-            LegalMoveGenerator.GenerateRookMoves(ref legalRookMoves, this);
-            LegalMoveGenerator.GenerateQueenMoves(ref legalQueenMoves, this);
-            LegalMoveGenerator.GenerateKingMoves(ref legalKingMoves, this);
+            LegalMoveGenerator.GeneratePawnMoves(ref legalMoves, this);
+            LegalMoveGenerator.GenerateKnightMoves(ref legalMoves, this);
+            LegalMoveGenerator.GenerateBishopMoves(ref legalMoves, this);
+            LegalMoveGenerator.GenerateRookMoves(ref legalMoves, this);
+            LegalMoveGenerator.GenerateQueenMoves(ref legalMoves, this);
+            LegalMoveGenerator.GenerateKingMoves(ref legalMoves, this);
         }
 
         private void GenerateDuckMoves()
         {
-            LegalMoveGenerator.GenerateDuckMoves(ref legalDuckMoves, this);
+            LegalMoveGenerator.GenerateDuckMoves(ref legalMoves, this);
         }
 
         /// <summary>
@@ -812,39 +794,6 @@ namespace DuckChess
         /// <param name="move">The move to check</param>
         public bool IsMoveLegal(ref Move move)
         {
-            int pieceType;
-            if (duckTurn)
-            {
-                pieceType = Piece.Duck;
-            } else
-            {
-                pieceType = Piece.PieceType(Squares[move.StartSquare]);
-            }
-            List<Move> legalMoves = null;
-            switch (pieceType)
-            {
-                case Piece.Duck:
-                    legalMoves = legalDuckMoves;
-                    break;
-                case Piece.Pawn:
-                    legalMoves = legalPawnMoves;
-                    break;
-                case Piece.Knight:
-                    legalMoves = legalKnightMoves;
-                    break;
-                case Piece.Bishop:
-                    legalMoves = legalBishopMoves;
-                    break;
-                case Piece.Rook:
-                    legalMoves = legalRookMoves;
-                    break;
-                case Piece.Queen:
-                    legalMoves = legalQueenMoves;
-                    break;
-                case Piece.King:
-                    legalMoves = legalKingMoves;
-                    break;
-            }
             foreach (Move legalMove in legalMoves)
             {
                 if (Move.SameMove(move, legalMove))
@@ -941,9 +890,16 @@ namespace DuckChess
             copy.CastleQueenSideW = this.CastleQueenSideW;
             copy.CastleKingSideB = this.CastleKingSideB;
             copy.CastleQueenSideB = this.CastleQueenSideB;
+            copy.PlyWhereLostKingSideCastleW = this.PlyWhereLostKingSideCastleW;
+            copy.PlyWhereLostKingSideCastleB = this.PlyWhereLostKingSideCastleB;
+            copy.PlyWhereLostQueenSideCastleW = this.PlyWhereLostQueenSideCastleW;
+            copy.PlyWhereLostQueenSideCastleB = this.PlyWhereLostQueenSideCastleB;
             copy.winnerColor = this.winnerColor;
             copy.isGameOver = this.isGameOver;
+            copy.plyCount = this.plyCount;
             copy.numPlySinceLastEvent = this.numPlySinceLastEvent;
+
+            copy.legalMoves = this.legalMoves;
 
             // Clone piece lists
             copy.WhitePawns = this.WhitePawns.Clone();
@@ -962,6 +918,5 @@ namespace DuckChess
 
             return copy;
         }
-
     }
 }
