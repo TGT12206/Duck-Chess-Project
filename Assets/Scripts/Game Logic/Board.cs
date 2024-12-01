@@ -125,7 +125,7 @@ namespace DuckChess
             get
             {
                 PieceList allPieces = new PieceList(64);
-                allPieces.MergeWithPieceList(BlackPawns);
+                allPieces.MergeWithPieceList(WhitePawns);
                 allPieces.MergeWithPieceList(BlackPawns);
                 allPieces.MergeWithPieceList(WhiteKnights);
                 allPieces.MergeWithPieceList(BlackKnights);
@@ -336,56 +336,252 @@ namespace DuckChess
         /// <param name="move">The move to make</param>
         public void MakeMove(ref Move move)
         {
-            plyCount++;
+            /*
+             * Checking pawn moves (en passant, two forward, promotion)
+             * Check bishop moves
+             * Check knight moves
+             * Check rook moves (castling)
+             * Check king moves (castling)
+             * Check duck moves
+             */
+            bool isWhite = turnColor == Piece.White;
+            MovePieceInPieceLists(move, isWhite);
+            MovePieceInSquares(move, isWhite);
+
+            SwitchToNextTurn();
+        }
+
+        private void MovePieceInPieceLists(Move move, bool isWhite)
+        {
             int startSquare = move.StartSquare;
             int targetSquare = move.TargetSquare;
-            if (duckTurn && Duck == NOT_ON_BOARD)
+            int pieceToMove = Squares[startSquare];
+            bool isPawn = false;
+            bool isRook = false;
+            bool isCapture = move.IsCapture;
+            PieceList pieceListToUpdate = null;
+            #region Find the piece list of the moved piece
+            switch (Piece.PieceType(pieceToMove))
             {
-                MoveDuck(move);
-                Squares[targetSquare] = Piece.Duck;
-            } else
+                case Piece.Pawn:
+                    pieceListToUpdate = isWhite ? WhitePawns : BlackPawns;
+                    isPawn = true;
+                    break;
+                case Piece.Knight:
+                    pieceListToUpdate = isWhite ? WhiteKnights : BlackKnights;
+                    break;
+                case Piece.Bishop:
+                    pieceListToUpdate = isWhite ? WhiteBishops : BlackBishops;
+                    break;
+                case Piece.Rook:
+                    pieceListToUpdate = isWhite ? WhiteRooks : BlackRooks;
+                    isRook = true;
+                    break;
+                case Piece.Queen:
+                    pieceListToUpdate = isWhite ? WhiteQueens : BlackQueens;
+                    break;
+            }
+            #endregion
+
+            // If it is null, it must be a duck or a king
+            if (pieceListToUpdate == null)
             {
-                int pieceType = Piece.PieceType(Squares[startSquare]);
-                bool isWhite = turnColor == Piece.White;
-                switch (pieceType)
+                // Must be a king or a duck
+                //if (Piece.PieceType(pieceToMove) == Piece.King)
+                //{
+                //    // King
+                //    int kingSpot = isWhite ? ref WhiteKing : ref BlackKing;
+                //    kingSpot = targetSquare;
+                //    bool kingSideCastle = isWhite ? ref CastleKingSideW : ref CastleKingSideB;
+                //    bool queenSideCastle = isWhite ? ref CastleQueenSideW : ref CastleQueenSideB;
+
+                //    // Can't castle after moving king
+                //    kingSideCastle = false;
+                //    queenSideCastle = false;
+
+                //    // Castle
+                //    if (move.MoveFlag == Move.Flag.Castling)
+                //    {
+                //        bool isKingSide = move.TargetSquare - move.StartSquare > 0;
+
+                //        int rookSpot = move.StartSquare;
+                //        rookSpot += isKingSide ? 3 : -4;
+
+                //        int newRookSpot = move.StartSquare;
+                //        newRookSpot += isKingSide ? 1 : -1;
+
+                //        PieceList friendlyRooks = isWhite ? WhiteRooks : BlackRooks;
+
+                //        Move moveRook = new Move(rookSpot, newRookSpot);
+                //        friendlyRooks.MovePiece(moveRook);
+                //    }
+                //} else
+                //{
+                    // Duck
+                    Duck = targetSquare;
+                //}
+            }
+            else
+            {
+                pieceListToUpdate.MovePiece(move);
+                if (isPawn)
+                {
+                    // En Passant
+                    if (move.MoveFlag == Move.Flag.EnPassantCapture)
+                    {
+                        EnPassantInPieceList(move, isWhite);
+                    }
+                    // Promotion
+                    if (move.IsPromotion)
+                    {
+                        PromoteInPieceList(move, isWhite, pieceListToUpdate);
+                    }
+                    // Two forward
+                    if (move.MoveFlag == Move.Flag.PawnTwoForward)
+                    {
+                        enPassantSquare = targetSquare;
+                    }
+                }
+                // If a rook is moving for the first time, disable castling on that side
+                //if (isRook)
+                //{
+                //    int startRowOfRook = isWhite ? 0 : 7;
+                //    bool isKingSideRook = GetColumnOf(startSquare) == 7 && GetRowOf(startSquare) == startRowOfRook;
+                //    bool isQueenSideRook = GetColumnOf(startSquare) == 0 && GetRowOf(startSquare) == startRowOfRook;
+                //    bool kingSideCastle = isWhite ? ref CastleKingSideW : ref CastleKingSideB;
+                //    bool queenSideCastle = isWhite ? ref CastleQueenSideW : ref CastleQueenSideB;
+                //    if (isKingSideRook && kingSideCastle)
+                //    {
+                //        kingSideCastle = false;
+                //    } else if (isQueenSideRook && queenSideCastle)
+                //    {
+                //        queenSideCastle = false;
+                //    }
+                //}
+            }
+            if (!isPawn && !isCapture)
+            {
+                // If not a pawn move or a capture
+                numPlySinceLastEvent++;
+            }
+            else
+            {
+                // Reset the draw counter
+                numPlySinceLastEvent = 0;
+            }
+            if (isCapture)
+            {
+                bool isRookCaptured = false;
+                int capturedPiece = Squares[targetSquare];
+                PieceList capturedPieceList = null;
+                switch (Piece.PieceType(capturedPiece))
                 {
                     case Piece.Pawn:
-                        MovePawn(move, isWhite);
+                        capturedPieceList = isWhite ? WhitePawns : BlackPawns;
                         break;
                     case Piece.Knight:
-                        MoveKnight(move, isWhite);
+                        capturedPieceList = isWhite ? WhiteKnights : BlackKnights;
                         break;
                     case Piece.Bishop:
-                        MoveBishop(move, isWhite);
+                        capturedPieceList = isWhite ? WhiteBishops : BlackBishops;
                         break;
                     case Piece.Rook:
-                        MoveRook(move, isWhite);
+                        capturedPieceList = isWhite ? WhiteRooks : BlackRooks;
+                        isRookCaptured = true;
                         break;
                     case Piece.Queen:
-                        MoveQueen(move, isWhite);
-                        break;
-                    case Piece.King:
-                        MoveKing(move, isWhite);
-                        break;
-                    case Piece.Duck:
-                        MoveDuck(move);
+                        capturedPieceList = isWhite ? WhiteQueens : BlackQueens;
                         break;
                 }
-                if (Squares[move.TargetSquare] != Piece.None)
+                if (capturedPieceList == null)
                 {
-                    CapturePieceNormally(ref move, isWhite);
+                    // Must be a king that was captured
+                    isGameOver = true;
+                    winnerColor = turnColor;
+                    int kingSpot = isWhite ? ref WhiteKing : ref BlackKing;
+                    kingSpot = NOT_ON_BOARD;
                 }
-                SwapSquares(move);
+                capturedPieceList.RemovePieceAtSquare(targetSquare);
+                //if (isRookCaptured)
+                //{
+                //    // If we capture an enemy rook, disable enemy castling on that side
+                //    int startRowOfEnemyRook = isWhite ? 7 : 0;
+                //    bool isKingSideRook = GetColumnOf(targetSquare) == 7 && GetRowOf(targetSquare) == startRowOfEnemyRook;
+                //    bool isQueenSideRook = GetColumnOf(targetSquare) == 0 && GetRowOf(targetSquare) == startRowOfEnemyRook;
+                //    bool enemyKingSideCastle = isWhite ? ref CastleKingSideB : ref CastleKingSideW;
+                //    bool enemyQueenSideCastle = isWhite ? ref CastleQueenSideB : ref CastleQueenSideW;
+                //    if (isKingSideRook && enemyKingSideCastle)
+                //    {
+                //        enemyKingSideCastle = false;
+                //    }
+                //    else if (isQueenSideRook && enemyQueenSideCastle)
+                //    {
+                //        enemyQueenSideCastle = false;
+                //    }
+                //}
             }
+        }
+        private void MovePieceInSquares(Move move, bool isWhite)
+        {
+            // The first duck move
+            if (duckTurn && Duck == NOT_ON_BOARD)
+            {
+                Squares[move.TargetSquare] = Piece.Duck;
+                return;
+            }
+
+            // Handles both normal captures and moving the piece to the new square
+            Squares[move.TargetSquare] = Squares[move.StartSquare];
+            Squares[move.StartSquare] = Piece.None;
+
+            // Special cases
+
+            // Castle
+            //if (move.MoveFlag == Move.Flag.Castling)
+            //{
+            //    bool isKingSide = move.TargetSquare - move.StartSquare > 0;
+
+            //    int rookSpot = move.StartSquare;
+            //    rookSpot += isKingSide ? 3 : -4;
+
+            //    int newRookSpot = move.StartSquare;
+            //    newRookSpot += isKingSide ? 1 : -1;
+
+            //    PieceList friendlyRooks = isWhite ? WhiteRooks : BlackRooks;
+
+            //    Squares[newRookSpot] = Squares[rookSpot];
+            //    Squares[rookSpot] = Piece.None;
+            //}
+
+            // If en passant, delete the enemy pawn
+            if (move.MoveFlag == Move.Flag.EnPassantCapture)
+            {
+                int enemyPawnSquare = isWhite ? -8 : 8;
+                enemyPawnSquare += move.TargetSquare;
+                Squares[enemyPawnSquare] = Piece.None;
+                return;
+            }
+
+            // If promotion, replace the pawn with the new piece
+            if (move.IsPromotion)
+            {
+                Squares[move.TargetSquare] = move.PromotionPieceType;
+                return;
+            }
+        }
+        private void SwitchToNextTurn()
+        {
+            plyCount++;
             ResetLegalMoves();
             if (duckTurn)
             {
                 duckTurn = false;
                 turnColor = turnColor == Piece.White ? Piece.Black : Piece.White;
                 GenerateNormalMoves();
-            } else
+            }
+            else
             {
-                duckTurn= true;
+                duckTurn = true;
                 GenerateDuckMoves();
             }
             if (numPlySinceLastEvent >= 200)
@@ -415,6 +611,7 @@ namespace DuckChess
             PieceList pieceListToUpdate = null;
 
             // Update the piece lists
+            #region select the piece list corresponding to the piece type and color
             switch (Piece.PieceType(piece))
             {
                 case Piece.Pawn:
@@ -433,6 +630,9 @@ namespace DuckChess
                     pieceListToUpdate = isWhite ? WhiteQueens : BlackQueens;
                     break;
             }
+            #endregion
+
+            # region If no piece list was selected, it is a king or a duck
             if (pieceListToUpdate == null)
             {
                 if (Piece.PieceType(piece) == Piece.Duck)
@@ -441,52 +641,59 @@ namespace DuckChess
                     if (plyCount == 2)
                     {
                         Duck = NOT_ON_BOARD;
+                    } else
+                    {
+                        Squares[originalSquare] = Squares[currentSquare];
                     }
+                    Squares[currentSquare] = Piece.None;
+                    return;
                 }
-                else
-                {
-                    int kingSpot = isWhite ? ref WhiteKing : ref BlackKing;
-                    if (move.MoveFlag == Move.Flag.Castling)
-                    {
-                        bool wasKingSide = GetColumnOf(kingSpot) == 6;
+                //else
+                //{
+                //    int kingSpot = isWhite ? ref WhiteKing : ref BlackKing;
+                //    if (move.MoveFlag == Move.Flag.Castling)
+                //    {
+                //        bool wasKingSide = GetColumnOf(kingSpot) == 6;
 
-                        // The location of the rook relative to the king
-                        int rookSpot = wasKingSide ? -1 : 1;
-                        int originalRookSpot = wasKingSide ? 1 : -2;
+                //        // The location of the rook relative to the king
+                //        int rookSpot = wasKingSide ? -1 : 1;
+                //        int originalRookSpot = wasKingSide ? 1 : -2;
 
-                        // The actual location of the rook
-                        rookSpot += kingSpot;
-                        originalRookSpot += kingSpot;
+                //        // The actual location of the rook
+                //        rookSpot += kingSpot;
+                //        originalRookSpot += kingSpot;
 
-                        PieceList rookPieceList = isWhite ? WhiteRooks : BlackRooks;
-                        rookPieceList.UnmovePiece(new Move(originalRookSpot, rookSpot));
+                //        PieceList rookPieceList = isWhite ? WhiteRooks : BlackRooks;
+                //        rookPieceList.UnmovePiece(new Move(originalRookSpot, rookSpot));
 
-                        // Update squares as well
-                        Squares[originalRookSpot] = Squares[rookSpot];
-                        Squares[rookSpot] = Piece.None;
-                    }
-                    int plyWhereLostKingSideCastle = isWhite ?
-                        ref PlyWhereLostKingSideCastleW :
-                        ref PlyWhereLostKingSideCastleB;
-                    int plyWhereLostQueenSideCastle = isWhite ?
-                        ref PlyWhereLostQueenSideCastleW :
-                        ref PlyWhereLostQueenSideCastleB;
-                    bool CastleKingSide = isWhite ? ref CastleKingSideW : ref CastleKingSideB;
-                    bool CastleQueenSide = isWhite ? ref CastleQueenSideW : ref CastleQueenSideB;
-                    kingSpot = originalSquare;
-                    if (plyCount == plyWhereLostKingSideCastle)
-                    {
-                        CastleKingSide = true;
-                        plyWhereLostKingSideCastle = NOT_ON_BOARD;
-                    }
-                    if (plyCount == plyWhereLostQueenSideCastle)
-                    {
-                        CastleQueenSide = true;
-                        plyWhereLostQueenSideCastle = NOT_ON_BOARD;
-                    }
-                }
+                //        // Update squares as well
+                //        Squares[originalRookSpot] = Squares[rookSpot];
+                //        Squares[rookSpot] = Piece.None;
+                //    }
+                //    int plyWhereLostKingSideCastle = isWhite ?
+                //        ref PlyWhereLostKingSideCastleW :
+                //        ref PlyWhereLostKingSideCastleB;
+                //    int plyWhereLostQueenSideCastle = isWhite ?
+                //        ref PlyWhereLostQueenSideCastleW :
+                //        ref PlyWhereLostQueenSideCastleB;
+                //    bool CastleKingSide = isWhite ? ref CastleKingSideW : ref CastleKingSideB;
+                //    bool CastleQueenSide = isWhite ? ref CastleQueenSideW : ref CastleQueenSideB;
+                //    kingSpot = originalSquare;
+                //    if (plyCount == plyWhereLostKingSideCastle)
+                //    {
+                //        CastleKingSide = true;
+                //        plyWhereLostKingSideCastle = NOT_ON_BOARD;
+                //    }
+                //    if (plyCount == plyWhereLostQueenSideCastle)
+                //    {
+                //        CastleQueenSide = true;
+                //        plyWhereLostQueenSideCastle = NOT_ON_BOARD;
+                //    }
+                //}
             }
+            #endregion
             else
+            #region Otherwise, update the piece list
             {
                 if (move.MoveFlag == Move.Flag.EnPassantCapture)
                 {
@@ -494,10 +701,19 @@ namespace DuckChess
                     int capturedPawnSpot = isWhite ? -1 : 1;
                     capturedPawnSpot += currentSquare;
                     enemyPawnList.AddPieceAtSquare(capturedPawnSpot);
+                } else if (move.IsPromotion)
+                {
+                    Debug.Log("IsPromotion");
+                    PieceList pawnList = isWhite ? WhitePawns : BlackPawns;
+                    pieceListToUpdate.RemovePieceAtSquare(currentSquare);
+                    pawnList.AddPieceAtSquare(currentSquare);
+                    pieceListToUpdate = pawnList;
                 }
                 pieceListToUpdate.UnmovePiece(move);
             }
+            #endregion
 
+            #region Check if this move was a normal capture
             if (Piece.PieceType(capturedPiece) != Piece.None)
             {
                 PieceList capturedPieceList = null;
@@ -531,6 +747,7 @@ namespace DuckChess
                     winnerColor = Piece.NoColor;
                 }
             }
+            #endregion
 
             // Update the squares
             // Not the first duck move
@@ -554,51 +771,38 @@ namespace DuckChess
             }
         }
 
-        private void SwapSquares(Move move)
+        private void EnPassantInPieceList(Move move, bool isWhite)
         {
-            Squares[move.TargetSquare] = Squares[move.StartSquare];
-            Squares[move.StartSquare] = Piece.None;
+            PieceList enemyPawns = isWhite ? BlackPawns : WhitePawns;
+            int enemyPawnSquare = isWhite ? -8 : 8;
+            enemyPawnSquare += move.TargetSquare;
+            enemyPawns.RemovePieceAtSquare(enemyPawnSquare);
         }
-
-        private void MovePawn(Move move, bool isWhite)
+        private void PromoteInPieceList(Move move, bool isWhite, PieceList friendlyPawns)
         {
-            PieceList friendlyPawns = isWhite ? WhitePawns : BlackPawns;
-            int findSquareBehind = isWhite ? -8 : 8;
-
-            friendlyPawns.MovePiece(move);
-
-            if (move.MoveFlag == Move.Flag.PawnTwoForward)
+            // The pawn should already be at the target square
+            // Remove it so we can place the new piece there
+            friendlyPawns.RemovePieceAtSquare(move.TargetSquare);
+            PieceList promotionPieceList = null;
+            #region Select the piece list of the promoted piece type
+            switch (move.PromotionPieceType)
             {
-                enPassantSquare = move.TargetSquare + findSquareBehind;
-            } else
-            {
-                enPassantSquare = NOT_ON_BOARD;
+                case Piece.Knight:
+                    promotionPieceList = isWhite ? WhiteKnights : BlackKnights;
+                    break;
+                case Piece.Bishop:
+                    promotionPieceList = isWhite ? WhiteBishops : BlackBishops;
+                    break;
+                case Piece.Rook:
+                    promotionPieceList = isWhite ? WhiteRooks : BlackRooks;
+                    break;
+                case Piece.Queen:
+                    promotionPieceList = isWhite ? WhiteQueens : BlackQueens;
+                    break;
             }
-            if (move.IsPromotion)
-            {
-                PromotePawn(move, friendlyPawns, isWhite);
-            }
-            else if (move.MoveFlag == Move.Flag.EnPassantCapture)
-            {
-                EnPassant(move, isWhite);
-            }
-            numPlySinceLastEvent = 0;
-        }
+            #endregion
 
-        private void MoveKnight(Move move, bool isWhite)
-        {
-            PieceList friendlyKnights = isWhite ? WhiteKnights : BlackKnights;
-            friendlyKnights.MovePiece(move);
-            enPassantSquare = NOT_ON_BOARD;
-            numPlySinceLastEvent++;
-        }
-
-        private void MoveBishop(Move move, bool isWhite)
-        {
-            PieceList friendlyBishops = isWhite ? WhiteBishops : BlackBishops;
-            friendlyBishops.MovePiece(move);
-            enPassantSquare = NOT_ON_BOARD;
-            numPlySinceLastEvent++;
+            promotionPieceList.AddPieceAtSquare(move.TargetSquare);
         }
 
         private void MoveRook(Move move, bool isWhite)
@@ -632,14 +836,6 @@ namespace DuckChess
                         break;
                 }
             }
-            enPassantSquare = NOT_ON_BOARD;
-            numPlySinceLastEvent++;
-        }
-
-        private void MoveQueen(Move move, bool isWhite)
-        {
-            PieceList friendlyQueens = isWhite ? WhiteQueens : BlackQueens;
-            friendlyQueens.MovePiece(move);
             enPassantSquare = NOT_ON_BOARD;
             numPlySinceLastEvent++;
         }
@@ -688,104 +884,25 @@ namespace DuckChess
                 Move moveRook = new Move(rookSpot, newRookSpot);
 
                 friendlyRooks.MovePiece(moveRook);
-                SwapSquares(moveRook);
+                //SwapSquares(moveRook);
             }
             enPassantSquare = NOT_ON_BOARD;
             numPlySinceLastEvent++;
         }
 
-        private void MoveDuck(Move move)
-        {
-            Duck = move.TargetSquare;
-            numPlySinceLastEvent++;
-        }
-
-        private void CapturePieceNormally(ref Move move, bool isWhite)
-        {
-            int capturedPiece = Squares[move.TargetSquare];
-            PieceList CapturedTypeEnemyPieces = null;
-            switch (Piece.PieceType(capturedPiece))
-            {
-                case Piece.Pawn:
-                    CapturedTypeEnemyPieces = isWhite ? BlackPawns : WhitePawns;
-                    break;
-                case Piece.Knight:
-                    CapturedTypeEnemyPieces = isWhite ? BlackKnights : WhiteKnights;
-                    break;
-                case Piece.Bishop:
-                    CapturedTypeEnemyPieces = isWhite ? BlackBishops : WhiteBishops;
-                    break;
-                case Piece.Rook:
-                    CapturedTypeEnemyPieces = isWhite ? BlackRooks : WhiteRooks;
-                    break;
-                case Piece.Queen:
-                    CapturedTypeEnemyPieces = isWhite ? BlackQueens : WhiteQueens;
-                    break;
-                case Piece.King:
-                    int capturedKing = isWhite ? BlackKing : WhiteKing;
-                    move = new Move(move, capturedPiece);
-                    capturedKing = NOT_ON_BOARD;
-                    isGameOver = true;
-                    winnerColor = turnColor;
-                    return;
-            }
-            CapturedTypeEnemyPieces.RemovePieceAtSquare(move.TargetSquare);
-            move = new Move(move, capturedPiece);
-            numPlySinceLastEvent = 0;
-        }
-
-        private void PromotePawn(Move move, PieceList friendlyPawns, bool isWhite)
-        {
-            friendlyPawns.RemovePieceAtSquare(move.TargetSquare);
-            switch(move.PromotionPieceType)
-            {
-                case Piece.Knight:
-                    PieceList friendlyKnights = isWhite ? WhiteKnights : BlackKnights;
-                    friendlyKnights.AddPieceAtSquare(move.TargetSquare);
-                    Squares[move.StartSquare] = Piece.Knight;
-                    break;
-                case Piece.Bishop:
-                    PieceList friendlyBishops = isWhite ? WhiteBishops : BlackBishops;
-                    friendlyBishops.AddPieceAtSquare(move.TargetSquare);
-                    Squares[move.StartSquare] = Piece.Bishop;
-                    break;
-                case Piece.Rook:
-                    PieceList friendlyRooks = isWhite ? WhiteRooks : BlackRooks;
-                    friendlyRooks.AddPieceAtSquare(move.TargetSquare);
-                    Squares[move.StartSquare] = Piece.Rook;
-                    break;
-                case Piece.Queen:
-                    PieceList friendlyQueens = isWhite ? WhiteQueens : BlackQueens;
-                    friendlyQueens.AddPieceAtSquare(move.TargetSquare);
-                    Squares[move.StartSquare] = Piece.Queen;
-                    break;
-            }
-            Squares[move.StartSquare] |= isWhite ? Piece.White : Piece.Black;
-        }
-
-        private void EnPassant(Move move, bool isWhite)
-        {
-            PieceList enemyPawns = isWhite ? BlackPawns : WhitePawns;
-            int enemyPawnSquare = isWhite ? -8 : 8;
-            enemyPawnSquare += move.TargetSquare;
-
-            enemyPawns.RemovePieceAtSquare(enemyPawnSquare);
-            Squares[enemyPawnSquare] = Piece.None;
-        }
-
         private void GenerateNormalMoves()
         {
-            NewLegalMoveGenerator.GeneratePawnMoves(ref legalMoves, this);
-            NewLegalMoveGenerator.GenerateKnightMoves(ref legalMoves, this);
-            NewLegalMoveGenerator.GenerateBishopMoves(ref legalMoves, this);
-            NewLegalMoveGenerator.GenerateRookMoves(ref legalMoves, this);
-            NewLegalMoveGenerator.GenerateQueenMoves(ref legalMoves, this);
-            NewLegalMoveGenerator.GenerateKingMoves(ref legalMoves, this);
+            LegalMoveGenerator.GeneratePawnMoves(ref legalMoves, this);
+            //LegalMoveGenerator.GenerateKnightMoves(ref legalMoves, this);
+            //LegalMoveGenerator.GenerateBishopMoves(ref legalMoves, this);
+            //LegalMoveGenerator.GenerateRookMoves(ref legalMoves, this);
+            //LegalMoveGenerator.GenerateQueenMoves(ref legalMoves, this);
+            //LegalMoveGenerator.GenerateKingMoves(ref legalMoves, this);
         }
 
         private void GenerateDuckMoves()
         {
-            NewLegalMoveGenerator.GenerateDuckMoves(ref legalMoves, this);
+            LegalMoveGenerator.GenerateDuckMoves(ref legalMoves, this);
         }
 
         /// <summary>
@@ -859,7 +976,7 @@ namespace DuckChess
                             pieceTypeChar = "K";
                             break;
                         case Piece.Duck:
-                            pieceTypeChar = "D";
+                            pieceTypeChar = "  D";
                             break;
                     }
                     int color = Piece.Color(piece);

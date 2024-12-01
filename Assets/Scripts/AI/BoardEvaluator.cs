@@ -6,33 +6,39 @@ namespace DuckChess
 {
     public static class BoardEvaluator
     {
-        private const int PawnValue = 100;
-        private const int KnightValue = 320;
-        private const int BishopValue = 330;
-        private const int RookValue = 500;
-        private const int QueenValue = 900;
-        private const int KingValue = 10000;
+        private const int PawnValue = 1000;
+        private const int KnightValue = 3200;
+        private const int BishopValue = 3300;
+        private const int RookValue = 5000;
+        private const int QueenValue = 9000;
+        private const int KingValue = 100000;
 
-        private const int CenterBonus = 20;
-        private const int DoubledPawnPenalty = -20;
-        private const int IsolatedPawnPenalty = -10;
-        private const int KingSafetyPenalty = -50;
+        //private const int CenterBonus = 20;
+        //private const int DoubledPawnPenalty = -20;
+        //private const int IsolatedPawnPenalty = -10;
+        //private const int KingSafetyPenalty = -50;
 
         private static readonly HashSet<int> CenterSquares = new HashSet<int> { 27, 28, 35, 36 }; // Example indices for d4, d5, e4, e5
 
         public static int Evaluate(Board board, int color)
         {
+            Debug.Log("evaluating");
+            Debug.Log("next line 1");
             if (board.isGameOver)
             {
+                Debug.Log("game over");
                 return EvaluateGameOver(board, color);
             }
+            Debug.Log("next line 2");
 
             int evaluation = 0;
 
             PieceList allPieces = board.AllPieces;
             // Material and positional evaluation
+            Debug.Log("before for loop");
             for (int i = 0; i < allPieces.Count; i++)
             {
+                Debug.Log("inside for loop");
                 int pieceLocation = allPieces[i];
                 int piece = board[pieceLocation];
                 int pieceType = Piece.PieceType(piece);
@@ -40,17 +46,17 @@ namespace DuckChess
 
                 int score = GetPieceValue(pieceType);
 
-                // Positional bonus
-                if (CenterSquares.Contains(pieceLocation))
-                {
-                    score += CenterBonus;
-                }
+                //// Positional bonus
+                //if (CenterSquares.Contains(pieceLocation))
+                //{
+                //    score += CenterBonus;
+                //}
 
-                // King safety penalty
-                if (pieceType == Piece.King && IsKingExposed(board, pieceLocation))
-                {
-                    score += KingSafetyPenalty;
-                }
+                //// King safety penalty
+                //if (pieceType == Piece.King && IsKingExposed(board, pieceLocation))
+                //{
+                //    score += KingSafetyPenalty;
+                //}
 
                 // Accumulate the score based on piece color
                 evaluation += (pieceColor == color) ? score : -score;
@@ -64,6 +70,7 @@ namespace DuckChess
 
         private static int EvaluateGameOver(Board board, int color)
         {
+            Debug.Log("evaluating game over");
             return board.winnerColor switch
             {
                 Piece.NoColor => 0, // Draw
@@ -91,18 +98,18 @@ namespace DuckChess
         {
             int score = 0;
 
-            foreach (int pawnLocation in BoardInfo.PawnLocations(board, color))
-            {
-                if (IsDoubledPawn(board, pawnLocation, color))
-                {
-                    score += DoubledPawnPenalty;
-                }
+            //foreach (int pawnLocation in BoardInfo.PawnLocations(board, color))
+            //{
+            //    if (IsDoubledPawn(board, pawnLocation, color))
+            //    {
+            //        score += DoubledPawnPenalty;
+            //    }
 
-                if (IsIsolatedPawn(board, pawnLocation, color))
-                {
-                    score += IsolatedPawnPenalty;
-                }
-            }
+            //    if (IsIsolatedPawn(board, pawnLocation, color))
+            //    {
+            //        score += IsolatedPawnPenalty;
+            //    }
+            //}
 
             return score;
         }

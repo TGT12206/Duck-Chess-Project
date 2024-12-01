@@ -1,3 +1,4 @@
+using UnityEngine;
 using DuckChess;
 
 public class AlphaBetaNode
@@ -8,14 +9,27 @@ public class AlphaBetaNode
     public bool isMaximizing;
     public int indexLeftOffAt;
     public Move moveToValue;
+    public AlphaBetaNode child;
     public Move moveFromParent;
-    public AlphaBetaNode (int alpha, int beta, bool isMaximizing, Move moveFromParent)
+    public AlphaBetaNode parent;
+    public AlphaBetaNode(int alpha, int beta, bool isMaximizing, Move moveFromParent)
     {
         this.alpha = alpha;
         this.beta = beta;
         this.isMaximizing = isMaximizing;
         indexLeftOffAt = 0;
         this.moveFromParent = moveFromParent;
+        value = isMaximizing ? alpha : beta;
+    }
+    public AlphaBetaNode(int alpha, int beta, bool isMaximizing, Move moveFromParent, AlphaBetaNode parent)
+    {
+        this.alpha = alpha;
+        this.beta = beta;
+        this.isMaximizing = isMaximizing;
+        indexLeftOffAt = 0;
+        this.moveFromParent = moveFromParent;
+        this.parent = parent;
+        value = isMaximizing ? alpha : beta;
     }
 
     /// <summary>
@@ -23,7 +37,7 @@ public class AlphaBetaNode
     /// move to its new value
     /// </summary>
     /// <returns>Whether or not it decided the new value was better</returns>
-    public bool JudgeNewValue(int newValue, Move moveToNewValue)
+    public bool JudgeNewValue(int newValue, Move moveToNewValue, AlphaBetaNode child)
     {
         bool valueChanged = false;
         if (isMaximizing)
@@ -38,12 +52,30 @@ public class AlphaBetaNode
             beta = valueChanged ? newValue : beta;
             value = beta;
         }
-        moveToValue = valueChanged ? moveToNewValue : moveToValue;
+        if (valueChanged)
+        {
+            Debug.Log("Changed");
+            moveToValue = moveToNewValue;
+            this.child = child;
+        }
+        
         return valueChanged;
     }
     public bool ShouldPrune()
     {
         return alpha >= beta;
+    }
+
+    public string ToString()
+    {
+        string output = "";
+        output += "alpha " + alpha + " beta " + beta + " value " + value + " Max? " + isMaximizing + "\n";
+        output += "move: " + moveToValue.ToString();
+        if (child != null)
+        {
+            output += "\n" + child.ToString();
+        }
+        return output;
     }
 
 }

@@ -90,6 +90,10 @@ namespace DuckChess
         {
             moveValue = startSquare | targetSquare << 6 | flag << 12;
         }
+        public Move(int startSquare, int targetSquare, int flag, int capturedPiece)
+        {
+            moveValue = startSquare | targetSquare << 6 | flag << 12 | capturedPiece << 16;
+        }
 
         /// <summary>
         /// Use to add a captured piece to a move. Note that this must be a normal capture,

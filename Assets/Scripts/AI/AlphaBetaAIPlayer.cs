@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEngine;
 
 namespace DuckChess
 {
@@ -9,7 +10,7 @@ namespace DuckChess
         public override string Type { get { return "AlphaBetaAIPlayer"; } }
         public override int Color { get; set; }
 
-        private const int NumActionsPerFrame = 10000;
+        private const int NumActionsPerFrame = 100;
 
         private Board board;
         private int maxDepth;
@@ -17,6 +18,7 @@ namespace DuckChess
         private bool startSearch;
         private List<Move> legalMoves;
         private Stack<AlphaBetaNode> alphaBetaNodes;
+        private AlphaBetaNode topNode;
         private Stack<int> significantMoveCounters;
         private Board searchBoard;
         private int currentDepth;
@@ -31,7 +33,15 @@ namespace DuckChess
 
         public override void Update()
         {
-            LookForBestMove();
+            try
+            {
+                LookForBestMove();
+            }
+            catch (Exception e)
+            {
+                Debug.Log("Invalid Move\n" + topNode.ToString() + "\n" + board.ToString() + "\n" + searchBoard.ToString() + "\n");
+                return;
+            }
         }
 
         private void LookForBestMove()
@@ -43,21 +53,17 @@ namespace DuckChess
 
             for (int i = 0; i < NumActionsPerFrame; i++)
             {
-                if (alphaBetaNodes.Count == 0)
-                {
-                    // Search is complete
-                    ChooseMove(bestMove);
-                    startSearch = true;
-                    return;
-                }
-
                 AlphaBetaNode currentNode = alphaBetaNodes.Peek();
 
-                if (currentDepth < maxDepth && currentNode.indexLeftOffAt < legalMoves.Count)
+                if (currentDepth < maxDepth && !searchBoard.isGameOver && currentNode.indexLeftOffAt < legalMoves.Count)
                 {
                     if (currentNode.ShouldPrune())
                     {
-                        CloseNode();
+                        if (CloseNode())
+                        {
+                            FinishSearch();
+                            return;
+                        }
                     }
                     else
                     {
@@ -66,19 +72,36 @@ namespace DuckChess
                 }
                 else
                 {
-                    CloseNode();
+                    if (CloseNode())
+                    {
+                        FinishSearch();
+                        return;
+                    }
                 }
             }
+        }
+
+        private void FinishSearch()
+        {
+            // Search is complete
+            if (bestMove.StartSquare == 0 && bestMove.TargetSquare == 0)
+            {
+                Debug.Log("Invalid Move\n" + topNode.ToString() + "\n" + board.ToString() + "\n" + searchBoard.ToString());
+                bestMove = board.legalMoves[0];
+            }
+            ChooseMove(bestMove);
+            startSearch = true;
         }
 
         private void InitializeSearch()
         {
             bestMove = new Move();
-            legalMoves = board.legalMoves;
             searchBoard = board.Clone();
+            legalMoves = searchBoard.legalMoves;
             alphaBetaNodes = new Stack<AlphaBetaNode>();
             significantMoveCounters = new Stack<int>();
-            alphaBetaNodes.Push(new AlphaBetaNode(int.MinValue, int.MaxValue, true, new Move()));
+            topNode = new AlphaBetaNode(int.MinValue, int.MaxValue, true, new Move());
+            alphaBetaNodes.Push(topNode);
             currentDepth = 1;
             startSearch = false;
         }
@@ -91,7 +114,7 @@ namespace DuckChess
             Move nextMove = legalMoves[indexOfNextMove];
 
             bool isMaximizing = searchBoard.duckTurn ? !parent.isMaximizing : parent.isMaximizing;
-            AlphaBetaNode newNode = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, nextMove);
+            AlphaBetaNode newNode = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, nextMove, parent);
 
             searchBoard.MakeMove(ref nextMove);
             legalMoves = searchBoard.legalMoves;
@@ -99,32 +122,34 @@ namespace DuckChess
             alphaBetaNodes.Push(newNode);
         }
 
-        private void CloseNode()
+        private bool CloseNode()
         {
             AlphaBetaNode node = alphaBetaNodes.Pop();
+            if (currentDepth >= maxDepth || searchBoard.isGameOver)
+            {
+                Debug.Log("end");
+                node.value = EvaluateBoard(searchBoard);
+                Debug.Log("value" + node.value);
+            }
+
             currentDepth--;
 
-            if (alphaBetaNodes.Count == 0)
+            if (currentDepth == 0)
             {
-                // If we've returned to the root, end the search
-                return;
+                return true;
             }
 
             AlphaBetaNode parent = alphaBetaNodes.Peek();
             searchBoard.UnmakeMove(node.moveFromParent, significantMoveCounters.Pop());
             legalMoves = searchBoard.legalMoves;
 
-            if (currentDepth == maxDepth || searchBoard.isGameOver)
-            {
-                node.value = EvaluateBoard(searchBoard);
-            }
-
-            if (parent.JudgeNewValue(node.value, node.moveFromParent) && currentDepth == 1)
+            if (parent.JudgeNewValue(node.value, node.moveFromParent, node) && currentDepth == 1)
             {
                 bestMove = node.moveFromParent;
             }
 
             parent.indexLeftOffAt++;
+            return false;
         }
 
         private int EvaluateBoard(Board board)
