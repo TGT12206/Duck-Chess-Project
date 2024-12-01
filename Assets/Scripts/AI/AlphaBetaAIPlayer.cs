@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 
 namespace DuckChess
 {
@@ -128,53 +129,7 @@ namespace DuckChess
 
         private int EvaluateBoard(Board board)
         {
-            if (board.isGameOver)
-            {
-                bool isWhite = Color == Piece.White;
-                return board.winnerColor switch
-                {
-                    Piece.NoColor => 0,
-                    Piece.White => isWhite ? int.MaxValue : int.MinValue,
-                    Piece.Black => isWhite ? int.MinValue : int.MaxValue,
-                    _ => 0
-                };
-            }
-
-            // Material evaluation
-            int evaluation = 0;
-            const int pawnValue = 100, knightValue = 320, bishopValue = 330, rookValue = 500, queenValue = 900, kingValue = 10000;
-
-              PieceList allPieces = board.AllPieces;
-
-            for (int i = 0; i < allPieces.Count; i++)
-            {
-               
-                 int pieceLocation = allPieces[i];
-                int piece = board[pieceLocation];
-                int pieceType = Piece.PieceType(piece);
-                int pieceColor = Piece.Color(piece);
-                int pieceValue = pieceType switch
-                {
-                    Piece.Pawn => pawnValue,
-                    Piece.Knight => knightValue,
-                    Piece.Bishop => bishopValue,
-                    Piece.Rook => rookValue,
-                    Piece.Queen => queenValue,
-                    Piece.King => kingValue,
-                    _ => 0
-                };
-
-                if (pieceColor == this.Color)
-                {
-                    evaluation += pieceValue;
-                }
-                else
-                {
-                    evaluation -= pieceValue;
-                }
-            }
-
-            return evaluation;
+           return BoardEvaluator.Evaluate(board, this.Color);
         }
 
         public override void UnmakeMove()
@@ -182,48 +137,4 @@ namespace DuckChess
             throw new NotImplementedException();
         }
     }
-
-    // public class AlphaBetaNode
-    // {
-    //     public int alpha;
-    //     public int beta;
-    //     public bool isMaximizing;
-    //     public int indexLeftOffAt;
-    //     public Move moveFromParent;
-        // public int value;
-
-    //     public AlphaBetaNode(int alpha, int beta, bool isMaximizing, Move moveFromParent)
-    //     {
-    //         this.alpha = alpha;
-    //         this.beta = beta;
-    //         this.isMaximizing = isMaximizing;
-    //         this.moveFromParent = moveFromParent;
-    //         this.indexLeftOffAt = 0;
-    //         this.value = isMaximizing ? int.MinValue : int.MaxValue;
-    //     }
-
-    //     public bool ShouldPrune()
-    //     {
-    //         return alpha >= beta;
-    //     }
-
-    //     public bool JudgeNewValue(int newValue, Move move)
-    //     {
-    //         if (isMaximizing && newValue > value)
-    //         {
-    //             value = newValue;
-    //             moveFromParent = move;
-    //             alpha = Math.Max(alpha, value);
-    //             return true;
-    //         }
-    //         else if (!isMaximizing && newValue < value)
-    //         {
-    //             value = newValue;
-    //             moveFromParent = move;
-    //             beta = Math.Min(beta, value);
-    //             return true;
-    //         }
-    //         return false;
-    //     }
-    // }
 }

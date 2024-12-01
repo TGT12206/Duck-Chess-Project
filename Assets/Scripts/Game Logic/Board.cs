@@ -918,5 +918,6 @@ namespace DuckChess
 
             return copy;
         }
+
     }
 }
