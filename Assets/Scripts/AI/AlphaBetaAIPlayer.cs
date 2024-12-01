@@ -1,124 +1,138 @@
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace DuckChess
 {
     public class AlphaBetaAIPlayer : RealTimePlayer
     {
-        public override string Type => "ABPlayer";
+        public override string Type { get { return "AlphaBetaAIPlayer"; } }
         public override int Color { get; set; }
 
-        private const int NodesPerFrame = 1000; // Number of nodes to explore per frame
-        private readonly int maxDepth; // Max depth for the alpha-beta search
+        private const int NumActionsPerFrame = 10000;
 
-        private Board board; // Current game board
-        private Board searchBoard; // Cloned board for search
-        private Move bestMove; // The best move found
-        private Stack<SearchNode> searchStack; // Stack to manage Alpha-Beta nodes
-        private List<Move> legalMoves; // Legal moves for the current position
-        private bool isSearching; // Indicates if search is ongoing
+        private Board board;
+        private int maxDepth;
+        private Move bestMove;
+        private bool startSearch;
+        private List<Move> legalMoves;
+        private Stack<AlphaBetaNode> alphaBetaNodes;
+        private Stack<int> significantMoveCounters;
+        private Board searchBoard;
+        private int currentDepth;
 
         public AlphaBetaAIPlayer(Board board, int color, int maxDepth)
         {
             this.board = board;
             this.Color = color;
             this.maxDepth = maxDepth;
-            isSearching = true;
+            startSearch = true;
         }
 
         public override void Update()
         {
-            if (isSearching)
-            {
-                SearchBestMove();
-            }
+            LookForBestMove();
         }
 
-        private void SearchBestMove()
+        private void LookForBestMove()
         {
-            if (searchStack == null)
+            if (startSearch)
             {
                 InitializeSearch();
             }
 
-            for (int i = 0; i < NodesPerFrame; i++)
+            for (int i = 0; i < NumActionsPerFrame; i++)
             {
-                if (searchStack.Count == 0)
+                if (alphaBetaNodes.Count == 0)
                 {
-                    Debug.Log($"Best move found: {bestMove}");
+                    Debug.Log("No more nodes to consider.");
+                    // Search is complete
                     ChooseMove(bestMove);
-                    isSearching = false;
+                    startSearch = true;
                     return;
                 }
 
-                ProcessCurrentNode();
+                AlphaBetaNode currentNode = alphaBetaNodes.Peek();
+
+                if (currentDepth < maxDepth && currentNode.indexLeftOffAt < legalMoves.Count)
+                {
+                    if (currentNode.ShouldPrune())
+                    {
+                        CloseNode();
+                    }
+                    else
+                    {
+                        ExpandNode();
+                    }
+                }
+                else
+                {
+                    CloseNode();
+                }
             }
         }
 
         private void InitializeSearch()
         {
-            searchBoard = board.Clone();
-            legalMoves = new List<Move>(board.legalMoves);
             bestMove = new Move();
-            searchStack = new Stack<SearchNode>();
-
-            // Push the root node
-            searchStack.Push(new SearchNode(int.MinValue, int.MaxValue, true, 0, new Move()));
+            legalMoves = board.legalMoves;
+            searchBoard = board.Clone();
+            alphaBetaNodes = new Stack<AlphaBetaNode>();
+            significantMoveCounters = new Stack<int>();
+            alphaBetaNodes.Push(new AlphaBetaNode(int.MinValue, int.MaxValue, true, new Move()));
+            currentDepth = 1;
+            startSearch = false;
         }
 
-        private void ProcessCurrentNode()
+        private void ExpandNode()
         {
-            var currentNode = searchStack.Peek();
+            currentDepth++;
+            AlphaBetaNode parent = alphaBetaNodes.Peek();
+            int indexOfNextMove = parent.indexLeftOffAt;
+            Move nextMove = legalMoves[indexOfNextMove];
 
-            if (currentNode.Depth >= maxDepth || currentNode.Index >= legalMoves.Count || searchBoard.isGameOver)
+            bool isMaximizing = searchBoard.duckTurn ? !parent.isMaximizing : parent.isMaximizing;
+            AlphaBetaNode newNode = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, nextMove);
+
+            searchBoard.MakeMove(ref nextMove);
+            legalMoves = searchBoard.legalMoves;
+            significantMoveCounters.Push(searchBoard.numPlySinceLastEvent);
+            alphaBetaNodes.Push(newNode);
+        }
+
+        private void CloseNode()
+        {
+            AlphaBetaNode node = alphaBetaNodes.Pop();
+            currentDepth--;
+
+            if (alphaBetaNodes.Count == 0)
             {
-                // Evaluate leaf nodes
-                if (currentNode.Depth >= maxDepth || searchBoard.isGameOver)
-                {
-                    currentNode.Value = BoardEvaluator.Evaluate(searchBoard, Color);
-                }
-
-                // Backtrack and propagate values
-                searchStack.Pop();
-                if (searchStack.Count > 0)
-                {
-                    var parent = searchStack.Peek();
-                    if (parent.IsMaximizing)
-                    {
-                        if (currentNode.Value > parent.Alpha)
-                        {
-                            parent.Alpha = currentNode.Value;
-                            if (currentNode.Depth == 1)
-                            {
-                                bestMove = currentNode.Move;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (currentNode.Value < parent.Beta)
-                        {
-                            parent.Beta = currentNode.Value;
-                        }
-                    }
-                    parent.Index++;
-                }
-                searchBoard.UnmakeMove(currentNode.Move, searchBoard.numPlySinceLastEvent);
+                // If we've returned to the root, end the search
+                return;
             }
-            else
+
+            if (currentDepth == maxDepth || searchBoard.isGameOver)
             {
-                // Expand node
-                var nextMove = legalMoves[currentNode.Index];
-                searchBoard.MakeMove(ref nextMove);
-
-                searchStack.Push(new SearchNode(
-                    currentNode.Alpha,
-                    currentNode.Beta,
-                    !currentNode.IsMaximizing,
-                    currentNode.Depth + 1,
-                    nextMove));
+                node.value = EvaluateBoard(searchBoard);
+                Debug.Log(node.value);
             }
+
+            AlphaBetaNode parent = alphaBetaNodes.Peek();
+            searchBoard.UnmakeMove(node.moveFromParent, significantMoveCounters.Pop());
+            legalMoves = searchBoard.legalMoves;
+
+            if (parent.JudgeNewValue(node.value, node.moveFromParent) && currentDepth == 1)
+            {
+                bestMove = node.moveFromParent;
+            }
+
+            parent.indexLeftOffAt++;
+        }
+
+        private int EvaluateBoard(Board board)
+        {
+           return BoardEvaluator.Evaluate(board, this.Color);
         }
 
         public override void UnmakeMove()
@@ -126,28 +140,4 @@ namespace DuckChess
             throw new NotImplementedException();
         }
     }
-
-    public class SearchNode
-    {
-        public int Alpha { get; set; }
-        public int Beta { get; set; }
-        public bool IsMaximizing { get; }
-        public int Depth { get; }
-        public int Index { get; set; }
-        public Move Move { get; }
-        public int Value { get; set; }
-
-        public SearchNode(int alpha, int beta, bool isMaximizing, int depth, Move move)
-        {
-            Alpha = alpha;
-            Beta = beta;
-            IsMaximizing = isMaximizing;
-            Depth = depth;
-            Index = 0;
-            Move = move;
-            Value = isMaximizing ? int.MinValue : int.MaxValue;
-        }
-    }
-
-    
 }
