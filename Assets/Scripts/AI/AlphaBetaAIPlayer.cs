@@ -112,6 +112,10 @@ namespace DuckChess
             AlphaBetaNode parent = alphaBetaNodes.Peek();
             int indexOfNextMove = parent.indexLeftOffAt;
             Move nextMove = legalMoves[indexOfNextMove];
+            if (searchBoard.duckTurn)
+            {
+                Debug.Log("Legal Duck Move " + nextMove.ToString());
+            }
 
             bool isMaximizing = searchBoard.duckTurn ? !parent.isMaximizing : parent.isMaximizing;
             AlphaBetaNode newNode = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, nextMove, parent);
@@ -127,9 +131,7 @@ namespace DuckChess
             AlphaBetaNode node = alphaBetaNodes.Pop();
             if (currentDepth >= maxDepth || searchBoard.isGameOver)
             {
-                Debug.Log("end");
                 node.value = EvaluateBoard(searchBoard);
-                Debug.Log("value" + node.value);
             }
 
             currentDepth--;

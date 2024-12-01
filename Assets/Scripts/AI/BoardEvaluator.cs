@@ -22,23 +22,17 @@ namespace DuckChess
 
         public static int Evaluate(Board board, int color)
         {
-            Debug.Log("evaluating");
-            Debug.Log("next line 1");
             if (board.isGameOver)
             {
-                Debug.Log("game over");
                 return EvaluateGameOver(board, color);
             }
-            Debug.Log("next line 2");
 
             int evaluation = 0;
 
             PieceList allPieces = board.AllPieces;
             // Material and positional evaluation
-            Debug.Log("before for loop");
             for (int i = 0; i < allPieces.Count; i++)
             {
-                Debug.Log("inside for loop");
                 int pieceLocation = allPieces[i];
                 int piece = board[pieceLocation];
                 int pieceType = Piece.PieceType(piece);
@@ -70,7 +64,6 @@ namespace DuckChess
 
         private static int EvaluateGameOver(Board board, int color)
         {
-            Debug.Log("evaluating game over");
             return board.winnerColor switch
             {
                 Piece.NoColor => 0, // Draw

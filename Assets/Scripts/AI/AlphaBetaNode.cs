@@ -54,7 +54,6 @@ public class AlphaBetaNode
         }
         if (valueChanged)
         {
-            Debug.Log("Changed");
             moveToValue = moveToNewValue;
             this.child = child;
         }

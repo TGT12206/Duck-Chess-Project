@@ -358,6 +358,14 @@ namespace DuckChess
         {
             int startSquare = move.StartSquare;
             int targetSquare = move.TargetSquare;
+            // If this is the first duck move, then the piece at the
+            // "start" square is actually the rook. Therefore, none of
+            // The following code works, and we need to return asap.
+            if (move.MoveFlag == Move.Flag.FirstDuckMove)
+            {
+                Duck = targetSquare;
+                return;
+            }
             int pieceToMove = Squares[startSquare];
             bool isPawn = false;
             bool isRook = false;
@@ -390,39 +398,40 @@ namespace DuckChess
             if (pieceListToUpdate == null)
             {
                 // Must be a king or a duck
-                //if (Piece.PieceType(pieceToMove) == Piece.King)
-                //{
-                //    // King
-                //    int kingSpot = isWhite ? ref WhiteKing : ref BlackKing;
-                //    kingSpot = targetSquare;
-                //    bool kingSideCastle = isWhite ? ref CastleKingSideW : ref CastleKingSideB;
-                //    bool queenSideCastle = isWhite ? ref CastleQueenSideW : ref CastleQueenSideB;
-
-                //    // Can't castle after moving king
-                //    kingSideCastle = false;
-                //    queenSideCastle = false;
-
-                //    // Castle
-                //    if (move.MoveFlag == Move.Flag.Castling)
-                //    {
-                //        bool isKingSide = move.TargetSquare - move.StartSquare > 0;
-
-                //        int rookSpot = move.StartSquare;
-                //        rookSpot += isKingSide ? 3 : -4;
-
-                //        int newRookSpot = move.StartSquare;
-                //        newRookSpot += isKingSide ? 1 : -1;
-
-                //        PieceList friendlyRooks = isWhite ? WhiteRooks : BlackRooks;
-
-                //        Move moveRook = new Move(rookSpot, newRookSpot);
-                //        friendlyRooks.MovePiece(moveRook);
-                //    }
-                //} else
-                //{
+                if (Piece.PieceType(pieceToMove) == Piece.Duck)
+                {
                     // Duck
                     Duck = targetSquare;
-                //}
+                }
+                else
+                {
+                    //// King
+                    //int kingSpot = isWhite ? ref WhiteKing : ref BlackKing;
+                    //kingSpot = targetSquare;
+                    //bool kingSideCastle = isWhite ? ref CastleKingSideW : ref CastleKingSideB;
+                    //bool queenSideCastle = isWhite ? ref CastleQueenSideW : ref CastleQueenSideB;
+
+                    //// Can't castle after moving king
+                    //kingSideCastle = false;
+                    //queenSideCastle = false;
+
+                    //// Castle
+                    //if (move.MoveFlag == Move.Flag.Castling)
+                    //{
+                    //    bool isKingSide = move.TargetSquare - move.StartSquare > 0;
+
+                    //    int rookSpot = move.StartSquare;
+                    //    rookSpot += isKingSide ? 3 : -4;
+
+                    //    int newRookSpot = move.StartSquare;
+                    //    newRookSpot += isKingSide ? 1 : -1;
+
+                    //    PieceList friendlyRooks = isWhite ? WhiteRooks : BlackRooks;
+
+                    //    Move moveRook = new Move(rookSpot, newRookSpot);
+                    //    friendlyRooks.MovePiece(moveRook);
+                    //}
+                }
             }
             else
             {
@@ -526,8 +535,10 @@ namespace DuckChess
         }
         private void MovePieceInSquares(Move move, bool isWhite)
         {
-            // The first duck move
-            if (duckTurn && Duck == NOT_ON_BOARD)
+            // If this is the first duck move, then the piece at the
+            // "start" square is actually the rook. Therefore, some of
+            // The following code will break, and we need to return asap.
+            if (move.MoveFlag == Move.Flag.FirstDuckMove)
             {
                 Squares[move.TargetSquare] = Piece.Duck;
                 return;
@@ -576,21 +587,20 @@ namespace DuckChess
         {
             plyCount++;
             ResetLegalMoves();
-            if (duckTurn)
-            {
-                duckTurn = false;
-                turnColor = turnColor == Piece.White ? Piece.Black : Piece.White;
-                GenerateNormalMoves();
-            }
-            else
-            {
-                duckTurn = true;
-                GenerateDuckMoves();
-            }
             if (numPlySinceLastEvent >= 200)
             {
                 isGameOver = true;
                 winnerColor = Piece.NoColor;
+            }
+            duckTurn = !duckTurn;
+            if (duckTurn)
+            {
+                GenerateDuckMoves();
+            }
+            else
+            {
+                turnColor = turnColor == Piece.White ? Piece.Black : Piece.White;
+                GenerateNormalMoves();
             }
         }
 
