@@ -298,7 +298,9 @@ MonoBehaviour:
   RookB: {fileID: 9093908949719373030, guid: 0a41cd6fa8bfe044f8b90c9888ecd871, type: 3}
   RookW: {fileID: 441707550595045278, guid: d5139b1322dbe964d8908dd2638a0c29, type: 3}
   Duck: {fileID: 3678837813050690649, guid: 9ca89387c4254c24b80f5fa0f6da1f4c, type: 3}
+  Circle: {fileID: 6955305696398098667, guid: 4fb8735371f868646a13ca37be9adb4f, type: 3}
   Pieces: []
+  Circles: []
   cam: {fileID: 0}
 --- !u!4 &1117467297
 Transform:
@@ -440,8 +442,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1854159108}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.6204057, y: 2.6107137, z: 0.050509777}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
