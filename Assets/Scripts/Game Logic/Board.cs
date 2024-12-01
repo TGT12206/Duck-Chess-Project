@@ -775,17 +775,17 @@ namespace DuckChess
 
         private void GenerateNormalMoves()
         {
-            LegalMoveGenerator.GeneratePawnMoves(ref legalMoves, this);
-            LegalMoveGenerator.GenerateKnightMoves(ref legalMoves, this);
-            LegalMoveGenerator.GenerateBishopMoves(ref legalMoves, this);
-            LegalMoveGenerator.GenerateRookMoves(ref legalMoves, this);
-            LegalMoveGenerator.GenerateQueenMoves(ref legalMoves, this);
-            LegalMoveGenerator.GenerateKingMoves(ref legalMoves, this);
+            NewLegalMoveGenerator.GeneratePawnMoves(ref legalMoves, this);
+            NewLegalMoveGenerator.GenerateKnightMoves(ref legalMoves, this);
+            NewLegalMoveGenerator.GenerateBishopMoves(ref legalMoves, this);
+            NewLegalMoveGenerator.GenerateRookMoves(ref legalMoves, this);
+            NewLegalMoveGenerator.GenerateQueenMoves(ref legalMoves, this);
+            NewLegalMoveGenerator.GenerateKingMoves(ref legalMoves, this);
         }
 
         private void GenerateDuckMoves()
         {
-            LegalMoveGenerator.GenerateDuckMoves(ref legalMoves, this);
+            NewLegalMoveGenerator.GenerateDuckMoves(ref legalMoves, this);
         }
 
         /// <summary>
