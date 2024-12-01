@@ -25,7 +25,7 @@ public class AlphaBetaNode
     /// <returns>Whether or not it decided the new value was better</returns>
     public bool JudgeNewValue(int newValue, Move moveToNewValue)
     {
-        bool valueChanged = false;
+        bool valueChanged;
         if (isMaximizing)
         {
             valueChanged = newValue > alpha;

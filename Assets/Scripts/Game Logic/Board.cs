@@ -349,6 +349,9 @@ namespace DuckChess
                 bool isWhite = turnColor == Piece.White;
                 switch (pieceType)
                 {
+                    case Piece.None:
+                        Debug.Log($"This should not be happening, moving from {move.StartSquare} to {move.TargetSquare}");
+                        return;
                     case Piece.Pawn:
                         MovePawn(move, isWhite);
                         break;
@@ -373,6 +376,7 @@ namespace DuckChess
                 }
                 if (Squares[move.TargetSquare] != Piece.None)
                 {
+                    Debug.Log($"Moving {pieceType} to: {move.TargetSquare}");
                     CapturePieceNormally(ref move, isWhite);
                 }
                 SwapSquares(move);
@@ -727,6 +731,8 @@ namespace DuckChess
                     capturedKing = NOT_ON_BOARD;
                     isGameOver = true;
                     winnerColor = turnColor;
+                    return;
+                default:
                     return;
             }
             CapturedTypeEnemyPieces.RemovePieceAtSquare(move.TargetSquare);

@@ -64,6 +64,7 @@ namespace DuckChess
 
         private static int EvaluateGameOver(Board board, int color)
         {
+            Debug.Log("Winner is " + board.winnerColor); 
             return board.winnerColor switch
             {
                 Piece.NoColor => 0, // Draw
@@ -107,20 +108,20 @@ namespace DuckChess
             return score;
         }
 
-       private static bool IsKingExposed(Board board, int kingLocation)
-{
-    return BoardInfo.IsKingExposed(board, kingLocation);
-}
+        private static bool IsKingExposed(Board board, int kingLocation)
+        {
+            return BoardInfo.IsKingExposed(board, kingLocation);
+        }
 
-private static bool IsDoubledPawn(Board board, int pawnLocation, int color)
-{
-    return BoardInfo.IsDoubledPawn(board, pawnLocation, color);
-}
+        private static bool IsDoubledPawn(Board board, int pawnLocation, int color)
+        {
+            return BoardInfo.IsDoubledPawn(board, pawnLocation, color);
+        }
 
-private static bool IsIsolatedPawn(Board board, int pawnLocation, int color)
-{
-    return BoardInfo.IsIsolatedPawn(board, pawnLocation, color);
-}
+        private static bool IsIsolatedPawn(Board board, int pawnLocation, int color)
+        {
+            return BoardInfo.IsIsolatedPawn(board, pawnLocation, color);
+        }
     }
 
 }

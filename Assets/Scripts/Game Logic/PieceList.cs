@@ -1,178 +1,176 @@
-using DuckChess;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// A class that stores all of the squares that have a specific piece type on them.
-/// The piece type a given PieceList object cares about is up to the user of this class
-/// to decide.
-/// </summary>
-public class PieceList
+namespace DuckChess
 {
-    /// <summary>
-    /// A list that stores squares with the specific piece type
-    /// </summary>
-    public int[] occupiedSquares;
-
-    /// <summary>
-    /// A mapping from square (0-63) to the index with that square in occupiedSquares
-    /// </summary>
-    int[] map;
-
-    /// <summary>
-    /// The number of this piece type on the board
-    /// </summary>
-    int numPieces;
-
-    public PieceList(int maxPieceCount)
+    public class PieceList : IEnumerable<int>
     {
-        occupiedSquares = new int[maxPieceCount];
-        map = new int[64];
-        for (int i = 0; i < maxPieceCount; i++)
+        /// <summary>
+        /// A list that stores squares with the specific piece type.
+        /// </summary>
+        private readonly List<int> occupiedSquares;
+
+        /// <summary>
+        /// A mapping from square (0-63) to the index within the occupiedSquares list.
+        /// </summary>
+        private readonly int[] map;
+
+        /// <summary>
+        /// The maximum number of pieces this list can hold.
+        /// </summary>
+        private readonly int maxPieceCount;
+
+        public PieceList(int maxPieceCount)
         {
-            occupiedSquares[i] = -1;
+            this.maxPieceCount = maxPieceCount;
+            occupiedSquares = new List<int>(maxPieceCount);
+            map = new int[64];
+            Array.Fill(map, -1); // Initialize all squares as unmapped
         }
-        for (int i = 0; i < 64; i++)
+
+        /// <summary>
+        /// The number of this piece type on the board.
+        /// </summary>
+        public int Count => occupiedSquares.Count;
+
+        /// <summary>
+        /// Adds a piece to the list and updates the map.
+        /// </summary>
+        public void AddPieceAtSquare(int square)
         {
-            map[i] = -1;
-        }
-        numPieces = 0;
-    }
-
-    /// <summary>
-    /// The number of this piece type on the board
-    /// </summary>
-    public int Count
-    {
-        get
-        {
-            return numPieces;
-        }
-    }
-
-    /// <summary>
-    /// Remember that a piece of this piece type is at the given square
-    /// </summary>
-    public void AddPieceAtSquare(int square)
-    {
-        occupiedSquares[numPieces] = square;
-        map[square] = numPieces;
-        numPieces++;
-    }
-
-    /// <summary>
-    /// Remove the piece of this piece type from memory at the given square
-    /// </summary>
-    public void RemovePieceAtSquare(int square)
-    {
-        int pieceIndex = map[square];
-        for (int i = pieceIndex; i < numPieces - 1; i++)
-        {
-            occupiedSquares[i] = occupiedSquares[i + 1];
-            map[occupiedSquares[i]] = i;
-        }
-        occupiedSquares[numPieces - 1] = -1;
-        map[square] = -1;
-        numPieces--;
-    }
-
-    /// <summary>
-    /// Update the locations in memory to reflect the given move
-    /// </summary>
-    public void MovePiece(Move move)
-    {
-        int startSquare = move.StartSquare;
-        int targetSquare = move.TargetSquare;
-        int pieceIndex = map[startSquare];
-        occupiedSquares[pieceIndex] = targetSquare;
-        map[targetSquare] = pieceIndex;
-        map[startSquare] = -1;
-    }
-
-    /// <summary>
-    /// Update the locations in memory to undo the given move
-    /// </summary>
-    public void UnmovePiece(Move move)
-    {
-        int startSquare = move.StartSquare;
-        int targetSquare = move.TargetSquare;
-        int pieceIndex = map[targetSquare];
-        occupiedSquares[pieceIndex] = startSquare;
-        map[startSquare] = pieceIndex;
-        map[targetSquare] = -1;
-    }
-
-    /// <summary>
-    /// Returns a new piecelist with the combined information.
-    /// It is not possible to add more pieces to this list, so treat it as readonly.
-    /// However, you may still merge it with another list.
-    /// </summary>
-    public static PieceList MergePieceLists(PieceList firstList, PieceList secondList)
-    {
-        int firstPieceCount = firstList.Count;
-        int secondPieceCount = secondList.Count;
-        int total = firstPieceCount + secondPieceCount;
-        PieceList newList = new PieceList(total);
-        for (int i = 0; i < firstPieceCount; i++)
-        {
-            int occupiedSquare = firstList[i];
-            newList.AddPieceAtSquare(occupiedSquare);
-        }
-        for (int i = 0; i < secondPieceCount; i++)
-        {
-            int occupiedSquare = secondList[i];
-            newList.AddPieceAtSquare(occupiedSquare);
-        }
-        return newList;
-    }
-
-    /// <summary>
-    /// Adds the information of the other list into this one. Make sure that
-    /// the maximum capacity of this list is greater than the combined
-    /// total of pieces, or it will result in an index out of bounds.
-    /// </summary>
-    public void MergeWithPieceList(PieceList otherList)
-    {
-        int otherPieceCount = otherList.Count;
-        for (int i = 0; i < otherPieceCount; i++)
-        {
-            int occupiedSquare = otherList[i];
-            AddPieceAtSquare(occupiedSquare);
-        }
-    }
-
-    public int this[int index] => occupiedSquares[index];
-
-    /// <summary>
-    /// Returns this Piece List as a formatted string
-    /// </summary>
-    public override string ToString()
-    {
-        string output = "Occupied Squares:\n";
-        for (int i = 0; i < occupiedSquares.Length; i++)
-        {
-            output += occupiedSquares[i] + " ";
-            output += i == numPieces - 1 ? "| " : "";
-        }
-        output += "\n" + numPieces;
-        output += "\nMap:\n";
-        for (int i = 7; i >= 0; i--)
-        {
-            int row = i * 8;
-            for (int j = 0; j < 8; j++)
+            if (occupiedSquares.Count >= maxPieceCount)
             {
-                output += map[row + j] + " ";
+                throw new InvalidOperationException("Exceeded the maximum capacity of this PieceList.");
             }
-            output += "\n";
-        }
-        return output;
-    }
 
-    public PieceList Clone()
-    {
-        PieceList clone = new PieceList(this.occupiedSquares.Length);
-        clone.numPieces = this.numPieces;
-        this.occupiedSquares.CopyTo(clone.occupiedSquares, 0);
-        this.map.CopyTo(clone.map, 0);
-        return clone;
+            if (map[square] != -1)
+            {
+                throw new InvalidOperationException($"Square {square} is already occupied.");
+            }
+
+            occupiedSquares.Add(square);
+            map[square] = occupiedSquares.Count - 1;
+        }
+
+        /// <summary>
+        /// Removes the piece from the specified square and updates the map.
+        /// </summary>
+        public void RemovePieceAtSquare(int square)
+        {
+            int pieceIndex = map[square];
+            if (pieceIndex == -1)
+            {
+                throw new InvalidOperationException($"Square {square} does not contain a piece.");
+            }
+
+            // Swap the last piece in the list with the one being removed
+            int lastPieceSquare = occupiedSquares[^1];
+            occupiedSquares[pieceIndex] = lastPieceSquare;
+            map[lastPieceSquare] = pieceIndex;
+
+            // Remove the last piece and update the map
+            occupiedSquares.RemoveAt(occupiedSquares.Count - 1);
+            map[square] = -1;
+        }
+
+        /// <summary>
+        /// Updates the locations to reflect a move.
+        /// </summary>
+        public void MovePiece(Move move)
+        {
+            int startSquare = move.StartSquare;
+            int targetSquare = move.TargetSquare;
+
+            RemovePieceAtSquare(startSquare);
+            AddPieceAtSquare(targetSquare);
+        }
+
+        /// <summary>
+        /// Reverts a move to its original state.
+        /// </summary>
+        public void UnmovePiece(Move move)
+        {
+            int startSquare = move.StartSquare;
+            int targetSquare = move.TargetSquare;
+
+            RemovePieceAtSquare(targetSquare);
+            AddPieceAtSquare(startSquare);
+        }
+
+        /// <summary>
+        /// Combines two piece lists into a new readonly list.
+        /// </summary>
+        public static PieceList MergePieceLists(PieceList firstList, PieceList secondList)
+        {
+            int combinedCount = firstList.Count + secondList.Count;
+            PieceList mergedList = new PieceList(combinedCount);
+
+            foreach (int square in firstList)
+            {
+                mergedList.AddPieceAtSquare(square);
+            }
+
+            foreach (int square in secondList)
+            {
+                mergedList.AddPieceAtSquare(square);
+            }
+
+            return mergedList;
+        }
+
+        /// <summary>
+        /// Adds the information of another list into this one.
+        /// </summary>
+        public void MergeWithPieceList(PieceList otherList)
+        {
+            foreach (int square in otherList)
+            {
+                AddPieceAtSquare(square);
+            }
+        }
+
+        /// <summary>
+        /// Allows indexing into the occupiedSquares list.
+        /// </summary>
+        public int this[int index] => occupiedSquares[index];
+
+        /// <summary>
+        /// Provides a formatted string of the piece list.
+        /// </summary>
+        public override string ToString()
+        {
+            return $"Occupied Squares: {string.Join(", ", occupiedSquares)} (Count: {Count})";
+        }
+
+        /// <summary>
+        /// Creates a deep copy of this PieceList.
+        /// </summary>
+        public PieceList Clone()
+        {
+            PieceList clone = new PieceList(maxPieceCount);
+            foreach (int square in occupiedSquares)
+            {
+                clone.AddPieceAtSquare(square);
+            }
+            return clone;
+        }
+
+        /// <summary>
+        /// Allows iteration over occupied squares using foreach.
+        /// </summary>
+        public IEnumerator<int> GetEnumerator()
+        {
+            return occupiedSquares.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Non-generic enumerator for compatibility.
+        /// </summary>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 }
