@@ -137,7 +137,10 @@ namespace DuckChess
                 allPieces.MergeWithPieceList(BlackQueens);
                 allPieces.AddPieceAtSquare(WhiteKing);
                 allPieces.AddPieceAtSquare(BlackKing);
-                allPieces.AddPieceAtSquare(Duck);
+                if (Duck != NOT_ON_BOARD)
+                {
+                    allPieces.AddPieceAtSquare(Duck);
+                }
                 return allPieces;
             }
         }
