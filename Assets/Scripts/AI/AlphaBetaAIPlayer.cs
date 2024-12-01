@@ -67,7 +67,7 @@ namespace DuckChess
                     }
                 } else
                 {
-                    if (currentDepth == 0)
+                    if (currentDepth == 1)
                     {
                         // If we're back at the top and there are no more legal moves
                         Debug.Log("Best Move " + bestMove.ToString() + "==================================================================");
@@ -112,7 +112,7 @@ namespace DuckChess
                 node.value = EvaluateBoard(searchBoard);
             }
             if (parent.JudgeNewValue(node.value, moveFromParentToNode) &&
-                currentDepth == 0
+                currentDepth == 1
             )
             {
                 // If we have come back to the base node and
