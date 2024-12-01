@@ -11,7 +11,7 @@ namespace DuckChess
         public override string Type { get { return "AlphaBetaAIPlayer"; } }
         public override int Color { get; set; }
 
-        private const int numActionsPerFrame = 5000;
+        private const int numActionsPerFrame = 10000;
 
         private Board board;
 
@@ -48,7 +48,6 @@ namespace DuckChess
                 alphaBetaNodes.Push(new AlphaBetaNode(int.MinValue, int.MaxValue, true, new Move()));
                 significantMoveCounters = new Stack<int>();
                 currentDepth = 1;
-                Debug.Log("Move being added: " + currentDepth + " count " + alphaBetaNodes.Count);
                 startSearch = false;
             }
             for (int i = 0; i < numActionsPerFrame; i++)
@@ -70,7 +69,6 @@ namespace DuckChess
                     if (currentDepth == 1)
                     {
                         // If we're back at the top and there are no more legal moves
-                        Debug.Log("Best Move " + bestMove.ToString() + "==================================================================");
                         ChooseMove(bestMove);
                         startSearch = true;
                         return;
@@ -89,7 +87,6 @@ namespace DuckChess
             AlphaBetaNode parent = alphaBetaNodes.Peek();
             int indexOfNextMove = parent.indexLeftOffAt;
             Move nextMove = legalMoves[indexOfNextMove];
-            Debug.Log("Move being added: " + (currentDepth - 1) + " count " + alphaBetaNodes.Count + " " + nextMove.ToString());
             bool isMaximizing = searchBoard.duckTurn ? !parent.isMaximizing : parent.isMaximizing;
             AlphaBetaNode node = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, nextMove);
             searchBoard.MakeMove(ref nextMove);
@@ -104,7 +101,6 @@ namespace DuckChess
             AlphaBetaNode node = alphaBetaNodes.Pop();
             AlphaBetaNode parent = alphaBetaNodes.Peek();
             Move moveFromParentToNode = node.moveFromParent;
-            Debug.Log("Move being undone: " + currentDepth + " count " + alphaBetaNodes.Count + " " + moveFromParentToNode.ToString());
             searchBoard.UnmakeMove(moveFromParentToNode, significantMoveCounters.Pop());
             legalMoves = searchBoard.legalMoves;
             if (currentDepth == maxDepth || searchBoard.isGameOver)
