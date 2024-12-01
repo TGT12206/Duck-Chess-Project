@@ -19,13 +19,14 @@ namespace DuckChess
         public static void GeneratePawnMoves(ref List<Move> generatedMoves, Board board)
         {
             bool isWhite = board.turnColor == Piece.White;
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
             PieceList pawnLocations = isWhite ? board.WhitePawns : board.BlackPawns;
             int pawnSpot;
             int findSpotOneFront = isWhite ? 8 : -8;
             int rowBeforePromotion = isWhite ? 6 : 1;
             int startRow = isWhite ? 1 : 6;
             int findCaptureSpotOnRight = isWhite ? 9 : -7;
-            int findCaptureSpotOnLeft = isWhite ? 9 : -7;
+            int findCaptureSpotOnLeft = isWhite ? 7 : -9;
             for (int i = 0; i < board.WhitePawns.Count; i++)
             {
                 pawnSpot = pawnLocations[i];
@@ -91,7 +92,7 @@ namespace DuckChess
                 int pawnCol = Board.GetColumnOf(pawnSpot);
                 if (pawnCol < 7)
                 {
-                    if (Piece.Color(board[rightCaptureSpot]) == Piece.Black)
+                    if (Piece.Color(board[rightCaptureSpot]) == enemyColor)
                     {
                         if (Board.GetRowOf(pawnSpot) == rowBeforePromotion)
                         {
@@ -117,7 +118,7 @@ namespace DuckChess
                 }
                 if (pawnCol > 0)
                 {
-                    if (Piece.Color(board[leftCaptureSpot]) == Piece.Black)
+                    if (Piece.Color(board[leftCaptureSpot]) == enemyColor)
                     {
                         if (Board.GetRowOf(pawnSpot) == rowBeforePromotion)
                         {

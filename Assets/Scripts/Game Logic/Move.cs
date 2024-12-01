@@ -231,7 +231,7 @@ namespace DuckChess
         public override string ToString()
         {
             string moveString = "";
-            moveString += StartSquare + " to " + TargetSquare + " flag: " + MoveFlag;
+            moveString += StartSquare + " to " + TargetSquare + " flag: " + MoveFlag + " captured " + CapturedPiece;
             return moveString;
         }
 
