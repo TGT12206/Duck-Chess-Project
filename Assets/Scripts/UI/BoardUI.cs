@@ -78,8 +78,7 @@ public class BoardUI : MonoBehaviour
     public void AISelectPiece(Move move)
     {
         Circles[selectedSquare].SetActive(false);
-        selectedSquare = move.StartSquare;
-        highlightedMoves.Clear();
+        selectedSquare = move.TargetSquare;
         Circles[move.TargetSquare].SetActive(true);
     }
 

@@ -119,9 +119,9 @@ namespace DuckChess
             int indexOfNextMove = parent.indexLeftOffAt;
             Move nextMove = legalMoves[indexOfNextMove];
 
-            if (nextMove.StartSquare == 0 && nextMove.TargetSquare == 0)
+            if (nextMove.StartSquare == 33 && nextMove.TargetSquare == 24)
             {
-                Debug.Log("Move: " + nextMove.ToString());
+                Debug.Log("Search Board: " + searchBoard.ToString());
             }
 
             bool isMaximizing = searchBoard.duckTurn ? !parent.isMaximizing : parent.isMaximizing;

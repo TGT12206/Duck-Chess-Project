@@ -353,7 +353,6 @@ namespace DuckChess
 
             SwitchToNextTurn();
             Debug.Log("end, done move");
-            Debug.Log("captured piece " + move.CapturedPiece);
         }
 
         private void MovePieceInPieceLists(ref Move move, bool isWhite)
@@ -498,20 +497,25 @@ namespace DuckChess
                 switch (Piece.PieceType(capturedPiece))
                 {
                     case Piece.Pawn:
-                        capturedPieceList = isWhite ? WhitePawns : BlackPawns;
+                        capturedPieceList = isWhite ? BlackPawns : WhitePawns;
+                        Debug.Log("captured a pawn");
                         break;
                     case Piece.Knight:
-                        capturedPieceList = isWhite ? WhiteKnights : BlackKnights;
+                        capturedPieceList = isWhite ? BlackKnights : WhiteKnights;
+                        Debug.Log("captured a knight");
                         break;
                     case Piece.Bishop:
-                        capturedPieceList = isWhite ? WhiteBishops : BlackBishops;
+                        capturedPieceList = isWhite ? BlackBishops : WhiteBishops;
+                        Debug.Log("captured a bishop");
                         break;
                     case Piece.Rook:
-                        capturedPieceList = isWhite ? WhiteRooks : BlackRooks;
+                        capturedPieceList = isWhite ? BlackRooks : WhiteRooks;
+                        Debug.Log("captured a rook");
                         isRookCaptured = true;
                         break;
                     case Piece.Queen:
-                        capturedPieceList = isWhite ? WhiteQueens : BlackQueens;
+                        capturedPieceList = isWhite ? BlackQueens : WhiteQueens;
+                        Debug.Log("captured a queen");
                         break;
                 }
                 if (capturedPieceList == null)
@@ -519,10 +523,12 @@ namespace DuckChess
                     // Must be a king that was captured
                     isGameOver = true;
                     winnerColor = turnColor;
-                    int kingSpot = isWhite ? ref WhiteKing : ref BlackKing;
+                    int kingSpot = isWhite ? ref BlackKing : ref WhiteKing;
                     kingSpot = NOT_ON_BOARD;
+                } else
+                {
+                    capturedPieceList.RemovePieceAtSquare(targetSquare);
                 }
-                capturedPieceList.RemovePieceAtSquare(targetSquare);
                 //if (isRookCaptured)
                 //{
                 //    // If we capture an enemy rook, disable enemy castling on that side
@@ -625,6 +631,22 @@ namespace DuckChess
              * - swap the target and start squares on the board
              * replace the piece that was captured
              */
+            // Update the turn info
+            bool isWhite = turnColor == Piece.White;
+            plyCount--;
+            duckTurn = !duckTurn;
+            ResetLegalMoves();
+            if (duckTurn)
+            {
+                turnColor = isWhite ? Piece.Black : Piece.White;
+                isWhite = turnColor == Piece.White;
+                GenerateDuckMoves();
+            }
+            else
+            {
+                GenerateNormalMoves();
+            }
+
             // If this is the first duck move, then the piece at the
             // "start" square is actually the rook. Therefore, some of
             // The following code will break, and we need to return asap.
@@ -634,13 +656,10 @@ namespace DuckChess
                 Duck = NOT_ON_BOARD;
                 return;
             }
-            bool isWhite = turnColor == Piece.White;
             int currentSquare = move.TargetSquare;
             int originalSquare = move.StartSquare;
             int piece = Squares[currentSquare];
             int capturedPiece = move.CapturedPiece;
-            Debug.Log("undoing move");
-            Debug.Log("captured piece " + move.CapturedPiece);
             PieceList pieceListToUpdate = null;
 
             // Update the piece lists
@@ -736,7 +755,6 @@ namespace DuckChess
                     enemyPawnList.AddPieceAtSquare(capturedPawnSpot);
                 } else if (move.IsPromotion)
                 {
-                    Debug.Log("IsPromotion");
                     PieceList pawnList = isWhite ? WhitePawns : BlackPawns;
                     pieceListToUpdate.RemovePieceAtSquare(currentSquare);
                     pawnList.AddPieceAtSquare(currentSquare);
@@ -747,9 +765,8 @@ namespace DuckChess
             #endregion
 
             #region Check if this move was a normal capture
-            if (Piece.PieceType(capturedPiece) != Piece.None)
+            if (move.IsCapture)
             {
-                Debug.Log("undoing capture");
                 PieceList capturedPieceList = null;
                 switch (Piece.PieceType(capturedPiece))
                 {
@@ -786,21 +803,6 @@ namespace DuckChess
             // Update the squares
             Squares[originalSquare] = Squares[currentSquare];
             Squares[currentSquare] = move.CapturedPiece;
-
-            // Update the turn info
-            plyCount--;
-            duckTurn = !duckTurn;
-            ResetLegalMoves();
-            if (duckTurn)
-            {
-                turnColor = isWhite ? Piece.Black : Piece.White;
-                GenerateDuckMoves();
-            } else
-            {
-                GenerateNormalMoves();
-            }
-            Debug.Log("end, undone move");
-            Debug.Log("captured piece " + move.CapturedPiece);
         }
 
         private void EnPassantInPieceList(Move move, bool isWhite)

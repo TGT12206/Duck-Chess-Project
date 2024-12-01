@@ -66,6 +66,12 @@ namespace DuckChess
             GeneratePawnForwardMoves(ref generatedMoves, board, pawnSpot, isWhite, findSpotOneFront, rowBeforePromotion, startRow);
             GeneratePawnCaptureMoves(ref generatedMoves, board, pawnSpot, enemyColor, findCaptureSpotOnRight, findCaptureSpotOnLeft, rowBeforePromotion);
             GenerateEnPassantMoves(ref generatedMoves, board, pawnSpot, findCaptureSpotOnLeft, findCaptureSpotOnRight);
+            string moves = "";
+            foreach (Move move in generatedMoves)
+            {
+                moves += "color: " + Piece.Color(board[move.StartSquare]) + " piece: " + Piece.PieceType(board[move.StartSquare]) + " " + move.ToString() + "\n";
+            }
+            Debug.Log( moves );
         }
 
         public static void GenerateOnePawnsMoves(ref List<Move> generatedMoves, Board board, int pawnSpot)
@@ -130,11 +136,11 @@ namespace DuckChess
                 int enemyPiece = board[leftCaptureSpot];
                 if (Board.GetRowOf(pawnSpot) == rowBeforePromotion)
                 {
-                    AddPawnPromotions(ref generatedMoves, pawnSpot, leftCaptureSpot);
+                    AddPawnPromotions(ref generatedMoves, pawnSpot, leftCaptureSpot, enemyPiece);
                 }
                 else
                 {
-                    generatedMoves.Add(new Move(pawnSpot, leftCaptureSpot));
+                    generatedMoves.Add(new Move(pawnSpot, leftCaptureSpot, enemyPiece));
                 }
             }
         }
