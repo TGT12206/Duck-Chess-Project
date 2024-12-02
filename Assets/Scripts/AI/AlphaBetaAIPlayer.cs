@@ -125,12 +125,12 @@ namespace DuckChess
             }
 
             bool isMaximizing = searchBoard.duckTurn ? !parent.isMaximizing : parent.isMaximizing;
-            
+
             // Making a move on a board saves any captured piece onto the move,
             // so we need to make the move before saving.
             searchBoard.MakeMove(ref nextMove);
             AlphaBetaNode newNode = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, nextMove, parent);
-            
+
             legalMoves = searchBoard.legalMoves;
             significantMoveCounters.Push(searchBoard.numPlySinceLastEvent);
             alphaBetaNodes.Push(newNode);
@@ -167,7 +167,7 @@ namespace DuckChess
 
         private int EvaluateBoard(Board board)
         {
-           return BoardEvaluator.Evaluate(board, this.Color);
+            return BoardEvaluator.Evaluate(board, this.Color);
         }
 
         public override void UnmakeMove()
