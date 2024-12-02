@@ -29,12 +29,10 @@ namespace DuckChess
 
             int evaluation = 0;
 
-            PieceList allPieces = board.AllPieces;
             // Material and positional evaluation
-            for (int i = 0; i < allPieces.Count; i++)
+            for (int i = 0; i < 64; i++)
             {
-                int pieceLocation = allPieces[i];
-                int piece = board[pieceLocation];
+                int piece = board[i];
                 int pieceType = Piece.PieceType(piece);
                 int pieceColor = Piece.Color(piece);
 

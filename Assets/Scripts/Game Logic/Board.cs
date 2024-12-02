@@ -41,59 +41,11 @@ namespace DuckChess
         public List<Move> legalMoves;
         #endregion
 
-        #region Piece Locations
-        public PieceList WhitePawns, BlackPawns, WhiteKnights, BlackKnights;
-        public PieceList WhiteBishops, BlackBishops, WhiteRooks, BlackRooks;
-        public PieceList WhiteQueens, BlackQueens;
-
-        public int WhiteKing, BlackKing;
-        public int Duck = NOT_ON_BOARD;
-        #endregion
-
-        #region Constants for Maximum Pieces
-        public const int MAX_PAWN_COUNT = 8;
-        public const int MAX_KNIGHT_COUNT = 10;
-        public const int MAX_BISHOP_COUNT = 10;
-        public const int MAX_ROOK_COUNT = 10;
-        public const int MAX_QUEEN_COUNT = 9;
-        #endregion
-
         public int this[int index]
         {
             get => Squares[index];
             set => Squares[index] = value;
         }
-
-        #region Piece Locations
-        // Information about (mostly location and number) each piece type
-        /// <summary>
-        /// A Piecelist that contains the location of every piece on the board.
-        /// </summary>
-        public PieceList AllPieces
-        {
-            get
-            {
-                PieceList allPieces = new PieceList(64);
-                allPieces.MergeWithPieceList(WhitePawns);
-                allPieces.MergeWithPieceList(BlackPawns);
-                allPieces.MergeWithPieceList(WhiteKnights);
-                allPieces.MergeWithPieceList(BlackKnights);
-                allPieces.MergeWithPieceList(WhiteBishops);
-                allPieces.MergeWithPieceList(BlackBishops);
-                allPieces.MergeWithPieceList(WhiteRooks);
-                allPieces.MergeWithPieceList(BlackRooks);
-                allPieces.MergeWithPieceList(WhiteQueens);
-                allPieces.MergeWithPieceList(BlackQueens);
-                allPieces.AddPieceAtSquare(WhiteKing);
-                allPieces.AddPieceAtSquare(BlackKing);
-                if (Duck != NOT_ON_BOARD)
-                {
-                    allPieces.AddPieceAtSquare(Duck);
-                }
-                return allPieces;
-            }
-        }
-        #endregion
 
         public Board()
         {
@@ -140,25 +92,8 @@ namespace DuckChess
                 winnerColor = winnerColor,
                 isGameOver = isGameOver,
                 plyCount = plyCount,
-                numPlySinceLastEvent = numPlySinceLastEvent,
-                Duck = Duck
+                numPlySinceLastEvent = numPlySinceLastEvent
             };
-
-            // Deep copy all piece lists
-            copy.WhitePawns = WhitePawns.Clone();
-            copy.BlackPawns = BlackPawns.Clone();
-            copy.WhiteKnights = WhiteKnights.Clone();
-            copy.BlackKnights = BlackKnights.Clone();
-            copy.WhiteBishops = WhiteBishops.Clone();
-            copy.BlackBishops = BlackBishops.Clone();
-            copy.WhiteRooks = WhiteRooks.Clone();
-            copy.BlackRooks = BlackRooks.Clone();
-            copy.WhiteQueens = WhiteQueens.Clone();
-            copy.BlackQueens = BlackQueens.Clone();
-
-            copy.WhiteKing = WhiteKing;
-            copy.BlackKing = BlackKing;
-
             // Clone legal moves
             copy.legalMoves = new List<Move>(legalMoves);
 
@@ -178,7 +113,6 @@ namespace DuckChess
             plyCount = 0;
             PlyWhereLostKingSideCastleW = PlyWhereLostQueenSideCastleW = NOT_ON_BOARD;
             PlyWhereLostKingSideCastleB = PlyWhereLostQueenSideCastleB = NOT_ON_BOARD;
-            Duck = NOT_ON_BOARD;
             enPassantSquare = -1;
         }
 
@@ -190,62 +124,52 @@ namespace DuckChess
             ResetBoardState();
 
             // Initialize pieces
-            WhitePawns = InitializePieceList(MAX_PAWN_COUNT, 8, 16, Piece.White | Piece.Pawn);
-            BlackPawns = InitializePieceList(MAX_PAWN_COUNT, 48, 56, Piece.Black | Piece.Pawn);
+            PlaceOnSquares(8, 16, Piece.White | Piece.Pawn);
+            PlaceOnSquares(48, 56, Piece.Black | Piece.Pawn);
 
-            WhiteKnights = InitializePieceList(MAX_KNIGHT_COUNT, new[] { 1, 6 }, Piece.White | Piece.Knight);
-            BlackKnights = InitializePieceList(MAX_KNIGHT_COUNT, new[] { 57, 62 }, Piece.Black | Piece.Knight);
+            PlaceOnSquares(new int[] { 1, 6 }, Piece.White | Piece.Knight);
+            PlaceOnSquares(new int[] { 57, 62 }, Piece.Black | Piece.Knight);
 
-            WhiteBishops = InitializePieceList(MAX_BISHOP_COUNT, new[] { 2, 5 }, Piece.White | Piece.Bishop);
-            BlackBishops = InitializePieceList(MAX_BISHOP_COUNT, new[] { 58, 61 }, Piece.Black | Piece.Bishop);
+            PlaceOnSquares(new int[] { 2, 5 }, Piece.White | Piece.Bishop);
+            PlaceOnSquares(new int[] { 58, 61 }, Piece.Black | Piece.Bishop);
 
-            WhiteRooks = InitializePieceList(MAX_ROOK_COUNT, new[] { 0, 7 }, Piece.White | Piece.Rook);
-            BlackRooks = InitializePieceList(MAX_ROOK_COUNT, new[] { 56, 63 }, Piece.Black | Piece.Rook);
+            PlaceOnSquares(new int[] { 0, 7 }, Piece.White | Piece.Rook);
+            PlaceOnSquares(new int[] { 56, 63 }, Piece.Black | Piece.Rook);
 
-            WhiteQueens = InitializePieceList(MAX_QUEEN_COUNT, new[] { 3 }, Piece.White | Piece.Queen);
-            BlackQueens = InitializePieceList(MAX_QUEEN_COUNT, new[] { 59 }, Piece.Black | Piece.Queen);
+            PlaceOnSquares(new int[] { 3 }, Piece.White | Piece.Queen);
+            PlaceOnSquares(new int[] { 59 }, Piece.Black | Piece.Queen);
 
             PlaceKings();
             turnColor = Piece.White;
             GenerateNormalMoves();
         }
 
-        private PieceList InitializePieceList(int maxCount, int start, int end, int piece)
+        private void PlaceOnSquares(int start, int end, int piece)
         {
-            var list = new PieceList(maxCount);
             for (int i = start; i < end; i++)
             {
                 Squares[i] = piece;
-                list.AddPieceAtSquare(i);
             }
-            return list;
         }
 
-        private PieceList InitializePieceList(int maxCount, int[] positions, int piece)
+        private void PlaceOnSquares(int[] positions, int piece)
         {
-            var list = new PieceList(maxCount);
             foreach (var pos in positions)
             {
                 Squares[pos] = piece;
-                list.AddPieceAtSquare(pos);
             }
-            return list;
         }
 
         private void PlaceKings()
         {
-            WhiteKing = 4;
-            BlackKing = 60;
-
-            Squares[WhiteKing] = Piece.White | Piece.King;
-            Squares[BlackKing] = Piece.Black | Piece.King;
+            Squares[4] = Piece.White | Piece.King;
+            Squares[60] = Piece.Black | Piece.King;
         }
 
 
-        private void UpdateBoardAndLists(ref Move move, bool isWhite)
+        private void UpdateBoard(ref Move move, bool isWhite)
         {
-            int piece = move.StartPiece(this);
-            PieceList pieceList = GetPieceList(Piece.PieceType(piece), isWhite);
+            int piece = Squares[move.StartSquare];
 
             String dbgStr = "Updating board (move attempt).\n";
             dbgStr += "Turn is white: " + (turnColor == Piece.White) + "\n";
@@ -253,79 +177,50 @@ namespace DuckChess
             dbgStr += "Piece: " + Piece.PieceStr(piece) + "\n";
             dbgStr += "Is white: " + isWhite + "\n";
             dbgStr += "Move: " + move + "\n";
-            dbgStr += "List: " + pieceList + "\n";
             dbgStr += "Board: " + this + "\n";
             Debug.Log(dbgStr);
 
-            if (pieceList != null)
+            if (move.MoveFlag == Move.Flag.EnPassantCapture)
             {
-                pieceList.MovePiece(move);
-                UpdateBoard(ref move, isWhite, pieceList);
+                HandleEnPassant(move, isWhite);
             }
-            else if (Piece.PieceType(piece) == Piece.Duck)
+            else if (move.IsPromotion)
             {
-                Duck = move.TargetSquare;
+                PromotePawn(move, isWhite);
+            }
+            else if (move.MoveFlag == Move.Flag.Castling)
+            {
+                HandleCastling(move, isWhite);
+            }
+            else
+            {
+                if (move.MoveFlag == Move.Flag.PawnTwoForward)
+                {
+                    enPassantSquare = move.TargetSquare;
+                }
+
                 Squares[move.TargetSquare] = piece;
                 if (move.MoveFlag != Move.Flag.FirstDuckMove)
+                {
                     Squares[move.StartSquare] = Piece.None;
+                }
             }
 
             Debug.Log("After attempt:\nBoard: " + this);
         }
 
-        private void UpdateBoard(ref Move move, bool isWhite, PieceList pieceList)
+        private void HandleEnPassant(Move move, bool isWhite)
         {
-            if (move.MoveFlag == Move.Flag.EnPassantCapture)
-                HandleEnPassant(move, isWhite);
-
-            else if (move.IsPromotion)
-                PromotePawn(move, isWhite, pieceList);
-
-            else if (move.MoveFlag == Move.Flag.Castling)
-                HandleCastling(move, isWhite);
-
-            else if (move.IsCapture)
-                HandleCapture(move, isWhite);
-
-            else
-            {
-                if (move.MoveFlag == Move.Flag.PawnTwoForward)
-                    enPassantSquare = move.TargetSquare;
-
-                Squares[move.TargetSquare] = Squares[move.StartSquare];
-                Squares[move.StartSquare] = Piece.None;
-
-            }
-
-        }
-
-        private void HandleCapture(Move move, bool isWhite)
-        {
-            int captureType = Piece.PieceType(move.CapturedPiece);
-            if (captureType != Piece.King)
-            {
-                PieceList captureList = GetPieceList(captureType, isWhite);
-                captureList.RemovePieceAtSquare(move.TargetSquare);
-            }
-
+            int enemySquare = move.TargetSquare + (isWhite ? -8 : 8);
+            Squares[enemySquare] = Piece.None;
             Squares[move.TargetSquare] = Squares[move.StartSquare];
             Squares[move.StartSquare] = Piece.None;
         }
 
-        private void HandleEnPassant(Move move, bool isWhite)
+        private void PromotePawn(Move move, bool isWhite)
         {
-            PieceList enemyPawns = isWhite ? BlackPawns : WhitePawns;
-            int enemySquare = move.TargetSquare + (isWhite ? -8 : 8);
-            enemyPawns.RemovePieceAtSquare(enemySquare);
-            Squares[enemySquare] = Piece.None;
-        }
-
-        private void PromotePawn(Move move, bool isWhite, PieceList pawns)
-        {
-            pawns.RemovePieceAtSquare(move.TargetSquare);
-            PieceList promotionList = GetPieceList(move.PromotionPieceType, isWhite);
-            promotionList.AddPieceAtSquare(move.TargetSquare);
             Squares[move.TargetSquare] = move.PromotionPieceType | (isWhite ? Piece.White : Piece.Black);
+            Squares[move.StartSquare] = Piece.None;
         }
 
         private void HandleCastling(Move move, bool isWhite)
@@ -334,26 +229,13 @@ namespace DuckChess
             int rookStart = isKingSide ? (isWhite ? 7 : 63) : (isWhite ? 0 : 56);
             int rookEnd = isKingSide ? move.TargetSquare - 1 : move.TargetSquare + 1;
 
+            // Update squares for king
+            Squares[move.TargetSquare] = Squares[move.StartSquare];
+            Squares[move.StartSquare] = Piece.None;
+
             // Update squares for the rook
             Squares[rookEnd] = Squares[rookStart];
             Squares[rookStart] = Piece.None;
-
-            // Update piece list for the rook
-            PieceList rookList = GetPieceList(Piece.Rook, isWhite);
-            rookList.MovePiece(new Move(rookStart, rookEnd));
-        }
-
-        private PieceList GetPieceList(int pieceType, bool isWhite)
-        {
-            return pieceType switch
-            {
-                Piece.Pawn => isWhite ? WhitePawns : BlackPawns,
-                Piece.Knight => isWhite ? WhiteKnights : BlackKnights,
-                Piece.Bishop => isWhite ? WhiteBishops : BlackBishops,
-                Piece.Rook => isWhite ? WhiteRooks : BlackRooks,
-                Piece.Queen => isWhite ? WhiteQueens : BlackQueens,
-                _ => null
-            };
         }
 
         private void SwitchTurnForward()
@@ -405,7 +287,7 @@ namespace DuckChess
             numPlySinceLastEvent++;
 
             bool isWhite = turnColor == Piece.White;
-            UpdateBoardAndLists(ref move, isWhite);
+            UpdateBoard(ref move, isWhite);
 
             SwitchTurnForward();
         }
@@ -445,110 +327,110 @@ namespace DuckChess
         /// <param name="previousNumPlySinceLastEvent">The draw counter value before the move was made.</param>
         public void UnmakeMove(Move move, int previousNumPlySinceLastEvent)
         {
-            String dbgStr = "Unmaking move.\n";
-            dbgStr += "Move: " + move + "\n";
-            dbgStr += "Board: " + this + "\n";
+            //String dbgStr = "Unmaking move.\n";
+            //dbgStr += "Move: " + move + "\n";
+            //dbgStr += "Board: " + this + "\n";
 
-            Debug.Log(dbgStr);
+            //Debug.Log(dbgStr);
 
-            plyCount--;
-            numPlySinceLastEvent = previousNumPlySinceLastEvent;
+            //plyCount--;
+            //numPlySinceLastEvent = previousNumPlySinceLastEvent;
 
-            // Restore the piece to its original position
-            int targetPiece = move.TargetPiece(this);
+            //// Restore the piece to its original position
+            //int targetPiece = move.TargetPiece(this);
 
-            if (move.MoveFlag == Move.Flag.FirstDuckMove)
-            {
-                Duck = NOT_ON_BOARD;
-                Squares[move.TargetSquare] = Piece.None;
-                return;
-            }
+            //if (move.MoveFlag == Move.Flag.FirstDuckMove)
+            //{
+            //    Duck = NOT_ON_BOARD;
+            //    Squares[move.TargetSquare] = Piece.None;
+            //    return;
+            //}
 
-            Squares[move.StartSquare] = targetPiece;
-            Squares[move.TargetSquare] = move.CapturedPiece;
+            //Squares[move.StartSquare] = targetPiece;
+            //Squares[move.TargetSquare] = move.CapturedPiece;
 
-            // Revert en passant square
-            if (move.MoveFlag == Move.Flag.PawnTwoForward)
-            {
-                enPassantSquare = NOT_ON_BOARD;
-            }
+            //// Revert en passant square
+            //if (move.MoveFlag == Move.Flag.PawnTwoForward)
+            //{
+            //    enPassantSquare = NOT_ON_BOARD;
+            //}
 
-            // Handle captured piece restoration
-            else if (move.IsCapture)
-            {
-                int capturedPiece = move.CapturedPiece;
-                if (capturedPiece != Piece.None)
-                {
-                    Debug.Log("Piece type: " + Piece.PieceStr(capturedPiece));
-                    PieceList capturedPieceList = GetPieceList(Piece.PieceType(capturedPiece), Piece.Color(capturedPiece) == Piece.White);
-                    capturedPieceList.AddPieceAtSquare(move.TargetSquare);
-                }
-            }
+            //// Handle captured piece restoration
+            //else if (move.IsCapture)
+            //{
+            //    int capturedPiece = move.CapturedPiece;
+            //    if (capturedPiece != Piece.None)
+            //    {
+            //        Debug.Log("Piece type: " + Piece.PieceStr(capturedPiece));
+            //        PieceList capturedPieceList = GetPieceList(Piece.PieceType(capturedPiece), Piece.Color(capturedPiece) == Piece.White);
+            //        capturedPieceList.AddPieceAtSquare(move.TargetSquare);
+            //    }
+            //}
 
-            // Handle pawn promotion reversal
-            else if (move.IsPromotion)
-            {
-                PieceList promotionList = GetPieceList(Piece.PieceType(targetPiece), Piece.Color(targetPiece) == Piece.White);
-                promotionList.RemovePieceAtSquare(move.TargetSquare);
-                PieceList pawnList = GetPieceList(Piece.Pawn, Piece.Color(targetPiece) == Piece.White);
-                pawnList.AddPieceAtSquare(move.TargetSquare);
-            }
-
-
-            // Handle castling
-            else if (move.MoveFlag == Move.Flag.Castling)
-            {
-                bool isKingSide = move.TargetSquare > move.StartSquare;
-                int rookStart = isKingSide ? move.TargetSquare + 1 : move.TargetSquare - 2;
-                int rookEnd = isKingSide ? move.TargetSquare - 1 : move.TargetSquare + 1;
-
-                Squares[rookStart] = Squares[rookEnd];
-                Squares[rookEnd] = Piece.None;
-
-                PieceList rookList = GetPieceList(Piece.Rook, Piece.Color(targetPiece) == Piece.White);
-                rookList.UnmovePiece(new Move(rookEnd, rookStart));
-            }
-
-            // default
-            else
-            {
-
-                int pieceType = Piece.PieceType(targetPiece);
-                if (pieceType == Piece.King)
-                {
-                    if (Piece.Color(targetPiece) == Piece.White)
-                    {
-                        WhiteKing = move.StartSquare;
-                    }
-                    else
-                    {
-                        BlackKing = move.StartSquare;
-                    }
-                }
-
-                else if (pieceType == Piece.Duck)
-                {
-                    Duck = move.StartSquare;
-                }
-
-                else
-                {
-                    // Regular piece movement undo
-                    PieceList movedPieceList = GetPieceList(pieceType, Piece.Color(targetPiece) == Piece.White);
-                    movedPieceList.UnmovePiece(move);
-                }
-            }
-            // Restore king position if necessary
+            //// Handle pawn promotion reversal
+            //else if (move.IsPromotion)
+            //{
+            //    PieceList promotionList = GetPieceList(Piece.PieceType(targetPiece), Piece.Color(targetPiece) == Piece.White);
+            //    promotionList.RemovePieceAtSquare(move.TargetSquare);
+            //    PieceList pawnList = GetPieceList(Piece.Pawn, Piece.Color(targetPiece) == Piece.White);
+            //    pawnList.AddPieceAtSquare(move.TargetSquare);
+            //}
 
 
-            SwitchTurnBackward(ref move);
+            //// Handle castling
+            //else if (move.MoveFlag == Move.Flag.Castling)
+            //{
+            //    bool isKingSide = move.TargetSquare > move.StartSquare;
+            //    int rookStart = isKingSide ? move.TargetSquare + 1 : move.TargetSquare - 2;
+            //    int rookEnd = isKingSide ? move.TargetSquare - 1 : move.TargetSquare + 1;
+
+            //    Squares[rookStart] = Squares[rookEnd];
+            //    Squares[rookEnd] = Piece.None;
+
+            //    PieceList rookList = GetPieceList(Piece.Rook, Piece.Color(targetPiece) == Piece.White);
+            //    rookList.UnmovePiece(new Move(rookEnd, rookStart));
+            //}
+
+            //// default
+            //else
+            //{
+
+            //    int pieceType = Piece.PieceType(targetPiece);
+            //    if (pieceType == Piece.King)
+            //    {
+            //        if (Piece.Color(targetPiece) == Piece.White)
+            //        {
+            //            WhiteKing = move.StartSquare;
+            //        }
+            //        else
+            //        {
+            //            BlackKing = move.StartSquare;
+            //        }
+            //    }
+
+            //    else if (pieceType == Piece.Duck)
+            //    {
+            //        Duck = move.StartSquare;
+            //    }
+
+            //    else
+            //    {
+            //        // Regular piece movement undo
+            //        PieceList movedPieceList = GetPieceList(pieceType, Piece.Color(targetPiece) == Piece.White);
+            //        movedPieceList.UnmovePiece(move);
+            //    }
+            //}
+            //// Restore king position if necessary
 
 
-            String dbgStr1 = "Unmaking move (finish).\n";
-            dbgStr1 += "Move: " + move + "\n";
-            dbgStr1 += "Board: " + this + "\n";
+            //SwitchTurnBackward(ref move);
 
-            Debug.Log(dbgStr1);
+
+            //String dbgStr1 = "Unmaking move (finish).\n";
+            //dbgStr1 += "Move: " + move + "\n";
+            //dbgStr1 += "Board: " + this + "\n";
+
+            //Debug.Log(dbgStr1);
 
         }
     }

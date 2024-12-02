@@ -31,7 +31,7 @@ namespace DuckChess
             int startRow = isWhite ? 1 : 6;
             int findCaptureSpotOnRight = isWhite ? 9 : -7;
             int findCaptureSpotOnLeft = isWhite ? 7 : -9;
-            PieceList pawnLocations = isWhite ? board.WhitePawns : board.BlackPawns;
+            List<int> pawnLocations = GetLocationOfPieces(board, Piece.Pawn);
             for (int i = 0; i < pawnLocations.Count; i++)
             {
                 pawnSpot = pawnLocations[i];
@@ -55,6 +55,37 @@ namespace DuckChess
                 moves += "Piece: " + Piece.PieceStr(board[move.StartSquare]) + " | " + move.ToString() + "\n";
             }
             Debug.Log( moves );
+        }
+
+        private static List<int> GetLocationOfPieces(Board board, int pieceType)
+        {
+            int piece = board.turnColor | pieceType;
+            int pieceColor = Piece.Color(piece);
+            List<int> pieceLocations = new List<int>();
+            for (int i = 0; i < 64; i++)
+            {
+                int boardPieceType = Piece.PieceType(board[i]);
+                int boardPieceColor = Piece.Color(board[i]);
+                // Just in case the implementation of piece ever changes,
+                // (ex. new flags) hard code it to check the piece type and color
+                if (pieceType == boardPieceType && pieceColor == boardPieceColor)
+                {
+                    pieceLocations.Add(i);
+                }
+            }
+            return pieceLocations;
+        }
+
+        private static int GetLocationOfDuck(Board board)
+        {
+            for (int i = 0; i < 64; i++)
+            {
+                if (Piece.PieceType(board[i]) == Piece.Duck)
+                {
+                    return i;
+                }
+            }
+            return Board.NOT_ON_BOARD;
         }
 
         private static void GenerateOnePawnsMoves(
@@ -153,7 +184,7 @@ namespace DuckChess
             {
                 if (leftCaptureSpot == board.enPassantSquare || rightCaptureSpot == board.enPassantSquare)
                 {
-                    if (board.Duck != board.enPassantSquare)
+                    if (board[board.enPassantSquare] != Piece.Duck)
                     {
                         generatedMoves.Add(new Move(pawnSpot, board.enPassantSquare, Move.Flag.EnPassantCapture));
                     }
@@ -217,10 +248,10 @@ namespace DuckChess
                 return;
             }
             bool isWhite = board.turnColor == Piece.White;
-            PieceList friendlyKnightSpots = isWhite ? board.WhiteKnights : board.BlackKnights;
-            for (int i = 0; i < friendlyKnightSpots.Count; i++)
+            List<int> knightLocations = GetLocationOfPieces(board, Piece.Knight);
+            for (int i = 0; i < knightLocations.Count; i++)
             {
-                int knightSpot = friendlyKnightSpots[i];
+                int knightSpot = knightLocations[i];
                 GenerateOneKnightsMoves(ref generatedMoves, board, knightSpot);
             }
         }
@@ -362,10 +393,10 @@ namespace DuckChess
                 return;
             }
             bool isWhite = board.turnColor == Piece.White;
-            PieceList friendlyBishopSpots = isWhite ? board.WhiteBishops : board.BlackBishops;
-            for (int i = 0; i < friendlyBishopSpots.Count; i++)
+            List<int> bishopLocations = GetLocationOfPieces(board, Piece.Bishop);
+            for (int i = 0; i < bishopLocations.Count; i++)
             {
-                int bishopSpot = friendlyBishopSpots[i];
+                int bishopSpot = bishopLocations[i];
                 GenerateOneBishopsMoves(ref generatedMoves, board, bishopSpot);
             }
         }
@@ -555,10 +586,10 @@ namespace DuckChess
                 return;
             }
             bool isWhite = board.turnColor == Piece.White;
-            PieceList friendlyRookSpots = isWhite ? board.WhiteRooks : board.BlackRooks;
-            for (int i = 0; i < friendlyRookSpots.Count; i++)
+            List<int> rookLocations = GetLocationOfPieces(board, Piece.Rook);
+            for (int i = 0; i < rookLocations.Count; i++)
             {
-                int rookSpot = friendlyRookSpots[i];
+                int rookSpot = rookLocations[i];
                 GenerateOneRooksMoves(ref generatedMoves, board, rookSpot);
             }
         }
@@ -744,11 +775,11 @@ namespace DuckChess
                 return;
             }
             bool isWhite = board.turnColor == Piece.White;
-            PieceList friendlyQueenSpots = isWhite ? board.WhiteQueens : board.BlackQueens;
+            List<int> queenLocations = GetLocationOfPieces(board, Piece.Queen);
             int enemyColor = isWhite ? Piece.Black : Piece.White;
-            for (int i = 0; i < friendlyQueenSpots.Count; i++)
+            for (int i = 0; i < queenLocations.Count; i++)
             {
-                int queenSpot = friendlyQueenSpots[i];
+                int queenSpot = queenLocations[i];
                 GenerateOneQueensMoves(ref generatedMoves, board, queenSpot);
             }
         }
@@ -925,7 +956,7 @@ namespace DuckChess
         public static void GenerateDuckMoves(ref List<Move> generatedMoves, Board board)
         {
             // The starting square for the duck (its current position).
-            int startSquare = board.Duck;
+            int startSquare = GetLocationOfDuck(board);
 
             // If the duck is not on the board, it starts at square 0.
             int firstDuckMoveFlag = Move.Flag.None;
