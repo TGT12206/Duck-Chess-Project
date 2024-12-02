@@ -74,7 +74,7 @@ namespace DuckChess
             output += "move: " + moveToValue.ToString();
             if (child != null)
             {
-                output += "\n" + child.ToString();
+                output += "Child:\n  " + child.ToString();
             }
             return output;
         }

@@ -259,8 +259,7 @@ namespace DuckChess
 
             if (pieceList != null)
             {
-                pieceList.MovePiece(move);
-                UpdateBoard(ref move, isWhite, pieceList);
+                AdditionalBoardHandling(ref move, isWhite, pieceList);
             }
             else if (Piece.PieceType(piece) == Piece.Duck)
             {
@@ -273,7 +272,7 @@ namespace DuckChess
             Debug.Log("After attempt:\nBoard: " + this);
         }
 
-        private void UpdateBoard(ref Move move, bool isWhite, PieceList pieceList)
+        private void AdditionalBoardHandling(ref Move move, bool isWhite, PieceList pieceList)
         {
             if (move.MoveFlag == Move.Flag.EnPassantCapture)
                 HandleEnPassant(move, isWhite);
@@ -284,28 +283,34 @@ namespace DuckChess
             else if (move.MoveFlag == Move.Flag.Castling)
                 HandleCastling(move, isWhite);
 
-            else if (move.IsCapture)
-                HandleCapture(move, isWhite);
 
-            else
-            {
-                if (move.MoveFlag == Move.Flag.PawnTwoForward)
-                    enPassantSquare = move.TargetSquare;
+            if (move.MoveFlag == Move.Flag.PawnTwoForward)
+                enPassantSquare = move.TargetSquare;
 
-                Squares[move.TargetSquare] = Squares[move.StartSquare];
-                Squares[move.StartSquare] = Piece.None;
-
-            }
+            MoveToTarget(ref move);
+            
 
         }
 
-        private void HandleCapture(Move move, bool isWhite)
-        {
-            int captureType = Piece.PieceType(move.CapturedPiece);
-            if (captureType != Piece.King)
-            {
-                PieceList captureList = GetPieceList(captureType, isWhite);
-                captureList.RemovePieceAtSquare(move.TargetSquare);
+        /// This is probably too robust.
+        private void MoveToTarget(ref Move move) {
+            int startPiece = move.StartPiece(this);
+            int startType = Piece.PieceType(startPiece);
+            int startColor = Piece.Color(startPiece);
+            if (startType == Piece.King) {
+                if (startColor == Piece.White) WhiteKing = move.TargetSquare;
+                else if (startColor == Piece.Black) BlackKing = move.TargetSquare;
+            } else {
+                PieceList startList = GetPieceList(startType, startColor == Piece.White);
+                startList.MovePiece(move);
+            }
+
+            int endPiece = move.TargetPiece(this);
+            int endType = Piece.PieceType(endPiece);
+
+            if (endType != Piece.None) {
+                PieceList endList = GetPieceList(endType, startColor != Piece.White);
+                endList.RemovePieceAtSquare(move.TargetSquare);
             }
 
             Squares[move.TargetSquare] = Squares[move.StartSquare];
@@ -318,6 +323,8 @@ namespace DuckChess
             int enemySquare = move.TargetSquare + (isWhite ? -8 : 8);
             enemyPawns.RemovePieceAtSquare(enemySquare);
             Squares[enemySquare] = Piece.None;
+
+            MoveToTarget(ref move);
         }
 
         private void PromotePawn(Move move, bool isWhite, PieceList pawns)
@@ -413,12 +420,12 @@ namespace DuckChess
 
         private void GenerateNormalMoves()
         {
-            legalMoves = new List<Move>();
+            legalMoves.Clear();
             LegalMoveGenerator.GeneratePawnMoves(ref legalMoves, this);
         }
         private void GenerateDuckMoves()
         {
-            legalMoves = new List<Move>();
+            legalMoves.Clear();
             LegalMoveGenerator.GenerateDuckMoves(ref legalMoves, this);
         }
 
@@ -463,10 +470,7 @@ namespace DuckChess
                 Squares[move.TargetSquare] = Piece.None;
                 return;
             }
-
-            Squares[move.StartSquare] = targetPiece;
-            Squares[move.TargetSquare] = move.CapturedPiece;
-
+    
             // Revert en passant square
             if (move.MoveFlag == Move.Flag.PawnTwoForward)
             {
@@ -481,7 +485,7 @@ namespace DuckChess
                 {
                     Debug.Log("Piece type: " + Piece.PieceStr(capturedPiece));
                     PieceList capturedPieceList = GetPieceList(Piece.PieceType(capturedPiece), Piece.Color(capturedPiece) == Piece.White);
-                    capturedPieceList.AddPieceAtSquare(move.TargetSquare);
+                    capturedPieceList.RemovePieceAtSquare(move.TargetSquare);
                 }
             }
 
@@ -509,35 +513,38 @@ namespace DuckChess
                 rookList.UnmovePiece(new Move(rookEnd, rookStart));
             }
 
-            // default
-            else
+   
+
+            int pieceType = Piece.PieceType(targetPiece);
+            if (pieceType == Piece.King)
             {
-
-                int pieceType = Piece.PieceType(targetPiece);
-                if (pieceType == Piece.King)
+                if (Piece.Color(targetPiece) == Piece.White)
                 {
-                    if (Piece.Color(targetPiece) == Piece.White)
-                    {
-                        WhiteKing = move.StartSquare;
-                    }
-                    else
-                    {
-                        BlackKing = move.StartSquare;
-                    }
+                    WhiteKing = move.StartSquare;
                 }
-
-                else if (pieceType == Piece.Duck)
-                {
-                    Duck = move.StartSquare;
-                }
-
                 else
                 {
-                    // Regular piece movement undo
-                    PieceList movedPieceList = GetPieceList(pieceType, Piece.Color(targetPiece) == Piece.White);
-                    movedPieceList.UnmovePiece(move);
+                    BlackKing = move.StartSquare;
                 }
             }
+
+            else if (pieceType == Piece.Duck)
+            {
+                Duck = move.StartSquare;
+            }
+
+            else
+            {
+                // Regular piece movement undo
+                PieceList movedPieceList = GetPieceList(pieceType, Piece.Color(targetPiece) == Piece.White);
+                movedPieceList.UnmovePiece(move);
+            }
+
+
+            Squares[move.StartSquare] = targetPiece;
+            Squares[move.TargetSquare] = move.CapturedPiece;
+
+            
             // Restore king position if necessary
 
 

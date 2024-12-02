@@ -49,11 +49,13 @@ namespace DuckChess
                 );
             }
 
-            string moves = "ALL MOVES\n";
+            string moves = "ALL MOVES FOR " + (board.turnColor == Piece.White ? "White" : "Black") + "\n";
+            moves += "Duck?: " + board.turnIsDuck + "\n";
             foreach (Move move in generatedMoves)
             {
-                moves += "Piece: " + Piece.PieceStr(board[move.StartSquare]) + " | " + move.ToString() + "\n";
+                moves += "Piece: " + Piece.PieceStr(move.StartPiece(board)) + " | " + move.ToString() + "\n";
             }
+            moves += "Board: " + board + "\n";
             Debug.Log( moves );
         }
 
@@ -129,7 +131,7 @@ namespace DuckChess
                 }
                 else
                 {
-                    generatedMoves.Add(new Move(pawnSpot, rightCaptureSpot, enemyPiece));
+                    generatedMoves.Add(new Move(pawnSpot, rightCaptureSpot, 0, enemyPiece));
                 }
             }
 
@@ -142,7 +144,7 @@ namespace DuckChess
                 }
                 else
                 {
-                    generatedMoves.Add(new Move(pawnSpot, leftCaptureSpot, enemyPiece));
+                    generatedMoves.Add(new Move(pawnSpot, leftCaptureSpot, 0, enemyPiece));
                 }
             }
         }
@@ -155,7 +157,8 @@ namespace DuckChess
                 {
                     if (board.Duck != board.enPassantSquare)
                     {
-                        generatedMoves.Add(new Move(pawnSpot, board.enPassantSquare, Move.Flag.EnPassantCapture));
+                        int enemyPiece = board[board.enPassantSquare];
+                        generatedMoves.Add(new Move(pawnSpot, board.enPassantSquare, Move.Flag.EnPassantCapture, enemyPiece));
                     }
                 }
             }
@@ -922,7 +925,7 @@ namespace DuckChess
         /// </summary>
         /// <param name="generatedMoves">The list to add the generated moves into</param>
         /// <param name="board">The board to use while checking for legal moves</param>
-        public static void GenerateDuckMoves(ref List<Move> generatedMoves, Board board)
+        public static void  GenerateDuckMoves(ref List<Move> generatedMoves, Board board)
         {
             // The starting square for the duck (its current position).
             int startSquare = board.Duck;

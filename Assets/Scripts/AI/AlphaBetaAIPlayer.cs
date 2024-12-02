@@ -46,7 +46,7 @@ namespace DuckChess
             }
             catch (Exception e)
             {
-                Debug.Log("Invalid Move" + movesLookedAt + "\n" + topNode.ToString() + "\n" + board.ToString() + "\n" + searchBoard.ToString() + "\n");
+                Debug.Log("Invalid Move " + movesLookedAt + "\n" + topNode.ToString() + "\n" + board.ToString() + "\n" + searchBoard.ToString() + "\n");
                 Debug.LogException(e);
                 throw e;
             }
@@ -96,9 +96,9 @@ namespace DuckChess
             dbgStr += "Turn is white: " + (board.turnColor == Piece.White) + "\n";
             dbgStr += "Turn is duck: " + (board.turnIsDuck) + "\n";
             dbgStr += "Piece: " + Piece.PieceStr(board[topNode.moveToValue.StartSquare]) + "\n";
-            dbgStr += topNode.ToString() + "\n";
-            dbgStr += board.ToString() + "\n";
-            dbgStr += searchBoard.ToString() + "\n";
+            dbgStr += "Node: " + topNode.ToString() + "\n";
+            dbgStr += "Actual board: " + board.ToString() + "\n";
+            dbgStr += "Search board: " + searchBoard.ToString() + "\n";
             Debug.Log(dbgStr);
             ChooseMove(bestMove);
             startSearch = true;
