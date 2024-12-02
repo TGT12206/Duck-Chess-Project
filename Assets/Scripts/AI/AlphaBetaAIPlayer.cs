@@ -93,7 +93,8 @@ namespace DuckChess
         {
             // Search is complete
             String dbgStr = "Chose Node: " + movesLookedAt + "\n";
-            dbgStr += "Turn is white: " + (board.turnColor == Piece.White);
+            dbgStr += "Turn is white: " + (board.turnColor == Piece.White) + "\n";
+            dbgStr += "Turn is duck: " + (board.turnIsDuck) + "\n";
             dbgStr += "Piece: " + Piece.PieceStr(board[topNode.moveToValue.StartSquare]) + "\n";
             dbgStr += topNode.ToString() + "\n";
             dbgStr += board.ToString() + "\n";
