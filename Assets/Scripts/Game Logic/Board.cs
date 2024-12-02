@@ -274,33 +274,38 @@ namespace DuckChess
 
         private void AdditionalBoardHandling(ref Move move, bool isWhite, PieceList pieceList)
         {
-            if (move.MoveFlag == Move.Flag.EnPassantCapture)
-                HandleEnPassant(move, isWhite);
 
-            else if (move.IsPromotion)
-                PromotePawn(move, isWhite, pieceList);
+            if (move.MoveFlag == Move.Flag.None || move.MoveFlag == Move.Flag.PawnTwoForward)
+            {
+                MoveToTarget(ref move);
+            }
+            else
+            {
+                pieceList.MovePiece(move);
+                if (move.MoveFlag == Move.Flag.EnPassantCapture)
+                    HandleEnPassant(move, isWhite);
 
-            else if (move.MoveFlag == Move.Flag.Castling)
-                HandleCastling(move, isWhite);
+                else if (move.IsPromotion)
+                    PromotePawn(move, isWhite, pieceList);
 
-
-            if (move.MoveFlag == Move.Flag.PawnTwoForward)
-                enPassantSquare = move.TargetSquare;
-
-            MoveToTarget(ref move);
-            
-
+                else if (move.MoveFlag == Move.Flag.Castling)
+                    HandleCastling(move, isWhite);
+            }
         }
 
         /// This is probably too robust.
-        private void MoveToTarget(ref Move move) {
+        private void MoveToTarget(ref Move move)
+        {
             int startPiece = move.StartPiece(this);
             int startType = Piece.PieceType(startPiece);
             int startColor = Piece.Color(startPiece);
-            if (startType == Piece.King) {
+            if (startType == Piece.King)
+            {
                 if (startColor == Piece.White) WhiteKing = move.TargetSquare;
                 else if (startColor == Piece.Black) BlackKing = move.TargetSquare;
-            } else {
+            }
+            else
+            {
                 PieceList startList = GetPieceList(startType, startColor == Piece.White);
                 startList.MovePiece(move);
             }
@@ -308,9 +313,15 @@ namespace DuckChess
             int endPiece = move.TargetPiece(this);
             int endType = Piece.PieceType(endPiece);
 
-            if (endType != Piece.None) {
+            if (endType != Piece.None)
+            {
                 PieceList endList = GetPieceList(endType, startColor != Piece.White);
                 endList.RemovePieceAtSquare(move.TargetSquare);
+            }
+
+            if (move.MoveFlag == Move.Flag.PawnTwoForward)
+            {
+                enPassantSquare = move.TargetSquare;
             }
 
             Squares[move.TargetSquare] = Squares[move.StartSquare];
@@ -323,13 +334,11 @@ namespace DuckChess
             int enemySquare = move.TargetSquare + (isWhite ? -8 : 8);
             enemyPawns.RemovePieceAtSquare(enemySquare);
             Squares[enemySquare] = Piece.None;
-
-            MoveToTarget(ref move);
         }
 
         private void PromotePawn(Move move, bool isWhite, PieceList pawns)
         {
-            pawns.RemovePieceAtSquare(move.TargetSquare);
+            pawns.RemovePieceAtSquare(move.StartSquare);
             PieceList promotionList = GetPieceList(move.PromotionPieceType, isWhite);
             promotionList.AddPieceAtSquare(move.TargetSquare);
             Squares[move.TargetSquare] = move.PromotionPieceType | (isWhite ? Piece.White : Piece.Black);
@@ -422,11 +431,29 @@ namespace DuckChess
         {
             legalMoves.Clear();
             LegalMoveGenerator.GeneratePawnMoves(ref legalMoves, this);
+
+            string moves = "ALL MOVES FOR " + (turnColor == Piece.White ? "White" : "Black") + "\n";
+            moves += "Duck?: " + turnIsDuck + "\n";
+            foreach (Move move in legalMoves)
+            {
+                moves += "Piece: " + Piece.PieceStr(move.StartPiece(this)) + " | " + move.ToString() + "\n";
+            }
+            moves += "Board: " + this + "\n";
+            Debug.Log( moves );
         }
         private void GenerateDuckMoves()
         {
             legalMoves.Clear();
             LegalMoveGenerator.GenerateDuckMoves(ref legalMoves, this);
+
+            string moves = "ALL MOVES FOR " + (turnColor == Piece.White ? "White" : "Black") + "\n";
+            moves += "Duck?: " + turnIsDuck + "\n";
+            foreach (Move move in legalMoves)
+            {
+                moves += "Piece: " + Piece.PieceStr(move.StartPiece(this)) + " | " + move.ToString() + "\n";
+            }
+            moves += "Board: " + this + "\n";
+            Debug.Log( moves );
         }
 
         public override string ToString()
@@ -470,7 +497,7 @@ namespace DuckChess
                 Squares[move.TargetSquare] = Piece.None;
                 return;
             }
-    
+
             // Revert en passant square
             if (move.MoveFlag == Move.Flag.PawnTwoForward)
             {
@@ -485,7 +512,8 @@ namespace DuckChess
                 {
                     Debug.Log("Piece type: " + Piece.PieceStr(capturedPiece));
                     PieceList capturedPieceList = GetPieceList(Piece.PieceType(capturedPiece), Piece.Color(capturedPiece) == Piece.White);
-                    capturedPieceList.RemovePieceAtSquare(move.TargetSquare);
+                    capturedPieceList.AddPieceAtSquare(move.TargetSquare);
+                    Squares[move.TargetSquare] = move.CapturedPiece;
                 }
             }
 
@@ -513,7 +541,7 @@ namespace DuckChess
                 rookList.UnmovePiece(new Move(rookEnd, rookStart));
             }
 
-   
+
 
             int pieceType = Piece.PieceType(targetPiece);
             if (pieceType == Piece.King)
@@ -544,7 +572,7 @@ namespace DuckChess
             Squares[move.StartSquare] = targetPiece;
             Squares[move.TargetSquare] = move.CapturedPiece;
 
-            
+
             // Restore king position if necessary
 
 

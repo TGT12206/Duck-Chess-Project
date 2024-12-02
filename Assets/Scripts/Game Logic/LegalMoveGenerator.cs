@@ -48,15 +48,6 @@ namespace DuckChess
                     findCaptureSpotOnLeft
                 );
             }
-
-            string moves = "ALL MOVES FOR " + (board.turnColor == Piece.White ? "White" : "Black") + "\n";
-            moves += "Duck?: " + board.turnIsDuck + "\n";
-            foreach (Move move in generatedMoves)
-            {
-                moves += "Piece: " + Piece.PieceStr(move.StartPiece(board)) + " | " + move.ToString() + "\n";
-            }
-            moves += "Board: " + board + "\n";
-            Debug.Log( moves );
         }
 
         private static void GenerateOnePawnsMoves(
