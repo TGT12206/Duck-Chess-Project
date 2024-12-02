@@ -253,6 +253,22 @@ namespace DuckChess
            
         }
 
+        public int StartPiece(Board board) {
+            if (Move.Flag.FirstDuckMove == MoveFlag) {
+                return Piece.Duck;
+            } else {
+                return board[StartSquare];
+            }
+        }
+
+        public int TargetPiece(Board board) {
+            if (Move.Flag.FirstDuckMove == MoveFlag) {
+                return Piece.Duck;
+            } else {
+                return board[StartSquare];
+            }
+        }
+
         //public string Name
         //{
         //    get

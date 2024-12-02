@@ -11,7 +11,7 @@ namespace DuckChess
     {
         public int[] Squares;
 
-        public const int NOT_ON_BOARD = -2;
+        public const int NOT_ON_BOARD = -2; // 63 is max
 
         #region Turn Information
         public int turnColor;
@@ -46,7 +46,7 @@ namespace DuckChess
         public PieceList WhiteQueens, BlackQueens;
 
         public int WhiteKing, BlackKing;
-        public int Duck;
+        public int Duck = NOT_ON_BOARD;
         #endregion
 
         #region Constants for Maximum Pieces
@@ -241,33 +241,54 @@ namespace DuckChess
         }
 
 
-        private void UpdatePieceLists(ref Move move, bool isWhite)
+        private void UpdateBoardAndLists(ref Move move, bool isWhite)
         {
-            int piece = Squares[move.StartSquare];
+            int piece = move.StartPiece(this);
             PieceList pieceList = GetPieceList(Piece.PieceType(piece), isWhite);
 
-            Debug.Log("performing move.\npiece: " + Piece.PieceStr(piece) + "\nis white: " + isWhite + "\nMove: " + move + "\nList: " + pieceList);
+            String dbgStr = "Updating piece lists.\n";
+            dbgStr += "Turn is white: " + (turnColor == Piece.White) + "\n";
+            dbgStr += "turn is duck: " + turnIsDuck + "\n";
+            dbgStr += "Piece: " + Piece.PieceStr(piece) + "\n";
+            dbgStr += "Is white: " + isWhite + "\n";
+            dbgStr += "Move: " + move + "\n";
+            dbgStr += "List: " + pieceList + "\n";
+            Debug.Log(dbgStr);
+
             if (pieceList != null)
             {
                 pieceList.MovePiece(move);
-                HandleSpecialMoves(ref move, isWhite, pieceList);
+                UpdateBoard(ref move, isWhite, pieceList);
             }
             else if (Piece.PieceType(piece) == Piece.Duck)
             {
                 Duck = move.TargetSquare;
+                Squares[move.TargetSquare] = piece;
             }
         }
 
-        private void HandleSpecialMoves(ref Move move, bool isWhite, PieceList pieceList)
+        private void UpdateBoard(ref Move move, bool isWhite, PieceList pieceList)
         {
             if (move.MoveFlag == Move.Flag.EnPassantCapture)
                 HandleEnPassant(move, isWhite);
 
-            if (move.IsPromotion)
+            else if (move.IsPromotion)
                 PromotePawn(move, isWhite, pieceList);
 
-            if (move.MoveFlag == Move.Flag.PawnTwoForward)
-                enPassantSquare = move.TargetSquare;
+            else if (move.MoveFlag == Move.Flag.Castling)
+                HandleCastling(move, isWhite);
+
+            else
+            {
+                if (move.MoveFlag == Move.Flag.PawnTwoForward)
+                    enPassantSquare = move.TargetSquare;
+
+
+                Debug.Log("Updating board as a normal move!");
+                Squares[move.TargetSquare] = Squares[move.StartSquare];
+                Squares[move.StartSquare] = Piece.None;
+            }
+
         }
 
         private void HandleEnPassant(Move move, bool isWhite)
@@ -286,6 +307,21 @@ namespace DuckChess
             Squares[move.TargetSquare] = move.PromotionPieceType | (isWhite ? Piece.White : Piece.Black);
         }
 
+        private void HandleCastling(Move move, bool isWhite)
+        {
+            bool isKingSide = move.TargetSquare > move.StartSquare;
+            int rookStart = isKingSide ? (isWhite ? 7 : 63) : (isWhite ? 0 : 56);
+            int rookEnd = isKingSide ? move.TargetSquare - 1 : move.TargetSquare + 1;
+
+            // Update squares for the rook
+            Squares[rookEnd] = Squares[rookStart];
+            Squares[rookStart] = Piece.None;
+
+            // Update piece list for the rook
+            PieceList rookList = GetPieceList(Piece.Rook, isWhite);
+            rookList.MovePiece(new Move(rookStart, rookEnd));
+        }
+
         private PieceList GetPieceList(int pieceType, bool isWhite)
         {
             return pieceType switch
@@ -299,19 +335,14 @@ namespace DuckChess
             };
         }
 
-        private void UpdateSquares(Move move)
-        {
-            Squares[move.TargetSquare] = Squares[move.StartSquare];
-            Squares[move.StartSquare] = Piece.None;
-        }
-
         private void SwitchTurnForward()
         {
             Debug.Log("Just performed move for: " + turnColor + " move type: " + (turnIsDuck ? "Duck" : "Regular"));
             turnIsDuck = !turnIsDuck;
 
             // the next turn we want is here.
-            if (turnIsDuck) {
+            if (turnIsDuck)
+            {
                 GenerateDuckMoves();
             }
             else
@@ -329,7 +360,8 @@ namespace DuckChess
             turnIsDuck = !turnIsDuck;
 
             // the next turn we want is here.
-            if (turnIsDuck) {
+            if (turnIsDuck)
+            {
                 GenerateDuckMoves();
             }
             else
@@ -340,7 +372,7 @@ namespace DuckChess
             }
 
 
-          
+
         }
 
         /// <summary>
@@ -352,20 +384,21 @@ namespace DuckChess
             numPlySinceLastEvent++;
 
             bool isWhite = turnColor == Piece.White;
-            UpdatePieceLists(ref move, isWhite);
-            UpdateSquares(move);
+            UpdateBoardAndLists(ref move, isWhite);
 
             SwitchTurnForward();
         }
 
 
-        private void GenerateNormalMoves() {
+        private void GenerateNormalMoves()
+        {
             legalMoves = new List<Move>();
             LegalMoveGenerator.GeneratePawnMoves(ref legalMoves, this);
         }
-        private void GenerateDuckMoves() {
-             legalMoves = new List<Move>();
-             LegalMoveGenerator.GenerateDuckMoves(ref legalMoves, this);
+        private void GenerateDuckMoves()
+        {
+            legalMoves = new List<Move>();
+            LegalMoveGenerator.GenerateDuckMoves(ref legalMoves, this);
         }
 
         public override string ToString()
@@ -406,7 +439,7 @@ namespace DuckChess
             }
 
             // Restore the piece to its original position
-            int piece = Squares[move.TargetSquare];
+            int piece = move.TargetPiece(this);
             Squares[move.StartSquare] = piece;
             Squares[move.TargetSquare] = move.CapturedPiece;
 
