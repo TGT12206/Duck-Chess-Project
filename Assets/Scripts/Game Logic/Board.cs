@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Mono.Cecil.Cil;
 using UnityEngine;
 
 namespace DuckChess
@@ -246,7 +247,7 @@ namespace DuckChess
             int piece = move.StartPiece(this);
             PieceList pieceList = GetPieceList(Piece.PieceType(piece), isWhite);
 
-            String dbgStr = "Updating piece lists.\n";
+            String dbgStr = "Updating board (move attempt).\n";
             dbgStr += "Turn is white: " + (turnColor == Piece.White) + "\n";
             dbgStr += "turn is duck: " + turnIsDuck + "\n";
             dbgStr += "Piece: " + Piece.PieceStr(piece) + "\n";
@@ -283,8 +284,6 @@ namespace DuckChess
                 if (move.MoveFlag == Move.Flag.PawnTwoForward)
                     enPassantSquare = move.TargetSquare;
 
-
-                Debug.Log("Updating board as a normal move!");
                 Squares[move.TargetSquare] = Squares[move.StartSquare];
                 Squares[move.StartSquare] = Piece.None;
             }
@@ -424,13 +423,18 @@ namespace DuckChess
         /// <param name="previousNumPlySinceLastEvent">The draw counter value before the move was made.</param>
         public void UnmakeMove(Move move, int previousNumPlySinceLastEvent)
         {
-            Debug.Log("Unmaking move");
-            // Revert turn info
+            String dbgStr = "Unmaking move.\n";
+            dbgStr += "Move: " + move + "\n";
+            dbgStr += "Board: " + this + "\n";
+
+            Debug.Log(dbgStr);
 
             plyCount--;
             numPlySinceLastEvent = previousNumPlySinceLastEvent;
 
-            // If this was a duck move
+            // Restore the piece to its original position
+            int targetPiece = move.TargetPiece(this);
+
             if (move.MoveFlag == Move.Flag.FirstDuckMove)
             {
                 Duck = NOT_ON_BOARD;
@@ -438,9 +442,7 @@ namespace DuckChess
                 return;
             }
 
-            // Restore the piece to its original position
-            int piece = move.TargetPiece(this);
-            Squares[move.StartSquare] = piece;
+            Squares[move.StartSquare] = targetPiece;
             Squares[move.TargetSquare] = move.CapturedPiece;
 
             // Revert en passant square
@@ -450,7 +452,7 @@ namespace DuckChess
             }
 
             // Handle captured piece restoration
-            if (move.IsCapture)
+            else if (move.IsCapture)
             {
                 int capturedPiece = move.CapturedPiece;
                 if (capturedPiece != Piece.None)
@@ -461,22 +463,17 @@ namespace DuckChess
             }
 
             // Handle pawn promotion reversal
-            if (move.IsPromotion)
+            else if (move.IsPromotion)
             {
-                PieceList promotionList = GetPieceList(Piece.PieceType(piece), Piece.Color(piece) == Piece.White);
+                PieceList promotionList = GetPieceList(Piece.PieceType(targetPiece), Piece.Color(targetPiece) == Piece.White);
                 promotionList.RemovePieceAtSquare(move.TargetSquare);
-                PieceList pawnList = GetPieceList(Piece.Pawn, Piece.Color(piece) == Piece.White);
+                PieceList pawnList = GetPieceList(Piece.Pawn, Piece.Color(targetPiece) == Piece.White);
                 pawnList.AddPieceAtSquare(move.TargetSquare);
             }
-            else
-            {
-                // Regular piece movement undo
-                PieceList movedPieceList = GetPieceList(Piece.PieceType(piece), Piece.Color(piece) == Piece.White);
-                movedPieceList.UnmovePiece(move);
-            }
+
 
             // Handle castling
-            if (move.MoveFlag == Move.Flag.Castling)
+            else if (move.MoveFlag == Move.Flag.Castling)
             {
                 bool isKingSide = move.TargetSquare > move.StartSquare;
                 int rookStart = isKingSide ? move.TargetSquare + 1 : move.TargetSquare - 2;
@@ -485,24 +482,50 @@ namespace DuckChess
                 Squares[rookStart] = Squares[rookEnd];
                 Squares[rookEnd] = Piece.None;
 
-                PieceList rookList = GetPieceList(Piece.Rook, Piece.Color(piece) == Piece.White);
+                PieceList rookList = GetPieceList(Piece.Rook, Piece.Color(targetPiece) == Piece.White);
                 rookList.UnmovePiece(new Move(rookEnd, rookStart));
             }
 
-            // Restore king position if necessary
-            if (Piece.PieceType(piece) == Piece.King)
+            // default
+            else
             {
-                if (Piece.Color(piece) == Piece.White)
+
+                int pieceType = Piece.PieceType(targetPiece);
+                if (pieceType == Piece.King)
                 {
-                    WhiteKing = move.StartSquare;
+                    if (Piece.Color(targetPiece) == Piece.White)
+                    {
+                        WhiteKing = move.StartSquare;
+                    }
+                    else
+                    {
+                        BlackKing = move.StartSquare;
+                    }
                 }
+
+                else if (pieceType == Piece.Duck)
+                {
+                    Duck = move.StartSquare;
+                }
+
                 else
                 {
-                    BlackKing = move.StartSquare;
+                    // Regular piece movement undo
+                    PieceList movedPieceList = GetPieceList(pieceType, Piece.Color(targetPiece) == Piece.White);
+                    movedPieceList.UnmovePiece(move);
                 }
             }
+            // Restore king position if necessary
+
 
             SwitchTurnBackward(ref move);
+
+
+            String dbgStr1 = "Unmaking move (finish).\n";
+            dbgStr1 += "Move: " + move + "\n";
+            dbgStr1 += "Board: " + this + "\n";
+
+            Debug.Log(dbgStr1);
 
         }
     }

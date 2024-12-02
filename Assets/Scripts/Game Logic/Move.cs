@@ -265,7 +265,7 @@ namespace DuckChess
             if (Move.Flag.FirstDuckMove == MoveFlag) {
                 return Piece.Duck;
             } else {
-                return board[StartSquare];
+                return board[TargetSquare];
             }
         }
 
