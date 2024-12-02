@@ -174,7 +174,7 @@ namespace DuckChess
 
         private int EvaluateBoard(Board board)
         {
-            return BoardEvaluator.EvaluateNormal(board, this.Color);
+            return BoardEvaluator.Evaluate(board, this.Color);
         }
 
         public override void UnmakeMove()
