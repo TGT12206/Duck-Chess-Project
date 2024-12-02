@@ -23,8 +23,8 @@ public class UITurnManager : MonoBehaviour, ITurnManager
 
     public void MakeMove(Move move)
     {
-        boardUI.MakeMove(move);
         board.MakeMove(ref move);
+        boardUI.LoadPosition(ref board);
         significantMoveCounters.Push(board.numPlySinceLastEvent);
         moveHistory.Push(move);
         Debug.Log("UI\n" + board.ToString());
@@ -34,7 +34,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
         Move move = moveHistory.Pop();
         int counter = significantMoveCounters.Pop();
         PlayerToMove.UnmakeMove();
-        boardUI.UnmakeMove(move);
+        boardUI.LoadPosition(ref board);
         board.UnmakeMove(move, counter);
     }
 
