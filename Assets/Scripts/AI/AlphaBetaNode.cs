@@ -1,5 +1,6 @@
 using UnityEngine;
 using DuckChess;
+using static DuckChess.Board;
 
 namespace DuckChess
 {
@@ -12,25 +13,23 @@ namespace DuckChess
         public int indexLeftOffAt;
         public Move moveToValue;
         public AlphaBetaNode child;
-        public Move moveFromParent;
-        public AlphaBetaNode parent;
-        public AlphaBetaNode(int alpha, int beta, bool isMaximizing, Move moveFromParent)
+        public Board.InfoToUnmakeMove InfoToUndoMove;
+        public Move moveFromParent { get { return InfoToUndoMove.moveToUnmake; } }
+        public AlphaBetaNode(int alpha, int beta, bool isMaximizing)
         {
             this.alpha = alpha;
             this.beta = beta;
             this.isMaximizing = isMaximizing;
             indexLeftOffAt = 0;
-            this.moveFromParent = moveFromParent;
             value = isMaximizing ? alpha : beta;
         }
-        public AlphaBetaNode(int alpha, int beta, bool isMaximizing, Move moveFromParent, AlphaBetaNode parent)
+        public AlphaBetaNode(int alpha, int beta, bool isMaximizing, InfoToUnmakeMove InfoToUndoMove)
         {
             this.alpha = alpha;
             this.beta = beta;
             this.isMaximizing = isMaximizing;
             indexLeftOffAt = 0;
-            this.moveFromParent = moveFromParent;
-            this.parent = parent;
+            this.InfoToUndoMove = InfoToUndoMove;
             value = isMaximizing ? alpha : beta;
         }
 

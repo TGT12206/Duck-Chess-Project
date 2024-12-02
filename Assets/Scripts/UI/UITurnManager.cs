@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using DuckChess;
 using UnityEngine;
+using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 
 public class UITurnManager : MonoBehaviour, ITurnManager
 {
@@ -10,10 +11,11 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     public RealTimePlayer PlayerToMove;
     public BoardUI boardUI;
     public Board board;
-    public Stack<Move> moveHistory;
-    public Stack<int> significantMoveCounters;
+    public Stack<Board.InfoToUnmakeMove> UndoMoveInfo;
     public bool haltForError;
-    public int framesToWait = 1;
+    public int framesToWaitWhite = 1;
+    public int framesToWaitBlack = 1;
+    public int framesToWait;
     public int framesWaited = 0;
 
     public bool IsGameOver()
@@ -23,19 +25,17 @@ public class UITurnManager : MonoBehaviour, ITurnManager
 
     public void MakeMove(Move move)
     {
-        board.MakeMove(ref move);
-        boardUI.LoadPosition(ref board);
-        significantMoveCounters.Push(board.numPlySinceLastEvent);
-        moveHistory.Push(move);
+        Board.InfoToUnmakeMove infoToStore = board.MakeMove(ref move);
+        UndoMoveInfo.Push(infoToStore);
+        boardUI.LoadPosition(ref board, false);
         Debug.Log("UI\n" + board.ToString());
+        framesToWait = board.isWhite ? framesToWaitWhite : framesToWaitBlack;
     }
     public void UnmakeMove()
     {
-        Move move = moveHistory.Pop();
-        int counter = significantMoveCounters.Pop();
         PlayerToMove.UnmakeMove();
-        boardUI.LoadPosition(ref board);
-        board.UnmakeMove(move, counter);
+        board.UnmakeMove(UndoMoveInfo.Pop());
+        boardUI.LoadPosition(ref board, false);
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -43,20 +43,19 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     {
         // Instantiating fields
         board = new Board();
-        moveHistory = new Stack<Move>();
-        significantMoveCounters = new Stack<int>();
+        UndoMoveInfo = new Stack<Board.InfoToUnmakeMove>();
 
         // Load the start position
         board.LoadStartPosition();
-        boardUI.LoadPosition(ref board);
+        boardUI.LoadPosition(ref board, false);
         board.turnColor = Piece.White;
 
         // Create the appropriate player types
         // placeholder
-        WhitePlayer = new HumanPlayer(boardUI, ref board, Piece.White);
-        //BlackPlayer = new HumanPlayer(boardUI, ref board, Piece.Black);
-        // WhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 2, boardUI);
-        BlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 2, boardUI);
+        //WhitePlayer = new HumanPlayer(boardUI, ref board, Piece.White);
+        BlackPlayer = new HumanPlayer(boardUI, ref board, Piece.Black);
+        WhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 2, boardUI);
+        //BlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 2, boardUI);
 
         // Set the MakeMove method to be called whenever either player makes a move
         WhitePlayer.OnMoveChosen.AddListener(MakeMove);

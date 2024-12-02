@@ -19,7 +19,6 @@ namespace DuckChess
         private bool startSearch;
         private List<Move> legalMoves;
         private Stack<AlphaBetaNode> alphaBetaNodes;
-        private Stack<int> significantMoveCounters;
         private Board searchBoard;
         private int currentDepth;
 
@@ -61,6 +60,7 @@ namespace DuckChess
 
             for (int i = 0; i < NumActionsPerFrame; i++)
             {
+                boardUI.LoadPosition(ref searchBoard, true);
                 AlphaBetaNode currentNode = alphaBetaNodes.Peek();
 
                 if (currentDepth < maxDepth && !searchBoard.isGameOver && currentNode.indexLeftOffAt < legalMoves.Count)
@@ -110,8 +110,7 @@ namespace DuckChess
             searchBoard = board.Clone();
             legalMoves = searchBoard.legalMoves;
             alphaBetaNodes = new Stack<AlphaBetaNode>();
-            significantMoveCounters = new Stack<int>();
-            topNode = new AlphaBetaNode(int.MinValue, int.MaxValue, true, new Move());
+            topNode = new AlphaBetaNode(int.MinValue, int.MaxValue, true);
             alphaBetaNodes.Push(topNode);
             currentDepth = 1;
             startSearch = false;
@@ -135,11 +134,10 @@ namespace DuckChess
 
             // Making a move on a board saves any captured piece onto the move,
             // so we need to make the move before saving.
-            searchBoard.MakeMove(ref nextMove);
-            AlphaBetaNode newNode = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, nextMove, parent);
+            Board.InfoToUnmakeMove undoMoveInfo = searchBoard.MakeMove(ref nextMove);
+            AlphaBetaNode newNode = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, undoMoveInfo);
 
             legalMoves = searchBoard.legalMoves;
-            significantMoveCounters.Push(searchBoard.numPlySinceLastEvent);
             alphaBetaNodes.Push(newNode);
         }
 
@@ -159,7 +157,7 @@ namespace DuckChess
             }
 
             AlphaBetaNode parent = alphaBetaNodes.Peek();
-            searchBoard.UnmakeMove(node.moveFromParent, significantMoveCounters.Pop());
+            searchBoard.UnmakeMove(node.InfoToUndoMove);
             legalMoves = searchBoard.legalMoves;
 
             if (parent.JudgeNewValue(node.value, node.moveFromParent, node) && currentDepth == 1)

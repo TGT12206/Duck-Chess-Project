@@ -160,7 +160,7 @@ namespace DuckChess
                 }
                 else
                 {
-                    generatedMoves.Add(new Move(pawnSpot, rightCaptureSpot, enemyPiece));
+                    generatedMoves.Add(new Move(pawnSpot, rightCaptureSpot, Move.Flag.None, enemyPiece));
                 }
             }
 
@@ -173,7 +173,7 @@ namespace DuckChess
                 }
                 else
                 {
-                    generatedMoves.Add(new Move(pawnSpot, leftCaptureSpot, enemyPiece));
+                    generatedMoves.Add(new Move(pawnSpot, leftCaptureSpot, Move.Flag.None, enemyPiece));
                 }
             }
         }
@@ -208,6 +208,10 @@ namespace DuckChess
         }
         public static void GenerateForOnePiece(ref List<Move> generatedMoves, Board board, int pieceSpot)
         {
+            if (board.plyCount == 1)
+            {
+                GenerateDuckMoves(ref generatedMoves, board);
+            }
             int piece = board[pieceSpot];
             switch (Piece.PieceType(piece))
             {

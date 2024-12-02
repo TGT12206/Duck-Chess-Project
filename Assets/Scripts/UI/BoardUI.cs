@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using DuckChess;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -34,6 +35,8 @@ public class BoardUI : MonoBehaviour
     public GameObject[] Pieces;
     public Board board;
     public GameObject[] Circles;
+    public TextMeshProUGUI boardType;
+    public TextMeshProUGUI displayIsDuckTurn;
     #endregion
 
     public List<Move> highlightedMoves = new List<Move>();
@@ -65,6 +68,8 @@ public class BoardUI : MonoBehaviour
         highlightedMoves = new List<Move>();
         board = null;
         selectedSquare = 0;
+        boardType.text = "Real Board";
+        displayIsDuckTurn.text = "Normal Turn";
     }
 
     public void AISelectPiece(Move move)
@@ -171,8 +176,10 @@ public class BoardUI : MonoBehaviour
     /// <summary>
     /// Loads a given position into the game world.
     /// </summary>
-    public void LoadPosition(ref Board board)
+    public void LoadPosition(ref Board board, bool isSearchBoard)
     {
+        boardType.text = isSearchBoard ? "AI Search Board" : "Real Board";
+        displayIsDuckTurn.text = board.turnIsDuck ? "Duck Turn" : "Normal Turn";
         this.board = board;
         if (Pieces != null)
         {
