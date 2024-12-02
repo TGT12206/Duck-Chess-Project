@@ -37,6 +37,7 @@ public class BoardUI : MonoBehaviour
     public GameObject[] Circles;
     public TextMeshProUGUI boardType;
     public TextMeshProUGUI displayIsDuckTurn;
+    public TextMeshProUGUI displayOtherInfo;
     #endregion
 
     public List<Move> highlightedMoves = new List<Move>();
@@ -176,10 +177,11 @@ public class BoardUI : MonoBehaviour
     /// <summary>
     /// Loads a given position into the game world.
     /// </summary>
-    public void LoadPosition(ref Board board, bool isSearchBoard)
+    public void LoadPosition(ref Board board, bool isSearchBoard, string InfoToDisplay)
     {
         boardType.text = isSearchBoard ? "AI Search Board" : "Real Board";
         displayIsDuckTurn.text = board.turnIsDuck ? "Duck Turn" : "Normal Turn";
+        displayOtherInfo.text = InfoToDisplay;
         this.board = board;
         if (Pieces != null)
         {

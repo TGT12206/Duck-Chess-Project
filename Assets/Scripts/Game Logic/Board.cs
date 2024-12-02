@@ -62,6 +62,11 @@ namespace DuckChess
         /// <returns>True if the move is legal, otherwise false.</returns>
         public bool IsMoveLegal(ref Move move)
         {
+            // If this move looks like a capture, make it a capture
+            if (this[move.TargetSquare] != Piece.None)
+            {
+                move = new Move(move, this[move.TargetSquare]);
+            }
             // Iterate through all generated legal moves for the current position
             foreach (Move legalMove in legalMoves)
             {
@@ -196,7 +201,6 @@ namespace DuckChess
                 pieceToMove = Piece.Duck;
             }
             #endregion
-
             // Also deletes the piece we are capturing, if any
             Squares[move.TargetSquare] = pieceToMove;
             #endregion

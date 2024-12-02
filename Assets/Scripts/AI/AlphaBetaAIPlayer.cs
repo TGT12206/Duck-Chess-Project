@@ -60,7 +60,7 @@ namespace DuckChess
 
             for (int i = 0; i < NumActionsPerFrame; i++)
             {
-                boardUI.LoadPosition(ref searchBoard, true);
+                boardUI.LoadPosition(ref searchBoard, true, "Depth: " + currentDepth);
                 AlphaBetaNode currentNode = alphaBetaNodes.Peek();
 
                 if (currentDepth < maxDepth && !searchBoard.isGameOver && currentNode.indexLeftOffAt < legalMoves.Count)

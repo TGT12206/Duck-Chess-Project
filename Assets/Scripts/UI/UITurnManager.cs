@@ -27,7 +27,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     {
         Board.InfoToUnmakeMove infoToStore = board.MakeMove(ref move);
         UndoMoveInfo.Push(infoToStore);
-        boardUI.LoadPosition(ref board, false);
+        boardUI.LoadPosition(ref board, false, "");
         Debug.Log("UI\n" + board.ToString());
         framesToWait = board.isWhite ? framesToWaitWhite : framesToWaitBlack;
     }
@@ -35,7 +35,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     {
         PlayerToMove.UnmakeMove();
         board.UnmakeMove(UndoMoveInfo.Pop());
-        boardUI.LoadPosition(ref board, false);
+        boardUI.LoadPosition(ref board, false, "");
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -47,7 +47,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
 
         // Load the start position
         board.LoadStartPosition();
-        boardUI.LoadPosition(ref board, false);
+        boardUI.LoadPosition(ref board, false, "");
         board.turnColor = Piece.White;
 
         // Create the appropriate player types
