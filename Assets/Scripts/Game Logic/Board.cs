@@ -376,7 +376,7 @@ namespace DuckChess
                 }
                 if (Squares[move.TargetSquare] != Piece.None)
                 {
-                    Debug.Log($"Moving {pieceType} to: {move.TargetSquare}");
+                    Debug.Log($"Moving {pieceType} | from: {move.StartSquare} | to: {move.TargetSquare}");
                     CapturePieceNormally(ref move, isWhite);
                 }
                 SwapSquares(move);
