@@ -254,6 +254,7 @@ namespace DuckChess
             dbgStr += "Is white: " + isWhite + "\n";
             dbgStr += "Move: " + move + "\n";
             dbgStr += "List: " + pieceList + "\n";
+            dbgStr += "Board: " + this + "\n";
             Debug.Log(dbgStr);
 
             if (pieceList != null)
@@ -265,7 +266,11 @@ namespace DuckChess
             {
                 Duck = move.TargetSquare;
                 Squares[move.TargetSquare] = piece;
+                if (move.MoveFlag != Move.Flag.FirstDuckMove)
+                    Squares[move.StartSquare] = Piece.None;
             }
+
+            Debug.Log("After attempt:\nBoard: " + this);
         }
 
         private void UpdateBoard(ref Move move, bool isWhite, PieceList pieceList)
@@ -279,6 +284,9 @@ namespace DuckChess
             else if (move.MoveFlag == Move.Flag.Castling)
                 HandleCastling(move, isWhite);
 
+            else if (move.IsCapture)
+                HandleCapture(move, isWhite);
+
             else
             {
                 if (move.MoveFlag == Move.Flag.PawnTwoForward)
@@ -286,8 +294,22 @@ namespace DuckChess
 
                 Squares[move.TargetSquare] = Squares[move.StartSquare];
                 Squares[move.StartSquare] = Piece.None;
+
             }
 
+        }
+
+        private void HandleCapture(Move move, bool isWhite)
+        {
+            int captureType = Piece.PieceType(move.CapturedPiece);
+            if (captureType != Piece.King)
+            {
+                PieceList captureList = GetPieceList(captureType, isWhite);
+                captureList.RemovePieceAtSquare(move.TargetSquare);
+            }
+
+            Squares[move.TargetSquare] = Squares[move.StartSquare];
+            Squares[move.StartSquare] = Piece.None;
         }
 
         private void HandleEnPassant(Move move, bool isWhite)
@@ -457,6 +479,7 @@ namespace DuckChess
                 int capturedPiece = move.CapturedPiece;
                 if (capturedPiece != Piece.None)
                 {
+                    Debug.Log("Piece type: " + Piece.PieceStr(capturedPiece));
                     PieceList capturedPieceList = GetPieceList(Piece.PieceType(capturedPiece), Piece.Color(capturedPiece) == Piece.White);
                     capturedPieceList.AddPieceAtSquare(move.TargetSquare);
                 }
