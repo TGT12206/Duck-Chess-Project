@@ -95,7 +95,7 @@ namespace DuckChess
 
             if (Piece.PieceType(board[spotInFrontOfPawn]) == Piece.None)
             {
-                if (Board.GetRowOf(pawnSpot) == rowBeforePromotion)
+                if (BoardInfo.GetRow(pawnSpot) == rowBeforePromotion)
                 {
                     AddPawnPromotions(ref generatedMoves, pawnSpot, spotInFrontOfPawn);
                 }
@@ -104,7 +104,7 @@ namespace DuckChess
                     generatedMoves.Add(new Move(pawnSpot, spotInFrontOfPawn));
                 }
 
-                if (Board.GetRowOf(pawnSpot) == startRow && Piece.PieceType(board[spotTwoInFrontOfPawn]) == Piece.None)
+                if (BoardInfo.GetRow(pawnSpot) == startRow && Piece.PieceType(board[spotTwoInFrontOfPawn]) == Piece.None)
                 {
                     generatedMoves.Add(new Move(pawnSpot, spotTwoInFrontOfPawn, Move.Flag.PawnTwoForward));
                 }
@@ -116,12 +116,12 @@ namespace DuckChess
             int rightCaptureSpot = pawnSpot + findCaptureSpotOnRight;
             int leftCaptureSpot = pawnSpot + findCaptureSpotOnLeft;
 
-            int pawnCol = Board.GetColumnOf(pawnSpot);
+            int pawnCol = BoardInfo.GetFile(pawnSpot);
 
             if (pawnCol < 7 && Piece.Color(board[rightCaptureSpot]) == enemyColor)
             {
                 int enemyPiece = board[rightCaptureSpot];
-                if (Board.GetRowOf(pawnSpot) == rowBeforePromotion)
+                if (BoardInfo.GetRow(pawnSpot) == rowBeforePromotion)
                 {
                     AddPawnPromotions(ref generatedMoves, pawnSpot, rightCaptureSpot, enemyPiece);
                 }
@@ -134,7 +134,7 @@ namespace DuckChess
             if (pawnCol > 0 && Piece.Color(board[leftCaptureSpot]) == enemyColor)
             {
                 int enemyPiece = board[leftCaptureSpot];
-                if (Board.GetRowOf(pawnSpot) == rowBeforePromotion)
+                if (BoardInfo.GetRow(pawnSpot) == rowBeforePromotion)
                 {
                     AddPawnPromotions(ref generatedMoves, pawnSpot, leftCaptureSpot, enemyPiece);
                 }
@@ -147,7 +147,7 @@ namespace DuckChess
 
         private static void GenerateEnPassantMoves(ref List<Move> generatedMoves, Board board, int pawnSpot, int leftCaptureSpot, int rightCaptureSpot)
         {
-            if (Board.GetRowOf(pawnSpot) == 4)
+            if (BoardInfo.GetRow(pawnSpot) == 4)
             {
                 if (leftCaptureSpot == board.enPassantSquare || rightCaptureSpot == board.enPassantSquare)
                 {
@@ -227,8 +227,8 @@ namespace DuckChess
         {
             //bool isWhite = board.turnColor == Piece.White;
             //int enemyColor = isWhite ? Piece.Black : Piece.White;
-            //int row = Board.GetRowOf(knightSpot);
-            //int col = Board.GetColumnOf(knightSpot);
+            //int row = BoardInfo.GetRow(knightSpot);
+            //int col = BoardInfo.GetFile(knightSpot);
 
             //// jumps that are up 2 tiles
             //if (row < 6)
@@ -383,8 +383,8 @@ namespace DuckChess
             }
             // Up left
             int potentialTarget = spotOfPieceMoving;
-            int rowOfPiece = Board.GetRowOf(spotOfPieceMoving);
-            int colOfPiece = Board.GetColumnOf(spotOfPieceMoving);
+            int rowOfPiece = BoardInfo.GetRow(spotOfPieceMoving);
+            int colOfPiece = BoardInfo.GetFile(spotOfPieceMoving);
             for (int i = 0; i < 8; i++)
             {
                 // If the piece itself is on one of these edges,
@@ -396,8 +396,8 @@ namespace DuckChess
 
                 potentialTarget += 7;
 
-                int rowOfTarget = Board.GetRowOf(potentialTarget);
-                int colOfTarget = Board.GetColumnOf(potentialTarget);
+                int rowOfTarget = BoardInfo.GetRow(potentialTarget);
+                int colOfTarget = BoardInfo.GetFile(potentialTarget);
 
                 // If the target is out of bounds, stop
                 if (potentialTarget > 63 || colOfTarget > colOfPiece)
@@ -435,8 +435,8 @@ namespace DuckChess
 
                 potentialTarget += 9;
 
-                int rowOfTarget = Board.GetRowOf(potentialTarget);
-                int colOfTarget = Board.GetColumnOf(potentialTarget);
+                int rowOfTarget = BoardInfo.GetRow(potentialTarget);
+                int colOfTarget = BoardInfo.GetFile(potentialTarget);
 
                 // If the target is out of bounds, stop
                 if (potentialTarget > 63 || colOfTarget < colOfPiece)
@@ -474,8 +474,8 @@ namespace DuckChess
 
                 potentialTarget -= 9;
 
-                int rowOfTarget = Board.GetRowOf(potentialTarget);
-                int colOfTarget = Board.GetColumnOf(potentialTarget);
+                int rowOfTarget = BoardInfo.GetRow(potentialTarget);
+                int colOfTarget = BoardInfo.GetFile(potentialTarget);
 
                 // If the target is out of bounds, stop
                 if (potentialTarget < 0 || colOfTarget > colOfPiece)
@@ -513,8 +513,8 @@ namespace DuckChess
 
                 potentialTarget -= 7;
 
-                int rowOfTarget = Board.GetRowOf(potentialTarget);
-                int colOfTarget = Board.GetColumnOf(potentialTarget);
+                int rowOfTarget = BoardInfo.GetRow(potentialTarget);
+                int colOfTarget = BoardInfo.GetFile(potentialTarget);
 
                 // If the target is out of bounds, stop
                 if (potentialTarget < 0 || colOfTarget < colOfPiece)
@@ -575,8 +575,8 @@ namespace DuckChess
                 return;
             }
             int potentialTarget = spotOfPieceMoving;
-            int rowOfPiece = Board.GetRowOf(spotOfPieceMoving);
-            int colOfPiece = Board.GetColumnOf(spotOfPieceMoving);
+            int rowOfPiece = BoardInfo.GetRow(spotOfPieceMoving);
+            int colOfPiece = BoardInfo.GetFile(spotOfPieceMoving);
 
             // Up
             for (int i = 0; i < 8; i++)
@@ -596,7 +596,7 @@ namespace DuckChess
                     break;
                 }
 
-                int rowOfTarget = Board.GetRowOf(potentialTarget);
+                int rowOfTarget = BoardInfo.GetRow(potentialTarget);
                 int pieceAtTarget = board[potentialTarget];
                 bool targetIsEmpty = Piece.PieceType(pieceAtTarget) == Piece.None;
                 bool targetHasEnemy = Piece.Color(pieceAtTarget) == enemyColor;
@@ -633,7 +633,7 @@ namespace DuckChess
                     break;
                 }
 
-                int rowOfTarget = Board.GetRowOf(potentialTarget);
+                int rowOfTarget = BoardInfo.GetRow(potentialTarget);
                 int pieceAtTarget = board[potentialTarget];
                 bool targetIsEmpty = Piece.PieceType(pieceAtTarget) == Piece.None;
                 bool targetHasEnemy = Piece.Color(pieceAtTarget) == enemyColor;
@@ -664,7 +664,7 @@ namespace DuckChess
 
                 potentialTarget -= 1;
 
-                int colOfTarget = Board.GetColumnOf(potentialTarget);
+                int colOfTarget = BoardInfo.GetFile(potentialTarget);
 
                 // If the target is out of bounds, stop
                 if (colOfTarget > colOfPiece)
@@ -702,7 +702,7 @@ namespace DuckChess
 
                 potentialTarget += 1;
 
-                int colOfTarget = Board.GetColumnOf(potentialTarget);
+                int colOfTarget = BoardInfo.GetFile(potentialTarget);
 
                 // If the target is out of bounds, stop
                 if (colOfTarget < colOfPiece)
@@ -774,10 +774,10 @@ namespace DuckChess
             //bool isWhite = board.turnColor == Piece.White;
             //int kingSpot = isWhite ? board.WhiteKing : board.BlackKing;
             //int enemyColor = isWhite ? Piece.Black : Piece.White;
-            //bool isOnTopEdge = Board.GetRowOf(kingSpot) == 7;
-            //bool isOnBottomEdge = Board.GetRowOf(kingSpot) == 0;
-            //bool isOnLeftEdge = Board.GetColumnOf(kingSpot) == 0;
-            //bool isOnRightEdge = Board.GetColumnOf(kingSpot) == 7;
+            //bool isOnTopEdge = BoardInfo.GetRow(kingSpot) == 7;
+            //bool isOnBottomEdge = BoardInfo.GetRow(kingSpot) == 0;
+            //bool isOnLeftEdge = BoardInfo.GetFile(kingSpot) == 0;
+            //bool isOnRightEdge = BoardInfo.GetFile(kingSpot) == 7;
             //int potentialTarget = kingSpot + 7;
             //if (
             //    !(isOnTopEdge || isOnLeftEdge) &&

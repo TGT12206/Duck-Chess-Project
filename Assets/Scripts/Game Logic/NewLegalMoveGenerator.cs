@@ -81,7 +81,7 @@ namespace DuckChess
 
             if (Piece.PieceType(board[spotInFrontOfPawn]) == Piece.None)
             {
-                if (Board.GetRowOf(pawnSpot) == rowBeforePromotion)
+                if (BoardInfo.GetRow(pawnSpot) == rowBeforePromotion)
                 {
                     AddPawnPromotions(ref generatedMoves, pawnSpot, spotInFrontOfPawn);
                 }
@@ -90,7 +90,7 @@ namespace DuckChess
                     generatedMoves.Add(new Move(pawnSpot, spotInFrontOfPawn));
                 }
 
-                if (Board.GetRowOf(pawnSpot) == startRow && Piece.PieceType(board[spotTwoInFrontOfPawn]) == Piece.None)
+                if (BoardInfo.GetRow(pawnSpot) == startRow && Piece.PieceType(board[spotTwoInFrontOfPawn]) == Piece.None)
                 {
                     generatedMoves.Add(new Move(pawnSpot, spotTwoInFrontOfPawn, Move.Flag.PawnTwoForward));
                 }
@@ -102,11 +102,11 @@ namespace DuckChess
             int rightCaptureSpot = pawnSpot + findCaptureSpotOnRight;
             int leftCaptureSpot = pawnSpot + findCaptureSpotOnLeft;
 
-            int pawnCol = Board.GetColumnOf(pawnSpot);
+            int pawnCol = BoardInfo.GetFile(pawnSpot);
 
             if (pawnCol < 7 && Piece.Color(board[rightCaptureSpot]) == enemyColor)
             {
-                if (Board.GetRowOf(pawnSpot) == rowBeforePromotion)
+                if (BoardInfo.GetRow(pawnSpot) == rowBeforePromotion)
                 {
                     AddPawnPromotions(ref generatedMoves, pawnSpot, rightCaptureSpot);
                 }
@@ -118,7 +118,7 @@ namespace DuckChess
 
             if (pawnCol > 0 && Piece.Color(board[leftCaptureSpot]) == enemyColor)
             {
-                if (Board.GetRowOf(pawnSpot) == rowBeforePromotion)
+                if (BoardInfo.GetRow(pawnSpot) == rowBeforePromotion)
                 {
                     AddPawnPromotions(ref generatedMoves, pawnSpot, leftCaptureSpot);
                 }
@@ -131,7 +131,7 @@ namespace DuckChess
 
         private static void GenerateEnPassantMoves(ref List<Move> generatedMoves, Board board, int pawnSpot, int leftCaptureSpot, int rightCaptureSpot)
         {
-            if (Board.GetRowOf(pawnSpot) == 4)
+            if (BoardInfo.GetRow(pawnSpot) == 4)
             {
                 if (leftCaptureSpot == board.enPassantSquare || rightCaptureSpot == board.enPassantSquare)
                 {

@@ -202,7 +202,7 @@ public class BoardUI : MonoBehaviour
         // Castling
         if (move.MoveFlag == Move.Flag.Castling) {
             int kingSpot = isWhite ? board.WhiteKing : board.BlackKing;
-            bool wasKingSide = Board.GetColumnOf(kingSpot) == 6;
+            bool wasKingSide = BoardInfo.GetFile(kingSpot) == 6;
             int rookSpot = wasKingSide ? -1 : 1;
             int originalRookSpot = wasKingSide ? 1 : -2;
             Pieces[originalRookSpot] = Pieces[rookSpot];
