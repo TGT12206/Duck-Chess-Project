@@ -9,14 +9,6 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class BoardUI : MonoBehaviour
 {
-    #region Max number of each piece type, for one color
-    const int MAX_PAWN_COUNT = Board.MAX_PAWN_COUNT;
-    const int MAX_KNIGHT_COUNT = Board.MAX_KNIGHT_COUNT;
-    const int MAX_BISHOP_COUNT = Board.MAX_BISHOP_COUNT;
-    const int MAX_ROOK_COUNT = Board.MAX_ROOK_COUNT;
-    const int MAX_QUEEN_COUNT = Board.MAX_QUEEN_COUNT;
-    #endregion
-
     #region References to Prefabs of the pieces
     public GameObject BishopB;
     public GameObject BishopW;

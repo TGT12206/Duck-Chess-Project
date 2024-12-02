@@ -53,7 +53,7 @@ public class HumanPlayer : RealTimePlayer
         int mouseSquare = BoardUI.GetMouseSquare();
         if (currentState == InputState.None)
         {
-            if (board.turnIsDuck && board.Duck == Board.NOT_ON_BOARD)
+            if (board.plyCount == 1)
             {
                 mouseSquare = 0;
                 selectedSquare = 0;
@@ -134,7 +134,7 @@ public class HumanPlayer : RealTimePlayer
             targetSquare = mouseSquare;
             currentState = InputState.None;
             Move newMove;
-            if (board.turnIsDuck && board.Duck == Board.NOT_ON_BOARD)
+            if (board.plyCount == 1)
             {
                 newMove = new Move(0, targetSquare, Move.Flag.FirstDuckMove);
             } else if (

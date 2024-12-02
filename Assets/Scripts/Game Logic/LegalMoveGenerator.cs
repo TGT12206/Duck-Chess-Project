@@ -57,7 +57,7 @@ namespace DuckChess
             Debug.Log( moves );
         }
 
-        private static List<int> GetLocationOfPieces(Board board, int pieceType)
+        public static List<int> GetLocationOfPieces(Board board, int pieceType)
         {
             int piece = board.turnColor | pieceType;
             int pieceColor = Piece.Color(piece);
@@ -76,7 +76,7 @@ namespace DuckChess
             return pieceLocations;
         }
 
-        private static int GetLocationOfDuck(Board board)
+        public static int GetLocationOfDuck(Board board)
         {
             for (int i = 0; i < 64; i++)
             {

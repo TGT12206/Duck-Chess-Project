@@ -170,6 +170,10 @@ namespace DuckChess
         private void UpdateBoard(ref Move move, bool isWhite)
         {
             int piece = Squares[move.StartSquare];
+            if (move.MoveFlag == Move.Flag.FirstDuckMove)
+            {
+                piece = Piece.Duck;
+            }
 
             String dbgStr = "Updating board (move attempt).\n";
             dbgStr += "Turn is white: " + (turnColor == Piece.White) + "\n";
