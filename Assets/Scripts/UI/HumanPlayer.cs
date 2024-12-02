@@ -53,7 +53,7 @@ public class HumanPlayer : RealTimePlayer
         int mouseSquare = BoardUI.GetMouseSquare();
         if (currentState == InputState.None)
         {
-            if (board.duckTurn && board.Duck == Board.NOT_ON_BOARD)
+            if (board.turnIsDuck && board.Duck == Board.NOT_ON_BOARD)
             {
                 mouseSquare = 0;
                 selectedSquare = 0;
@@ -85,10 +85,10 @@ public class HumanPlayer : RealTimePlayer
         {
             // If square contains a piece, select that piece for dragging
             if (
-                (!board.duckTurn &&
+                (!board.turnIsDuck &&
                 Piece.IsColor(board[mouseSquare], Color))
                 ||
-                (board.duckTurn &&
+                (board.turnIsDuck &&
                 Piece.PieceType(board[mouseSquare]) == Piece.Duck)
             )
             {
@@ -134,7 +134,7 @@ public class HumanPlayer : RealTimePlayer
             targetSquare = mouseSquare;
             currentState = InputState.None;
             Move newMove;
-            if (board.duckTurn && board.Duck == Board.NOT_ON_BOARD)
+            if (board.turnIsDuck && board.Duck == Board.NOT_ON_BOARD)
             {
                 newMove = new Move(0, targetSquare, Move.Flag.FirstDuckMove);
             } else if (

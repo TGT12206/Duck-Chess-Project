@@ -13,7 +13,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     public Stack<Move> moveHistory;
     public Stack<int> significantMoveCounters;
     public bool haltForError;
-    public int framesToWait = 50;
+    public int framesToWait = 1;
     public int framesWaited = 0;
 
     public bool IsGameOver()
@@ -53,7 +53,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
 
         // Create the appropriate player types
         // placeholder
-        //WhitePlayer = new HumanPlayer(boardUI, ref board, Piece.White);
+        // WhitePlayer = new HumanPlayer(boardUI, ref board, Piece.White);
         //BlackPlayer = new HumanPlayer(boardUI, ref board, Piece.Black);
         WhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 2, boardUI);
         BlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 2, boardUI);

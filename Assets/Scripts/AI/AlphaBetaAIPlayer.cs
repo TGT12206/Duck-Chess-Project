@@ -124,7 +124,7 @@ namespace DuckChess
                 Debug.Log("Search Board: " + searchBoard.ToString());
             }
 
-            bool isMaximizing = searchBoard.duckTurn ? !parent.isMaximizing : parent.isMaximizing;
+            bool isMaximizing = searchBoard.turnIsDuck ? !parent.isMaximizing : parent.isMaximizing;
 
             // Making a move on a board saves any captured piece onto the move,
             // so we need to make the move before saving.

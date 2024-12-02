@@ -171,7 +171,7 @@ public class BoardUI : MonoBehaviour
             Move moveRooks = new Move(rookSpot, newRookSpot);
             MakeMove(moveRooks);
         }
-        if (board.duckTurn && board.Duck == Board.NOT_ON_BOARD)
+        if (board.turnIsDuck && board.Duck == Board.NOT_ON_BOARD)
         {
             Pieces[newSquare] = Instantiate(Duck);
         } else
