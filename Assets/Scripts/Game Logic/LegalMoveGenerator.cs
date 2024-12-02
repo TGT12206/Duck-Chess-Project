@@ -49,7 +49,7 @@ namespace DuckChess
                 );
             }
 
-            string moves = "";
+            string moves = "ALL MOVES\n";
             foreach (Move move in generatedMoves)
             {
                 moves += "Piece: " + Piece.PieceStr(board[move.StartSquare]) + " | " + move.ToString() + "\n";

@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace DuckChess
@@ -240,6 +241,16 @@ namespace DuckChess
             string moveString = "";
             moveString += StartSquare + " to " + TargetSquare + " flag: " + MoveFlag + " captured " + CapturedPiece;
             return moveString;
+        }
+
+        public bool isDuckMove(Board board) 
+        {
+            if (Move.Flag.FirstDuckMove != MoveFlag) {
+                return board[StartSquare] == Piece.Duck;
+            } else {
+                return true;
+            }
+           
         }
 
         //public string Name

@@ -246,7 +246,7 @@ namespace DuckChess
             int piece = Squares[move.StartSquare];
             PieceList pieceList = GetPieceList(Piece.PieceType(piece), isWhite);
 
-            Debug.Log("piece: " + Piece.PieceStr(piece) + "\nis white: " + isWhite + "\nList: " + pieceList);
+            Debug.Log("performing move.\npiece: " + Piece.PieceStr(piece) + "\nis white: " + isWhite + "\nMove: " + move + "\nList: " + pieceList);
             if (pieceList != null)
             {
                 pieceList.MovePiece(move);
@@ -305,7 +305,7 @@ namespace DuckChess
             Squares[move.StartSquare] = Piece.None;
         }
 
-        private void SwitchTurn()
+        private void SwitchTurnForward()
         {
             Debug.Log("Just performed move for: " + turnColor + " move type: " + (turnIsDuck ? "Duck" : "Regular"));
             turnIsDuck = !turnIsDuck;
@@ -321,6 +321,28 @@ namespace DuckChess
             }
         }
 
+        private void SwitchTurnBackward(ref Move move)
+        {
+            bool duckMove = move.isDuckMove(this);
+            Debug.Log("We are undoing move for: " + turnColor + " move type: " + (duckMove ? "Duck" : "Regular") + " board type (should be opposite): " + (turnIsDuck ? "Duck" : "Regular"));
+
+            turnIsDuck = !turnIsDuck;
+
+            // the next turn we want is here.
+            if (turnIsDuck) {
+                GenerateDuckMoves();
+            }
+            else
+            {
+                // keep as same color.
+                // turnColor = turnColor == Piece.White ? Piece.Black : Piece.White;
+                GenerateNormalMoves();
+            }
+
+
+          
+        }
+
         /// <summary>
         /// Makes a move on the board and updates its state.
         /// </summary>
@@ -333,12 +355,18 @@ namespace DuckChess
             UpdatePieceLists(ref move, isWhite);
             UpdateSquares(move);
 
-            SwitchTurn();
+            SwitchTurnForward();
         }
 
 
-        private void GenerateNormalMoves() => LegalMoveGenerator.GeneratePawnMoves(ref legalMoves, this);
-        private void GenerateDuckMoves() => LegalMoveGenerator.GenerateDuckMoves(ref legalMoves, this);
+        private void GenerateNormalMoves() {
+            legalMoves = new List<Move>();
+            LegalMoveGenerator.GeneratePawnMoves(ref legalMoves, this);
+        }
+        private void GenerateDuckMoves() {
+             legalMoves = new List<Move>();
+             LegalMoveGenerator.GenerateDuckMoves(ref legalMoves, this);
+        }
 
         public override string ToString()
         {
@@ -402,9 +430,9 @@ namespace DuckChess
             // Handle pawn promotion reversal
             if (move.IsPromotion)
             {
-                PieceList promotionList = GetPieceList(Piece.PieceType(piece), move.PromotionPieceType == Piece.White);
+                PieceList promotionList = GetPieceList(Piece.PieceType(piece), Piece.Color(piece) == Piece.White);
                 promotionList.RemovePieceAtSquare(move.TargetSquare);
-                PieceList pawnList = GetPieceList(Piece.Pawn, move.PromotionPieceType == Piece.White);
+                PieceList pawnList = GetPieceList(Piece.Pawn, Piece.Color(piece) == Piece.White);
                 pawnList.AddPieceAtSquare(move.TargetSquare);
             }
             else
@@ -441,8 +469,7 @@ namespace DuckChess
                 }
             }
 
-            SwitchTurn();
-
+            SwitchTurnBackward(ref move);
 
         }
     }

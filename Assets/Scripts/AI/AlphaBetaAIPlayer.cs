@@ -92,7 +92,13 @@ namespace DuckChess
         private void FinishSearch()
         {
             // Search is complete
-            Debug.Log("Chose Move" + movesLookedAt + "\n" + topNode.ToString() + "\n" + board.ToString() + "\n" + searchBoard.ToString() + "\n");
+            String dbgStr = "Chose Node: " + movesLookedAt + "\n";
+            dbgStr += "Turn is white: " + (board.turnColor == Piece.White);
+            dbgStr += "Piece: " + Piece.PieceStr(board[topNode.moveToValue.StartSquare]) + "\n";
+            dbgStr += topNode.ToString() + "\n";
+            dbgStr += board.ToString() + "\n";
+            dbgStr += searchBoard.ToString() + "\n";
+            Debug.Log(dbgStr);
             ChooseMove(bestMove);
             startSearch = true;
         }

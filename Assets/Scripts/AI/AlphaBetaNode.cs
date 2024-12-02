@@ -67,7 +67,7 @@ namespace DuckChess
             return alpha >= beta;
         }
 
-        public string ToString()
+        public override string ToString()
         {
             string output = "";
             output += "alpha " + alpha + " beta " + beta + " value " + value + " Max? " + isMaximizing + "\n";

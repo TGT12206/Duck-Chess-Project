@@ -53,9 +53,9 @@ public class UITurnManager : MonoBehaviour, ITurnManager
 
         // Create the appropriate player types
         // placeholder
-        // WhitePlayer = new HumanPlayer(boardUI, ref board, Piece.White);
+        WhitePlayer = new HumanPlayer(boardUI, ref board, Piece.White);
         //BlackPlayer = new HumanPlayer(boardUI, ref board, Piece.Black);
-        WhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 2, boardUI);
+        // WhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 2, boardUI);
         BlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 2, boardUI);
 
         // Set the MakeMove method to be called whenever either player makes a move
