@@ -110,6 +110,21 @@ namespace DuckChess
             return $"{color}{pieceChar}";
         }
 
+        /// <summary>
+        /// Returns the opponent's color given a piece's color.
+        /// </summary>
+        /// <param name="color">The color of the piece (Piece.White or Piece.Black).</param>
+        /// <returns>The opponent's color (Piece.Black if input is Piece.White, and vice versa).</returns>
+        public static int OpponentColor(int color)
+        {
+            if (color == Piece.White)
+                return Piece.Black;
+            else if (color == Piece.Black)
+                return Piece.White;
+            return Piece.NoColor; // For cases like ducks or empty squares.
+        }
+
+
         //public static bool IsRookOrQueen(int piece)
         //{
         //    return (piece & 0b110) == 0b110;

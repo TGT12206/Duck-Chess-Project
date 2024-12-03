@@ -86,7 +86,7 @@ public class HumanPlayer : RealTimePlayer
         // If square contains a piece, select that piece for dragging
         if (board.turnIsDuck)
         {
-            selectedSquare = LegalMoveGenerator.GetLocationOfDuck(board);
+            selectedSquare = board.GetLocationOfPieces(Piece.Duck)[0];
             boardUI.SelectPiece(selectedSquare);
             currentState = InputState.DraggingPiece;
         }

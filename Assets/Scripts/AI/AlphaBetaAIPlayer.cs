@@ -92,7 +92,7 @@ namespace DuckChess
             searchBoard = new Board(board);
             legalMoves = searchBoard.legalMoves;
             alphaBetaNodes = new Stack<AlphaBetaNode>();
-            topNode = new AlphaBetaNode(int.MinValue, int.MaxValue, true, new Board(searchBoard));
+            topNode = new AlphaBetaNode(int.MinValue, int.MaxValue, true, new Board(board));
             alphaBetaNodes.Push(topNode);
             currentDepth = 1;
             startSearch = false;

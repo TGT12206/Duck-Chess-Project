@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace DuckChess
@@ -30,6 +31,28 @@ namespace DuckChess
 
         public List<Move> legalMoves;
 
+        public PieceList WhitePawnLocations;
+        public PieceList BlackPawnLocations;
+        public PieceList WhiteKnightLocations;
+        public PieceList BlackKnightLocations;
+        public PieceList WhiteBishopLocations;
+        public PieceList BlackBishopLocations;
+        public PieceList WhiteRookLocations;
+        public PieceList BlackRookLocations;
+        public PieceList WhiteQueenLocations;
+        public PieceList BlackQueenLocations;
+        public PieceList WhiteKingLocation;
+        public PieceList BlackKingLocation;
+        public PieceList DuckLocation;
+        /// <summary>
+        /// An array of arrays. The first index is for which piece list
+        /// (do not rely on the order being constant), The second index is for which
+        /// piece of that type. Given both of these indexes, the location of the
+        /// piece is returned.
+        /// </summary>
+        /// <returns></returns>
+        public PieceList[] AllPieceLocations;
+
         public int this[int index]
         {
             get => Squares[index];
@@ -42,6 +65,15 @@ namespace DuckChess
             ResetBoardState();
         }
 
+        /// <summary>
+        /// By default, copies squares and turn information.
+        /// <br></br>
+        /// This is enough to calculate the next move correctly.
+        /// <br></br>
+        /// If you want to copy everything, you must specify.
+        /// <br></br>
+        /// </summary>
+        /// <param name="otherBoard"></param>
         public Board(Board otherBoard)
         {
             Squares = new int[64];
@@ -57,8 +89,29 @@ namespace DuckChess
             isGameOver = otherBoard.isGameOver;
             plyCount = otherBoard.plyCount;
             numPlySinceLastEvent = otherBoard.numPlySinceLastEvent;
-            // Clone legal moves
             legalMoves = new List<Move>(otherBoard.legalMoves);
+            WhitePawnLocations = new PieceList(otherBoard.WhitePawnLocations);
+            BlackPawnLocations = new PieceList(otherBoard.BlackPawnLocations);
+            WhiteKnightLocations = new PieceList(otherBoard.WhiteKnightLocations);
+            BlackKnightLocations = new PieceList(otherBoard.BlackKnightLocations);
+            WhiteBishopLocations = new PieceList(otherBoard.WhiteBishopLocations);
+            BlackBishopLocations = new PieceList(otherBoard.BlackBishopLocations);
+            WhiteRookLocations = new PieceList(otherBoard.WhiteRookLocations);
+            BlackRookLocations = new PieceList(otherBoard.BlackRookLocations);
+            WhiteQueenLocations = new PieceList(otherBoard.WhiteQueenLocations);
+            BlackQueenLocations = new PieceList(otherBoard.BlackQueenLocations);
+            WhiteKingLocation = new PieceList(otherBoard.WhiteKingLocation);
+            BlackKingLocation = new PieceList(otherBoard.BlackKingLocation);
+            DuckLocation = new PieceList(otherBoard.DuckLocation);
+            AllPieceLocations = new PieceList[] {
+                WhitePawnLocations, BlackPawnLocations,
+                WhiteKnightLocations, BlackKnightLocations,
+                WhiteBishopLocations, BlackBishopLocations,
+                WhiteRookLocations, BlackRookLocations,
+                WhiteQueenLocations, BlackQueenLocations,
+                WhiteKingLocation, BlackKingLocation,
+                DuckLocation
+            };
         }
 
         /// <summary>
@@ -87,9 +140,37 @@ namespace DuckChess
             turnColor = Piece.NoColor;
             winnerColor = Piece.NoColor;
             isGameOver = false;
-            //numPlySinceLastEvent = 0;
+            numPlySinceLastEvent = 0;
             plyCount = 0;
             enPassantSquare = -1;
+            ReinitializePieceLists();
+        }
+
+        private void ReinitializePieceLists()
+        {
+
+            WhitePawnLocations = new PieceList(NOT_ON_BOARD, 8, Piece.White | Piece.Pawn);
+            BlackPawnLocations = new PieceList(NOT_ON_BOARD, 8, Piece.Black | Piece.Pawn);
+            WhiteKnightLocations = new PieceList(NOT_ON_BOARD, 10, Piece.White | Piece.Knight);
+            BlackKnightLocations = new PieceList(NOT_ON_BOARD, 10, Piece.Black | Piece.Knight);
+            WhiteBishopLocations = new PieceList(NOT_ON_BOARD, 10, Piece.White | Piece.Bishop);
+            BlackBishopLocations = new PieceList(NOT_ON_BOARD, 10, Piece.Black | Piece.Bishop);
+            WhiteRookLocations = new PieceList(NOT_ON_BOARD, 10, Piece.White | Piece.Rook);
+            BlackRookLocations = new PieceList(NOT_ON_BOARD, 10, Piece.Black | Piece.Rook);
+            WhiteQueenLocations = new PieceList(NOT_ON_BOARD, 9, Piece.White | Piece.Queen);
+            BlackQueenLocations = new PieceList(NOT_ON_BOARD, 9, Piece.Black | Piece.Queen);
+            WhiteKingLocation = new PieceList(NOT_ON_BOARD, 1, Piece.White | Piece.King);
+            BlackKingLocation = new PieceList(NOT_ON_BOARD, 1, Piece.Black | Piece.King);
+            DuckLocation = new PieceList(NOT_ON_BOARD, 1, Piece.Duck);
+            AllPieceLocations = new PieceList[] {
+                WhitePawnLocations, BlackPawnLocations,
+                WhiteKnightLocations, BlackKnightLocations,
+                WhiteBishopLocations, BlackBishopLocations,
+                WhiteRookLocations, BlackRookLocations,
+                WhiteQueenLocations, BlackQueenLocations,
+                WhiteKingLocation, BlackKingLocation,
+                DuckLocation
+            };
         }
 
         /// <summary>
@@ -118,6 +199,7 @@ namespace DuckChess
             PlaceKings();
             turnColor = Piece.White;
             turnIsDuck = false;
+            SaveLocationOfPieces();
             GenerateNormalMoves();
         }
 
@@ -143,7 +225,7 @@ namespace DuckChess
             Squares[60] = Piece.Black | Piece.King;
         }
 
-        private void UpdateBoard(ref Move move, bool isWhite)
+        private void UpdateBoard(ref Move move)
         {
             /*
              * DONE
@@ -167,7 +249,9 @@ namespace DuckChess
              * - if it is a capture or a pawn move, reset the counter for a draw
              * - idk
              */
-
+            if (Squares[move.TargetSquare] != Piece.None) {
+                move = new Move(move, Squares[move.TargetSquare]);
+            }
             // Check if this is a capture, and if so, check if it is a rook or a king.
             if (move.IsCapture)
             {
@@ -220,7 +304,7 @@ namespace DuckChess
                     CastleQueenSideB = false;
                 }
             }
-            
+
             if (move.MoveFlag == Move.Flag.Castling)
             {
                 bool isKingSide = move.TargetSquare > move.StartSquare;
@@ -244,7 +328,7 @@ namespace DuckChess
                 int enemySquare = move.TargetSquare + (isWhite ? -8 : 8);
                 Squares[enemySquare] = Piece.None;
             }
-            
+
             if (move.IsPromotion)
             {
                 Squares[move.TargetSquare] = turnColor | move.PromotionPieceType;
@@ -327,8 +411,10 @@ namespace DuckChess
         {
             plyCount++;
 
-            bool isWhite = turnColor == Piece.White;
-            UpdateBoard(ref move, isWhite);
+            ReinitializePieceLists();
+            SaveLocationOfPieces();
+
+            UpdateBoard(ref move);
 
             SwitchTurnForward();
         }
@@ -363,6 +449,110 @@ namespace DuckChess
             }
             return boardString;
         }
-    }
+        private void SaveLocationOfPieces()
+        {
+            PieceList listToUpdate = null;
+            for (int i = 0; i < 64; i++)
+            {
+                int boardPieceType = Piece.PieceType(Squares[i]);
+                bool boardPieceIsWhite = Piece.IsColor(Squares[i], Piece.White);
+                listToUpdate = null;
+                switch (boardPieceType)
+                {
+                    case Piece.Pawn:
+                        listToUpdate = boardPieceIsWhite ? WhitePawnLocations : BlackPawnLocations;
+                        break;
+                    case Piece.Knight:
+                        listToUpdate = boardPieceIsWhite ? WhiteKnightLocations : BlackKnightLocations;
+                        break;
+                    case Piece.Bishop:
+                        listToUpdate = boardPieceIsWhite ? WhiteBishopLocations : BlackBishopLocations;
+                        break;
+                    case Piece.Rook:
+                        listToUpdate = boardPieceIsWhite ? WhiteRookLocations : BlackRookLocations;
+                        break;
+                    case Piece.Queen:
+                        listToUpdate = boardPieceIsWhite ? WhiteQueenLocations : BlackQueenLocations;
+                        break;
+                    case Piece.King:
+                        listToUpdate = boardPieceIsWhite ? WhiteKingLocation : BlackKingLocation;
+                        break;
+                    case Piece.Duck:
+                        listToUpdate = DuckLocation;
+                        break;
+                }
+                if (listToUpdate != null)
+                {
+                    listToUpdate.AddToSquare(i);
+                }
+            }
+            AllPieceLocations = new PieceList[] {
+                WhitePawnLocations, BlackPawnLocations,
+                WhiteKnightLocations, BlackKnightLocations,
+                WhiteBishopLocations, BlackBishopLocations,
+                WhiteRookLocations, BlackRookLocations,
+                WhiteQueenLocations, BlackQueenLocations,
+                WhiteKingLocation, BlackKingLocation,
+                DuckLocation
+            };
+        }
+        public PieceList GetLocationOfPieces(int pieceType)
+        {
+            return pieceType switch
+            {
+                Piece.Pawn => isWhite ? WhitePawnLocations : BlackPawnLocations,
+                Piece.Knight => isWhite ? WhiteKnightLocations : BlackKnightLocations,
+                Piece.Bishop => isWhite ? WhiteBishopLocations : BlackBishopLocations,
+                Piece.Rook => isWhite ? WhiteRookLocations : BlackRookLocations,
+                Piece.Queen => isWhite ? WhiteQueenLocations : BlackQueenLocations,
+                Piece.King => isWhite ? WhiteKingLocation : BlackKingLocation,
+                Piece.Duck => DuckLocation,
+                _ => null
+            };
+        }
+        public PieceList GetLocationOfPieces(int pieceType, int pieceColor)
+        {
+            bool isWhite = pieceColor == Piece.White;
+            return pieceType switch
+            {
+                Piece.Pawn => isWhite ? WhitePawnLocations : BlackPawnLocations,
+                Piece.Knight => isWhite ? WhiteKnightLocations : BlackKnightLocations,
+                Piece.Bishop => isWhite ? WhiteBishopLocations : BlackBishopLocations,
+                Piece.Rook => isWhite ? WhiteRookLocations : BlackRookLocations,
+                Piece.Queen => isWhite ? WhiteQueenLocations : BlackQueenLocations,
+                Piece.King => isWhite ? WhiteKingLocation : BlackKingLocation,
+                Piece.Duck => DuckLocation,
+                _ => null
+            };
+        }
+        public class PieceList
+        {
+            public int[] locations;
+            public int Length;
+            public int maxLength;
+            public int piece;
+            internal PieceList(int defaultValue, int maxLength, int piece)
+            {
+                locations = Enumerable.Repeat(NOT_ON_BOARD, maxLength).ToArray();
+                this.maxLength = maxLength;
+                Length = 0;
+                this.piece = piece;
+            }
+            internal PieceList(PieceList otherList)
+            {
+                locations = new int[otherList.maxLength];
+                Array.Copy(otherList.locations, locations, otherList.maxLength);
+                Length = otherList.Length;
+                maxLength = otherList.maxLength;
+                piece = otherList.piece;
+            }
+            internal void AddToSquare(int square)
+            {
+                locations[Length] = square;
+                Length++;
+            }
 
+            public int this[int index] => locations[index];
+        }
+    }
 }
