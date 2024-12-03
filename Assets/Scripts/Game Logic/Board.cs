@@ -249,7 +249,9 @@ namespace DuckChess
              * - if it is a capture or a pawn move, reset the counter for a draw
              * - idk
              */
-
+            if (Squares[move.TargetSquare] != Piece.None) {
+                move = new Move(move, Squares[move.TargetSquare]);
+            }
             // Check if this is a capture, and if so, check if it is a rook or a king.
             if (move.IsCapture)
             {
