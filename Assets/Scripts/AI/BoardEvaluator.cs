@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace DuckChess
 {
     public static class BoardEvaluator
     {
+        private static System.Random random = new System.Random();
         private const int PawnValue = 1000;
         private const int KnightValue = 3200;
         private const int BishopValue = 3300;
@@ -71,7 +73,7 @@ namespace DuckChess
             };
         }
 
-        private static int GetPieceValue(int pieceType)
+        public static int GetPieceValue(int pieceType)
         {
             return pieceType switch
             {
@@ -105,7 +107,62 @@ namespace DuckChess
             return score;
         }
 
-       private static bool IsKingExposed(Board board, int kingLocation)
+        // NEW METHOD: GetHeuristicMove
+        public static Move GetHeuristicMove(Board board, List<Move> moves, int currentPlayer)
+        {
+            // Assign a score to each move based on heuristic evaluation
+            List<Tuple<Move, int>> scoredMoves = new List<Tuple<Move, int>>();
+            foreach (var move in moves)
+            {
+                int score = EvaluateMove(board, move, currentPlayer);
+                scoredMoves.Add(new Tuple<Move, int>(move, score));
+            }
+
+            // Sort moves based on the score (higher is better)
+            scoredMoves.Sort((a, b) => b.Item2.CompareTo(a.Item2));
+
+            // Select the best move with some randomness
+            int topN = Math.Min(5, scoredMoves.Count);
+            int selectedIndex = random.Next(topN);
+            return scoredMoves[selectedIndex].Item1;
+        }
+
+        // NEW METHOD: EvaluateMove
+        public static int EvaluateMove(Board board, Move move, int player)
+        {
+            int score = 0;
+
+            int startPiece = board.Squares[move.StartSquare];
+            int targetPiece = board.Squares[move.TargetSquare];
+
+            int pieceType = Piece.PieceType(startPiece);
+            int pieceColor = Piece.Color(startPiece);
+
+            // Encourage capturing opponent's pieces
+            if (Piece.Color(targetPiece) != Piece.NoColor && Piece.Color(targetPiece) != pieceColor)
+            {
+                int capturedPieceValue = BoardEvaluator.GetPieceValue(Piece.PieceType(targetPiece));
+                score += capturedPieceValue * 10; // Higher weight for captures
+            }
+
+            // Encourage advancing pawns
+            if (pieceType == Piece.Pawn)
+            {
+                int direction = (pieceColor == Piece.White) ? 1 : -1;
+                int startRow = BoardInfo.GetRow(move.StartSquare);
+                int targetRow = BoardInfo.GetRow(move.TargetSquare);
+                score += (targetRow - startRow) * direction * 2;
+            }
+
+            // Encourage central control
+            int targetCol = BoardInfo.GetFile(move.TargetSquare);
+            int targetRowCentrality = (int)Math.Abs(3.5f - BoardInfo.GetRow(move.TargetSquare));
+            int targetColCentrality = (int)Math.Abs(3.5f - targetCol);
+            score += (int)(7 - (targetRowCentrality + targetColCentrality)); // Closer to center gets higher score
+
+            return score;
+        }
+        private static bool IsKingExposed(Board board, int kingLocation)
 {
     return BoardInfo.IsKingExposed(board, kingLocation);
 }

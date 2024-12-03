@@ -169,10 +169,5 @@ namespace DuckChess
         {
             return BoardEvaluator.Evaluate(board, this.Color);
         }
-
-        public override void UnmakeMove()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

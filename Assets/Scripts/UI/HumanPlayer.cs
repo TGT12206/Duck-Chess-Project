@@ -158,10 +158,4 @@ public class HumanPlayer : RealTimePlayer
         currentState = InputState.None;
         boardUI.CancelSelection();
     }
-
-    public override void UnmakeMove()
-    {
-        currentState = InputState.None;
-        selectedSquare = 0;
-    }
 }
