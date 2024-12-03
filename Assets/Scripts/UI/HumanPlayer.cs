@@ -56,6 +56,7 @@ public class HumanPlayer : RealTimePlayer
         {
             if (board.plyCount == 1)
             {
+                // If it is the first duck move, auto select
                 mouseSquare = 0;
                 selectedSquare = 0;
                 boardUI.SelectDuckInitially();
@@ -82,19 +83,20 @@ public class HumanPlayer : RealTimePlayer
 
     private void HandlePieceSelection(int mouseSquare)
     {
-        if (Input.GetMouseButtonDown(0))
+        // If square contains a piece, select that piece for dragging
+        if (board.turnIsDuck)
+        {
+            selectedSquare = LegalMoveGenerator.GetLocationOfDuck(board);
+            boardUI.SelectPiece(selectedSquare);
+            currentState = InputState.DraggingPiece;
+        }
+        else if (Input.GetMouseButtonDown(0))
         {
             // If square contains a piece, select that piece for dragging
-            if (
-                (!board.turnIsDuck &&
-                Piece.IsColor(board[mouseSquare], Color))
-                ||
-                (board.turnIsDuck &&
-                Piece.PieceType(board[mouseSquare]) == Piece.Duck)
-            )
+            if (Piece.IsColor(board[mouseSquare], Color))
             {
                 selectedSquare = mouseSquare;
-                boardUI.SelectPiece(mouseSquare);
+                boardUI.SelectPiece(selectedSquare);
                 currentState = InputState.DraggingPiece;
             }
         }

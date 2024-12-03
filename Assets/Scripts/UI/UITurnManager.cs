@@ -32,7 +32,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     {
         board.MakeMove(ref move);
         boardUI.LoadPosition(ref board, false, "");
-        Debug.Log("UI\n" + board.ToString());
+        //Debug.Log("UI\n" + board.ToString());
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
