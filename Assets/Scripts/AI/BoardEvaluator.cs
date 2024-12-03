@@ -225,6 +225,13 @@ namespace DuckChess
             // Flip the board for Black pieces
             int index = color == Piece.White ? position : 63 - position;
 
+            // Ensure the index is within the bounds of the piece-square table arrays
+            if (index < 0 || index >= 64)
+            {
+                Debug.LogError($"Invalid index {index} for pieceType {pieceType}, position {position}, color {color}");
+                return 0; // Return a neutral score if the index is invalid
+            }
+
             return pieceType switch
             {
                 Piece.Pawn => PawnTable[index],
@@ -236,6 +243,7 @@ namespace DuckChess
                 _ => 0
             };
         }
+
 
         // 3. Pawn Structure Evaluation
         private static int EvaluatePawnStructure(Board board, int color)
@@ -344,7 +352,18 @@ namespace DuckChess
             int attackingPieces = 0;
             int kingRow = BoardInfo.GetRow(kingPosition);
             int kingCol = BoardInfo.GetFile(kingPosition);
-            int enemyColor = Piece.OpponentColor(Piece.Color(board[kingPosition]));
+            int enemyColor = Piece.NoColor; // Default to no color if invalid
+
+            // Validate kingPosition and the piece at that position
+            if (kingPosition >= 0 && kingPosition < 64 && board[kingPosition] != Piece.None)
+            {
+                enemyColor = Piece.OpponentColor(Piece.Color(board[kingPosition]));
+            }
+            else
+            {
+                Debug.LogError($"Invalid king position or piece at position: {kingPosition}");
+            }
+
 
             // directions for attacks
             int[][] directions = new int[][]
@@ -543,8 +562,8 @@ namespace DuckChess
             return board.winnerColor switch
             {
                 Piece.NoColor => 0, // Draw
-                Piece.White => color == Piece.White ? int.MaxValue : int.MinValue,
-                Piece.Black => color == Piece.Black ? int.MaxValue : int.MinValue,
+                Piece.White => color == Piece.White ? 1000000 : -1000000,
+                Piece.Black => color == Piece.Black ? 1000000 : -1000000,
                 _ => 0
             };
         }

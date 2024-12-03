@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using DuckChess;
 using UnityEngine;
-using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 
 public class UITurnManager : MonoBehaviour, ITurnManager
 {
@@ -10,14 +9,26 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     public HumanPlayer HumanBlackPlayer;
     public AlphaBetaAIPlayer AlphaBetaAIWhitePlayer;
     public AlphaBetaAIPlayer AlphaBetaAIBlackPlayer;
+    public MCTSAIPlayer MCTSAIWhitePlayer;
+    public MCTSAIPlayer MCTSAIBlackPlayer;
+
     public RealTimePlayer PlayerToMove;
     public BoardUI boardUI;
     public Board board;
     public bool haltForError;
     public int framesToWaitWhite = 1;
     public int framesToWaitBlack = 1;
-    public bool WhiteIsBot;
-    public bool BlackIsBot;
+
+    public enum PlayerType
+    {
+        Human,
+        AlphaBetaAI,
+        MCTSAI
+    }
+
+    public PlayerType WhitePlayerType;
+    public PlayerType BlackPlayerType;
+
     public bool showWhiteSearchBoard;
     public bool showBlackSearchBoard;
     public int framesToWait;
@@ -32,7 +43,6 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     {
         board.MakeMove(ref move);
         boardUI.LoadPosition(ref board, false, "");
-        //Debug.Log("UI\n" + board.ToString());
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -48,17 +58,24 @@ public class UITurnManager : MonoBehaviour, ITurnManager
         board.turnColor = Piece.White;
 
         // Create the appropriate player types
-        // placeholder
         HumanWhitePlayer = new HumanPlayer(boardUI, ref board, Piece.White);
         HumanBlackPlayer = new HumanPlayer(boardUI, ref board, Piece.Black);
+
         AlphaBetaAIWhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 5, boardUI);
         AlphaBetaAIBlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 5, boardUI);
 
-        // Set the MakeMove method to be called whenever either player makes a move
+        MCTSAIWhitePlayer = new MCTSAIPlayer(board, Piece.White, boardUI);
+        MCTSAIBlackPlayer = new MCTSAIPlayer(board, Piece.Black, boardUI);
+
+        // Set the MakeMove method to be called whenever any player makes a move
         HumanWhitePlayer.OnMoveChosen.AddListener(MakeMove);
         HumanBlackPlayer.OnMoveChosen.AddListener(MakeMove);
+
         AlphaBetaAIWhitePlayer.OnMoveChosen.AddListener(MakeMove);
         AlphaBetaAIBlackPlayer.OnMoveChosen.AddListener(MakeMove);
+
+        MCTSAIWhitePlayer.OnMoveChosen.AddListener(MakeMove);
+        MCTSAIBlackPlayer.OnMoveChosen.AddListener(MakeMove);
 
         haltForError = false;
     }
@@ -70,15 +87,57 @@ public class UITurnManager : MonoBehaviour, ITurnManager
         framesWaited++;
         if (!board.isGameOver && !haltForError && framesWaited >= framesToWait)
         {
-            RealTimePlayer WhitePlayer = WhiteIsBot ? AlphaBetaAIWhitePlayer : HumanWhitePlayer;
-            RealTimePlayer BlackPlayer = BlackIsBot ? AlphaBetaAIBlackPlayer : HumanBlackPlayer;
-            AlphaBetaAIWhitePlayer.showSearchBoard = showWhiteSearchBoard;
-            AlphaBetaAIBlackPlayer.showSearchBoard = showBlackSearchBoard;
+            RealTimePlayer WhitePlayer;
+            RealTimePlayer BlackPlayer;
+
+            // Select the appropriate player for white
+            switch (WhitePlayerType)
+            {
+                case PlayerType.Human:
+                    WhitePlayer = HumanWhitePlayer;
+                    break;
+                case PlayerType.AlphaBetaAI:
+                    WhitePlayer = AlphaBetaAIWhitePlayer;
+                    break;
+                case PlayerType.MCTSAI:
+                    WhitePlayer = MCTSAIWhitePlayer;
+                    break;
+                default:
+                    WhitePlayer = HumanWhitePlayer;
+                    break;
+            }
+
+            // Select the appropriate player for black
+            switch (BlackPlayerType)
+            {
+                case PlayerType.Human:
+                    BlackPlayer = HumanBlackPlayer;
+                    break;
+                case PlayerType.AlphaBetaAI:
+                    BlackPlayer = AlphaBetaAIBlackPlayer;
+                    break;
+                case PlayerType.MCTSAI:
+                    BlackPlayer = MCTSAIBlackPlayer;
+                    break;
+                default:
+                    BlackPlayer = HumanBlackPlayer;
+                    break;
+            }
+
+            // Set showSearchBoard flags if needed
+            AlphaBetaAIWhitePlayer.showSearchBoard = (WhitePlayerType == PlayerType.AlphaBetaAI) && showWhiteSearchBoard;
+            AlphaBetaAIBlackPlayer.showSearchBoard = (BlackPlayerType == PlayerType.AlphaBetaAI) && showBlackSearchBoard;
+
+            // If MCTSAIPlayer has a showSearchBoard property, set it
+            MCTSAIWhitePlayer.showSearchBoard = (WhitePlayerType == PlayerType.MCTSAI) && showWhiteSearchBoard;
+            MCTSAIBlackPlayer.showSearchBoard = (BlackPlayerType == PlayerType.MCTSAI) && showBlackSearchBoard;
+
             PlayerToMove = board.turnColor == Piece.White ? WhitePlayer : BlackPlayer;
             try
             {
                 PlayerToMove.Update();
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 haltForError = true;
                 Debug.Log(e);

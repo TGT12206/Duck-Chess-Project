@@ -70,6 +70,9 @@ namespace DuckChess
         //    this.moveValue = moveValue;
         //}
 
+        // Define an invalid move
+        public static Move Invalid => new Move(-1, -1);
+
         /// <summary>
         /// Creates a move that simply moves a piece from start to target
         /// </summary>
@@ -108,6 +111,13 @@ namespace DuckChess
         {
             moveValue = move.moveValue | capturedPiece << 16;
         }
+
+        public bool IsValid()
+        {
+            // Assuming valid squares are between 0 and 63
+            return StartSquare >= 0 && StartSquare < 64 && TargetSquare >= 0 && TargetSquare < 64;
+        }
+
 
         /// <summary>
         /// The starting square of this move
