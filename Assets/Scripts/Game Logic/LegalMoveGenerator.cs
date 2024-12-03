@@ -262,137 +262,101 @@ namespace DuckChess
             {
                 return;
             }
-            bool isWhite = board.turnColor == Piece.White;
+            bool isWhite = board.isWhite;
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
+            int[] knightOffsets = { 15, 17, -15, -17, 10, -10, 6, -6 };
             List<int> knightLocations = GetLocationOfPieces(board, Piece.Knight);
             for (int i = 0; i < knightLocations.Count; i++)
             {
                 int knightSpot = knightLocations[i];
-                GenerateOneKnightsMoves(ref generatedMoves, board, knightSpot);
+                GenerateOneKnightsMoves(ref generatedMoves, board, knightSpot, enemyColor, knightOffsets);
             }
+        }
+
+        private static bool isKnightInBoundsForThisJump(int knightSpot, int jumpOffset)
+        {
+            bool rowIsInBounds = true;
+            bool fileIsInBounds = true;
+            int knightRow = BoardInfo.GetRow(knightSpot);
+            int knightCol = BoardInfo.GetFile(knightSpot);
+            switch (jumpOffset)
+            {
+                // jumps that move 1 left
+                case 15:
+                case -17:
+                    fileIsInBounds = knightCol > 0;
+                    break;
+                // jumps that move 2 left
+                case 6:
+                case -10:
+                    fileIsInBounds = knightCol > 1;
+                    break;
+                // jumps that move 1 right
+                case 17:
+                case -15:
+                    fileIsInBounds = knightCol < 7;
+                    break;
+                // jumps that move 2 right
+                case 10:
+                case -6:
+                    fileIsInBounds = knightCol < 6;
+                    break;
+            }
+            switch (jumpOffset)
+            {
+                // jumps that move 1 up
+                case 6:
+                case 10:
+                    rowIsInBounds = knightRow < 7;
+                    break;
+                // jumps that move 2 up
+                case 15:
+                case 17:
+                    rowIsInBounds = knightRow < 6;
+                    break;
+                // jumps that move 1 down
+                case -6:
+                case -10:
+                    rowIsInBounds = knightRow > 0;
+                    break;
+                // jumps that move 2 down
+                case -15:
+                case -17:
+                    rowIsInBounds = knightRow > 1;
+                    break;
+            }
+            return rowIsInBounds && fileIsInBounds;
         }
 
         public static void GenerateOneKnightsMoves(ref List<Move> generatedMoves, Board board, int knightSpot)
         {
-            //bool isWhite = board.turnColor == Piece.White;
-            //int enemyColor = isWhite ? Piece.Black : Piece.White;
-            //int row = BoardInfo.GetRow(knightSpot);
-            //int col = BoardInfo.GetFile(knightSpot);
+            bool isWhite = board.isWhite;
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
+            int[] knightOffsets = { 15, 17, -15, -17, 10, -10, 6, -6 };
+            for (int i = 0; i < knightOffsets.Length; i++)
+            {
+                int targetSpot = knightSpot + knightOffsets[i];
 
-            //// jumps that are up 2 tiles
-            //if (row < 6)
-            //{
-            //    // left
-            //    if (col > 0)
-            //    {
-            //        if (
-            //            Piece.PieceType(board[knightSpot + 15]) == Piece.None ||
-            //            Piece.Color(board[knightSpot + 15]) == enemyColor
-            //        )
-            //        {
-            //            Move move = new Move(knightSpot, knightSpot + 15);
-            //            generatedMoves.Add(move);
-            //        }
-            //    }
-            //    // right
-            //    if (col < 7)
-            //    {
-            //        if (
-            //            Piece.PieceType(board[knightSpot + 17]) == Piece.None ||
-            //            Piece.Color(board[knightSpot + 17]) == enemyColor
-            //        )
-            //        {
-            //            Move move = new Move(knightSpot, knightSpot + 17);
-            //            generatedMoves.Add(move);
-            //        }
-            //    }
-            //}
+                if (isKnightInBoundsForThisJump(knightSpot, knightOffsets[i]) &&
+                    (Piece.PieceType(board[targetSpot]) == Piece.None || Piece.Color(board[targetSpot]) == enemyColor))
+                {
+                    generatedMoves.Add(new Move(knightSpot, targetSpot));
+                }
+            }
+        }
 
-            //// jumps that are down 2 tiles
-            //if (row > 1)
-            //{
-            //    // left
-            //    if (col > 0)
-            //    {
-            //        if (
-            //            Piece.PieceType(board[knightSpot - 17]) == Piece.None ||
-            //            Piece.Color(board[knightSpot - 17]) == enemyColor
-            //        )
-            //        {
-            //            Move move = new Move(knightSpot, knightSpot - 17);
-            //            generatedMoves.Add(move);
-            //        }
-            //    }
-            //    // right
-            //    if (col < 7)
-            //    {
-            //        if (
-            //            Piece.PieceType(board[knightSpot - 15]) == Piece.None ||
-            //            Piece.Color(board[knightSpot - 15]) == enemyColor
-            //        )
-            //        {
-            //            Move move = new Move(knightSpot, knightSpot - 15);
-            //            generatedMoves.Add(move);
-            //        }
-            //    }
-            //}
+        public static void GenerateOneKnightsMoves(ref List<Move> generatedMoves, Board board, int knightSpot, int enemyColor, int[] knightOffsets)
+        {
+            for (int i = 0; i < knightOffsets.Length; i++)
+            {
+                int targetSpot = knightSpot + knightOffsets[i];
 
-            //// jumps that are left 2 tiles
-            //if (col > 1)
-            //{
-            //    // up
-            //    if (row < 7)
-            //    {
-            //        if (
-            //            Piece.PieceType(board[knightSpot + 6]) == Piece.None ||
-            //            Piece.Color(board[knightSpot + 6]) == enemyColor
-            //        )
-            //        {
-            //            Move move = new Move(knightSpot, knightSpot + 6);
-            //            generatedMoves.Add(move);
-            //        }
-            //    }
-            //    // down
-            //    if (row > 0)
-            //    {
-            //        if (
-            //            Piece.PieceType(board[knightSpot - 10]) == Piece.None ||
-            //            Piece.Color(board[knightSpot - 10]) == enemyColor
-            //        )
-            //        {
-            //            Move move = new Move(knightSpot, knightSpot - 10);
-            //            generatedMoves.Add(move);
-            //        }
-            //    }
-            //}
-
-            //// jumps that are right 2 tiles
-            //if (col < 6)
-            //{
-            //    // up
-            //    if (row < 7)
-            //    {
-            //        if (
-            //            Piece.PieceType(board[knightSpot + 10]) == Piece.None ||
-            //            Piece.Color(board[knightSpot + 10]) == enemyColor
-            //        )
-            //        {
-            //            Move move = new Move(knightSpot, knightSpot + 10);
-            //            generatedMoves.Add(move);
-            //        }
-            //    }
-            //    // down
-            //    if (row > 0)
-            //    {
-            //        if (
-            //            Piece.PieceType(board[knightSpot - 6]) == Piece.None ||
-            //            Piece.Color(board[knightSpot - 6]) == enemyColor
-            //        )
-            //        {
-            //            Move move = new Move(knightSpot, knightSpot - 6);
-            //            generatedMoves.Add(move);
-            //        }
-            //    }
-            //}
+                if (isKnightInBoundsForThisJump(knightSpot, knightOffsets[i]) &&
+                    (Piece.PieceType(board[targetSpot]) == Piece.None || Piece.Color(board[targetSpot]) == enemyColor))
+                {
+                    generatedMoves.Add(new Move(knightSpot, targetSpot));
+                }
+            }
         }
 
         /// <summary>
@@ -418,9 +382,9 @@ namespace DuckChess
 
         public static void GenerateOneBishopsMoves(ref List<Move> generatedMoves, Board board, int bishopSpot)
         {
-            //bool isWhite = board.turnColor == Piece.White;
-            //int enemyColor = isWhite ? Piece.Black : Piece.White;
-            //GenerateDiagonalMoves(ref generatedMoves, board, bishopSpot, enemyColor);
+            bool isWhite = board.turnColor == Piece.White;
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
+            GenerateDiagonalMoves(ref generatedMoves, board, bishopSpot, enemyColor);
         }
 
         private static void GenerateDiagonalMoves(ref List<Move> generatedMoves, Board board, int spotOfPieceMoving, int enemyColor)

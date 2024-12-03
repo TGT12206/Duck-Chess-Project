@@ -269,6 +269,9 @@ namespace DuckChess
         {
             legalMoves = new List<Move>();
             LegalMoveGenerator.GeneratePawnMoves(ref legalMoves, this);
+            LegalMoveGenerator.GenerateKnightMoves(ref legalMoves, this);
+            LegalMoveGenerator.GenerateBishopMoves(ref legalMoves, this);
+
         }
         private void GenerateDuckMoves()
         {
