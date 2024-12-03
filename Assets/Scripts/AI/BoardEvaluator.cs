@@ -131,223 +131,224 @@ namespace DuckChess
             }
             return totalMaterial < (PawnValue * 8 + KnightValue * 4 + BishopValue * 4 + RookValue * 4 + QueenValue * 2);
         }
-            public static int Evaluate(Board board, int color)
+        public static int Evaluate(Board board, int color)
+        {
+            if (board.isGameOver)
             {
-                if (board.isGameOver)
+                return EvaluateGameOver(board, color);
+            }
+
+            int evaluation = 0;
+
+            // Material evaluation
+            evaluation += EvaluateMaterial(board, color);
+
+            // Positional evaluation using piece-square tables
+            evaluation += EvaluatePosition(board, color);
+
+            // Pawn structure evaluation
+            evaluation += EvaluatePawnStructure(board, color);
+
+            // King safety evaluation
+            evaluation += EvaluateKingSafety(board, color);
+
+            // Mobility evaluation
+            evaluation += EvaluateMobility(board, color);
+
+            // Control of the center
+            evaluation += EvaluateCenterControl(board, color);
+
+            // Duck-specific evaluation
+            evaluation += EvaluateDuckImpact(board, color);
+
+            return evaluation;
+        }
+
+        // 1. Material Evaluation
+        private static int EvaluateMaterial(Board board, int color)
+        {
+            int material = 0;
+            for (int i = 0; i < 64; i++)
+            {
+                int piece = board[i];
+                if (piece == Piece.None)
+                    continue;
+
+                int pieceType = Piece.PieceType(piece);
+                int pieceColor = Piece.Color(piece);
+
+                int value = GetPieceValue(pieceType);
+
+                if (pieceColor == color)
                 {
-                    return EvaluateGameOver(board, color);
+                    material += value;
                 }
-
-                int evaluation = 0;
-
-                // Material evaluation
-                evaluation += EvaluateMaterial(board, color);
-
-                // Positional evaluation using piece-square tables
-                evaluation += EvaluatePosition(board, color);
-
-                // Pawn structure evaluation
-                evaluation += EvaluatePawnStructure(board, color);
-
-                // King safety evaluation
-                evaluation += EvaluateKingSafety(board, color);
-
-                // Mobility evaluation
-                evaluation += EvaluateMobility(board, color);
-
-                // Control of the center
-                evaluation += EvaluateCenterControl(board, color);
-
-                // Duck-specific evaluation
-                evaluation += EvaluateDuckImpact(board, color);
-
-                return evaluation;
-            }
-
-            // 1. Material Evaluation
-            private static int EvaluateMaterial(Board board, int color)
-            {
-                int material = 0;
-                for (int i = 0; i < 64; i++)
+                else
                 {
-                    int piece = board[i];
-                    if (piece == Piece.None)
-                        continue;
-
-                    int pieceType = Piece.PieceType(piece);
-                    int pieceColor = Piece.Color(piece);
-
-                    int value = GetPieceValue(pieceType);
-
-                    if (pieceColor == color)
-                    {
-                        material += value;
-                    }
-                    else
-                    {
-                        material -= value;
-                    }
+                    material -= value;
                 }
-                return material;
             }
+            return material;
+        }
 
-            // 2. Positional Evaluation
-            private static int EvaluatePosition(Board board, int color)
+        // 2. Positional Evaluation
+        private static int EvaluatePosition(Board board, int color)
+        {
+            int positionalScore = 0;
+            bool endGame = IsEndGame(board);
+
+            for (int i = 0; i < 64; i++)
             {
-                int positionalScore = 0;
-                bool endGame = IsEndGame(board);
+                int piece = board[i];
+                if (piece == Piece.None)
+                    continue;
 
-                for (int i = 0; i < 64; i++)
+                int pieceType = Piece.PieceType(piece);
+                int pieceColor = Piece.Color(piece);
+
+                if (pieceColor == color)
                 {
-                    int piece = board[i];
-                    if (piece == Piece.None)
-                        continue;
-
-                    int pieceType = Piece.PieceType(piece);
-                    int pieceColor = Piece.Color(piece);
-
-                    if (pieceColor == color)
-                    {
-                        positionalScore += GetPositionValue(pieceType, i, color, endGame);
-                    }
-                    else
-                    {
-                        positionalScore -= GetPositionValue(pieceType, i, Piece.OpponentColor(color), endGame);
-                    }
+                    positionalScore += GetPositionValue(pieceType, i, color, endGame);
                 }
-
-                return positionalScore;
-            }
-
-            private static int GetPositionValue(int pieceType, int position, int color, bool endGame)
-            {
-                // Flip the board for Black pieces
-                int index = color == Piece.White ? position : 63 - position;
-
-                return pieceType switch
+                else
                 {
-                    Piece.Pawn => PawnTable[index],
-                    Piece.Knight => KnightTable[index],
-                    Piece.Bishop => BishopTable[index],
-                    Piece.Rook => RookTable[index],
-                    Piece.Queen => QueenTable[index],
-                    Piece.King => endGame ? KingTableEndGame[index] : KingTableMiddleGame[index],
-                    _ => 0
-                };
-            }
-
-            // 3. Pawn Structure Evaluation
-            private static int EvaluatePawnStructure(Board board, int color)
-            {
-                int score = 0;
-                var pawnPositions = BoardInfo.PawnLocations(board, color);
-
-                foreach (int pos in pawnPositions)
-                {
-                    if (IsDoubledPawn(board, pos, color))
-                        score += DoubledPawnPenalty;
-
-                    if (IsIsolatedPawn(board, pos, color))
-                        score += IsolatedPawnPenalty;
-
-                    if (IsPassedPawn(board, pos, color))
-                        score += PassedPawnBonus;
+                    positionalScore -= GetPositionValue(pieceType, i, Piece.OpponentColor(color), endGame);
                 }
-
-                return score;
             }
 
-            private static bool IsDoubledPawn(Board board, int pawnPosition, int color)
-            {
-                int file = BoardInfo.GetFile(pawnPosition);
-                int rank = BoardInfo.GetRank(pawnPosition);
+            return positionalScore;
+        }
 
+
+        private static int GetPositionValue(int pieceType, int position, int color, bool endGame)
+        {
+            // Flip the board for Black pieces
+            int index = color == Piece.White ? position : 63 - position;
+
+            return pieceType switch
+            {
+                Piece.Pawn => PawnTable[index],
+                Piece.Knight => KnightTable[index],
+                Piece.Bishop => BishopTable[index],
+                Piece.Rook => RookTable[index],
+                Piece.Queen => QueenTable[index],
+                Piece.King => endGame ? KingTableEndGame[index] : KingTableMiddleGame[index],
+                _ => 0
+            };
+        }
+
+        // 3. Pawn Structure Evaluation
+        private static int EvaluatePawnStructure(Board board, int color)
+        {
+            int score = 0;
+            var pawnPositions = BoardInfo.PawnLocations(board, color);
+
+            foreach (int pos in pawnPositions)
+            {
+                if (IsDoubledPawn(board, pos, color))
+                    score += DoubledPawnPenalty;
+
+                if (IsIsolatedPawn(board, pos, color))
+                    score += IsolatedPawnPenalty;
+
+                if (IsPassedPawn(board, pos, color))
+                    score += PassedPawnBonus;
+            }
+
+            return score;
+        }
+
+        private static bool IsDoubledPawn(Board board, int pawnPosition, int color)
+        {
+            int file = BoardInfo.GetFile(pawnPosition);
+            int rank = BoardInfo.GetRank(pawnPosition);
+
+            for (int r = 0; r < 8; r++)
+            {
+                if (r == rank)
+                    continue;
+
+                int otherPawnPos = BoardInfo.GetSquare(r, file);
+                if (board[otherPawnPos] == (color | Piece.Pawn))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsIsolatedPawn(Board board, int pawnPosition, int color)
+        {
+            int file = BoardInfo.GetFile(pawnPosition);
+
+            // Check adjacent files for any pawns of the same color
+            if (file > 0)
+            {
                 for (int r = 0; r < 8; r++)
                 {
-                    if (r == rank)
-                        continue;
-
-                    int otherPawnPos = BoardInfo.GetSquare(r, file);
-                    if (board[otherPawnPos] == (color | Piece.Pawn))
-                    {
-                        return true;
-                    }
+                    if (board[BoardInfo.GetSquare(r, file - 1)] == (color | Piece.Pawn))
+                        return false;
                 }
-
-                return false;
             }
 
-            private static bool IsIsolatedPawn(Board board, int pawnPosition, int color)
+            if (file < 7)
             {
-                int file = BoardInfo.GetFile(pawnPosition);
-
-                // Check adjacent files for any pawns of the same color
-                if (file > 0)
+                for (int r = 0; r < 8; r++)
                 {
-                    for (int r = 0; r < 8; r++)
-                    {
-                        if (board[BoardInfo.GetSquare(r, file - 1)] == (color | Piece.Pawn))
-                            return false;
-                    }
+                    if (board[BoardInfo.GetSquare(r, file + 1)] == (color | Piece.Pawn))
+                        return false;
                 }
-
-                if (file < 7)
-                {
-                    for (int r = 0; r < 8; r++)
-                    {
-                        if (board[BoardInfo.GetSquare(r, file + 1)] == (color | Piece.Pawn))
-                            return false;
-                    }
-                }
-
-                return true;
             }
 
-            private static bool IsPassedPawn(Board board, int pawnPosition, int color)
+            return true;
+        }
+
+        private static bool IsPassedPawn(Board board, int pawnPosition, int color)
+        {
+            int file = BoardInfo.GetFile(pawnPosition);
+            int rank = BoardInfo.GetRank(pawnPosition);
+            int direction = color == Piece.White ? 1 : -1;
+
+            for (int r = rank + direction; r >= 0 && r < 8; r += direction)
             {
-                int file = BoardInfo.GetFile(pawnPosition);
-                int rank = BoardInfo.GetRank(pawnPosition);
-                int direction = color == Piece.White ? 1 : -1;
-
-                for (int r = rank + direction; r >= 0 && r < 8; r += direction)
+                // Check the file and adjacent files for enemy pawns
+                for (int f = Math.Max(0, file - 1); f <= Math.Min(7, file + 1); f++)
                 {
-                    // Check the file and adjacent files for enemy pawns
-                    for (int f = Math.Max(0, file - 1); f <= Math.Min(7, file + 1); f++)
-                    {
-                        int pos = BoardInfo.GetSquare(r, f);
-                        if (board[pos] == (Piece.OpponentColor(color) | Piece.Pawn))
-                            return false;
-                    }
+                    int pos = BoardInfo.GetSquare(r, f);
+                    if (board[pos] == (Piece.OpponentColor(color) | Piece.Pawn))
+                        return false;
                 }
-
-                return true;
             }
 
-            // 4. King Safety Evaluation
-            private static int EvaluateKingSafety(Board board, int color)
+            return true;
+        }
+
+        // 4. King Safety Evaluation
+        private static int EvaluateKingSafety(Board board, int color)
+        {
+            int score = 0;
+            int kingPos = BoardInfo.KingLocation(board, color);
+
+            if (IsKingExposed(board, kingPos))
             {
-                int score = 0;
-                int kingPos = BoardInfo.KingLocation(board, color);
-
-                if (IsKingExposed(board, kingPos))
-                {
-                    score += KingSafetyPenalty;
-                }
-
-                return score;
+                score += KingSafetyPenalty;
             }
 
-            private static bool IsKingExposed(Board board, int kingPosition)
-            {
-                // number of enemy pieces attacking the king
-                int attackingPieces = 0;
-                int kingRow = BoardInfo.GetRow(kingPosition);
-                int kingCol = BoardInfo.GetFile(kingPosition);
-                int enemyColor = Piece.OpponentColor(Piece.Color(board[kingPosition]));
+            return score;
+        }
 
-                // directions for attacks
-                int[][] directions = new int[][]
-                {
+        private static bool IsKingExposed(Board board, int kingPosition)
+        {
+            // number of enemy pieces attacking the king
+            int attackingPieces = 0;
+            int kingRow = BoardInfo.GetRow(kingPosition);
+            int kingCol = BoardInfo.GetFile(kingPosition);
+            int enemyColor = Piece.OpponentColor(Piece.Color(board[kingPosition]));
+
+            // directions for attacks
+            int[][] directions = new int[][]
+            {
                 new int[] {1, 0}, // Up
                 new int[] {-1, 0}, // Down
                 new int[] {0, 1}, // Right
@@ -356,55 +357,55 @@ namespace DuckChess
                 new int[] {1, -1}, // Up-Left
                 new int[] {-1, 1}, // Down-Right
                 new int[] {-1, -1} // Down-Left
-                };
+            };
 
-                foreach (var dir in directions)
-                {
-                    int r = kingRow + dir[0];
-                    int c = kingCol + dir[1];
-                    while (r >= 0 && r < 8 && c >= 0 && c < 8)
-                    {
-                        int pos = BoardInfo.GetSquare(r, c);
-                        int piece = board[pos];
-                        if (piece == Piece.None)
-                        {
-                            r += dir[0];
-                            c += dir[1];
-                            continue;
-                        }
-
-                        if (Piece.Color(piece) == enemyColor)
-                        {
-                            int pieceType = Piece.PieceType(piece);
-                            if (IsAttackingDirection(pieceType, dir))
-                            {
-                                attackingPieces++;
-                            }
-                        }
-                        break;
-                    }
-                }
-
-                return attackingPieces > 2; // Threshold can be adjusted
-            }
-
-            private static bool IsAttackingDirection(int pieceType, int[] direction)
+            foreach (var dir in directions)
             {
-                switch (pieceType)
+                int r = kingRow + dir[0];
+                int c = kingCol + dir[1];
+                while (r >= 0 && r < 8 && c >= 0 && c < 8)
                 {
-                    case Piece.Queen:
-                        return true;
-                    case Piece.Rook:
-                        return direction[0] == 0 || direction[1] == 0;
-                    case Piece.Bishop:
-                        return direction[0] != 0 && direction[1] != 0;
-                    case Piece.Knight:
-                        // Knights have unique movement; handle separately if needed
-                        return false;
-                    default:
-                        return false;
+                    int pos = BoardInfo.GetSquare(r, c);
+                    int piece = board[pos];
+                    if (piece == Piece.None)
+                    {
+                        r += dir[0];
+                        c += dir[1];
+                        continue;
+                    }
+
+                    if (Piece.Color(piece) == enemyColor)
+                    {
+                        int pieceType = Piece.PieceType(piece);
+                        if (IsAttackingDirection(pieceType, dir))
+                        {
+                            attackingPieces++;
+                        }
+                    }
+                    break;
                 }
             }
+
+            return attackingPieces > 2; // Threshold can be adjusted
+        }
+
+        private static bool IsAttackingDirection(int pieceType, int[] direction)
+        {
+            switch (pieceType)
+            {
+                case Piece.Queen:
+                    return true;
+                case Piece.Rook:
+                    return direction[0] == 0 || direction[1] == 0;
+                case Piece.Bishop:
+                    return direction[0] != 0 && direction[1] != 0;
+                case Piece.Knight:
+                    // Knights have unique movement; handle separately if needed
+                    return false;
+                default:
+                    return false;
+            }
+        }
 
         private static int EvaluateMobility(Board board, int color)
         {
@@ -426,120 +427,80 @@ namespace DuckChess
 
         // 6. Control of the Center
         private static int EvaluateCenterControl(Board board, int color)
+        {
+            int score = 0;
+
+            foreach (int square in CenterSquares)
             {
-                int score = 0;
+                int piece = board[square];
+                if (piece == Piece.None)
+                    continue;
 
-                foreach (int square in CenterSquares)
+                if (Piece.Color(piece) == color)
                 {
-                    int piece = board[square];
-                    if (piece == Piece.None)
-                        continue;
-
-                    if (Piece.Color(piece) == color)
-                    {
-                        score += CenterControlBonus;
-                    }
-                    else if (Piece.Color(piece) == Piece.OpponentColor(color))
-                    {
-                        score -= CenterControlBonus;
-                    }
+                    score += CenterControlBonus;
                 }
-
-                return score;
+                else if (Piece.Color(piece) == Piece.OpponentColor(color))
+                {
+                    score -= CenterControlBonus;
+                }
             }
 
-            // 7. Duck-Specific Evaluation
-            private static int EvaluateDuckImpact(Board board, int color)
-            {
-                int score = 0;
+            return score;
+        }
 
-                // Assess how the duck is affecting the opponent
-                score += EvaluateDuckBlockage(board, color);
+        // 7. Duck-Specific Evaluation
+        private static int EvaluateDuckImpact(Board board, int color)
+        {
+            int score = 0;
 
-                // Potential duck placements
-                score += EvaluateDuckPlacementOptions(board, color);
+            //foreach (int pawnLocation in BoardInfo.PawnLocations(board, color))
+            //{
+            //    if (IsDoubledPawn(board, pawnLocation, color))
+            //    {
+            //        score += DoubledPawnPenalty;
+            //    }
 
-                return score;
-            }
+            //    if (IsIsolatedPawn(board, pawnLocation, color))
+            //    {
+            //        score += IsolatedPawnPenalty;
+            //    }
+            //}
 
-            private static int EvaluateDuckBlockage(Board board, int color)
-            {
-                int score = 0;
-
-                // Get the duck's position
-                int duckPosition = BoardInfo.GetDuckPosition(board);
-                if (duckPosition == -1)
-                {
-                    // If the duck is not on the board, no blockage can occur
-                    return score;
-                }
-
-                // Locate the king of the specified color
-                int kingPosition = BoardInfo.KingLocation(board, color);
-                if (kingPosition == -1)
-                {
-                    // If the king is not on the board, return early
-                    return score;
-                }
-
-                // Check legal moves to identify enemy piece attacks
-                foreach (Move move in board.legalMoves)
-                {
-                    int movingPiece = board[move.StartSquare];
-                    int pieceType = Piece.PieceType(movingPiece);
-                    int pieceColor = Piece.Color(movingPiece);
-
-                    // Only consider moves from the opponent
-                    if (pieceColor != Piece.OpponentColor(color))
-                    {
-                        continue;
-                    }
-
-                    // Focus on sliding pieces (Queen, Rook, Bishop)
-                    if (pieceType == Piece.Queen || pieceType == Piece.Rook || pieceType == Piece.Bishop)
-                    {
-                        // Check if the duck blocks the line between the attacking piece and the king
-                        if (IsBlocking(move.StartSquare, kingPosition, duckPosition))
-                        {
-                            score += DuckBlockageBonus;
-                        }
-                    }
-                }
-
-                return score;
-            }
+            return score;
+        }
 
 
         private static bool IsBlocking(int attackerPos, int targetPos, int blockPos)
+        {
+            // Determine if blockPos is on the line between attackerPos and targetPos
+            int attackerRow = BoardInfo.GetRow(attackerPos);
+            int attackerCol = BoardInfo.GetFile(attackerPos);
+            int targetRow = BoardInfo.GetRow(targetPos);
+            int targetCol = BoardInfo.GetFile(targetPos);
+            int blockRow = BoardInfo.GetRow(blockPos);
+            int blockCol = BoardInfo.GetFile(blockPos);
+
+            int rowDir = Math.Sign(targetRow - attackerRow);
+            int colDir = Math.Sign(targetCol - attackerCol);
+
+            int currentRow = attackerRow + rowDir;
+            int currentCol = attackerCol + colDir;
+
+            while (currentRow != targetRow || currentCol != targetCol)
             {
-                // Determine if blockPos is on the line between attackerPos and targetPos
-                int attackerRow = BoardInfo.GetRow(attackerPos);
-                int attackerCol = BoardInfo.GetFile(attackerPos);
-                int targetRow = BoardInfo.GetRow(targetPos);
-                int targetCol = BoardInfo.GetFile(targetPos);
-                int blockRow = BoardInfo.GetRow(blockPos);
-                int blockCol = BoardInfo.GetFile(blockPos);
+                if (currentRow == blockRow && currentCol == blockCol)
+                    return true;
 
-                int rowDir = Math.Sign(targetRow - attackerRow);
-                int colDir = Math.Sign(targetCol - attackerCol);
+                currentRow += rowDir;
+                currentCol += colDir;
 
-                int currentRow = attackerRow + rowDir;
-                int currentCol = attackerCol + colDir;
-
-                while (currentRow != targetRow || currentCol != targetCol)
-                {
-                    if (currentRow == blockRow && currentCol == blockCol)
-                        return true;
-
-                    currentRow += rowDir;
-                    currentCol += colDir;
-
-                    if (currentRow < 0 || currentRow > 7 || currentCol < 0 || currentCol > 7)
-                        break;
-                }
-
-                return false;
+                if (currentRow < 0 || currentRow > 7 || currentCol < 0 || currentCol > 7)
+                    break;
             }
+
+            return false;
+        }
 
         private static int EvaluateDuckPlacementOptions(Board board, int color)
         {
@@ -563,31 +524,32 @@ namespace DuckChess
         // Helper Methods
 
         private static int GetPieceValue(int pieceType)
+        {
+            return pieceType switch
             {
-                return pieceType switch
-                {
-                    Piece.Pawn => PawnValue,
-                    Piece.Knight => KnightValue,
-                    Piece.Bishop => BishopValue,
-                    Piece.Rook => RookValue,
-                    Piece.Queen => QueenValue,
-                    Piece.King => KingValue,
-                    Piece.Duck => 2000, // Assign a value to the Duck
-                    _ => 0
-                };
-            }
-
-            private static int EvaluateGameOver(Board board, int color)
-            {
-                return board.winnerColor switch
-                {
-                    Piece.NoColor => 0, // Draw
-                    Piece.White => color == Piece.White ? int.MaxValue : int.MinValue,
-                    Piece.Black => color == Piece.Black ? int.MaxValue : int.MinValue,
-                    _ => 0
-                };
-            }
-
-            // Additional Helper Functions can be added here as needed
+                Piece.Pawn => PawnValue,
+                Piece.Knight => KnightValue,
+                Piece.Bishop => BishopValue,
+                Piece.Rook => RookValue,
+                Piece.Queen => QueenValue,
+                Piece.King => KingValue,
+                Piece.Duck => 2000, // Assign a value to the Duck
+                _ => 0
+            };
         }
+
+        private static int EvaluateGameOver(Board board, int color)
+        {
+            return board.winnerColor switch
+            {
+                Piece.NoColor => 0, // Draw
+                Piece.White => color == Piece.White ? int.MaxValue : int.MinValue,
+                Piece.Black => color == Piece.Black ? int.MaxValue : int.MinValue,
+                _ => 0
+            };
+        }
+
+        // Additional Helper Functions can be added here as needed
     }
+}
+

@@ -89,6 +89,7 @@ public class BoardUI : MonoBehaviour
         if (Duck == null)
         {
             SelectDuckInitially();
+            return;
         }
         selectedStartSquare = square;
         highlightedMoves.Clear();
