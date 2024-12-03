@@ -65,6 +65,8 @@ namespace DuckChess
         const int flagMask =          0b0000001111000000000000;
         const int capturedPieceMask = 0b1111110000000000000000;
 
+        public static Move Invalid => new Move(-1, -1);
+
         //public Move(int moveValue)
         //{
         //    this.moveValue = moveValue;
@@ -107,6 +109,12 @@ namespace DuckChess
         public Move(Move move, int capturedPiece)
         {
             moveValue = move.moveValue | capturedPiece << 16;
+        }
+
+        public bool IsValid()
+        {
+            // Assuming valid squares are between 0 and 63
+            return StartSquare >= 0 && StartSquare < 64 && TargetSquare >= 0 && TargetSquare < 64;
         }
 
         /// <summary>
