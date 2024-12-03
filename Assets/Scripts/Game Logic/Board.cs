@@ -169,6 +169,10 @@ namespace DuckChess
              */
 
             // Check if this is a capture, and if so, check if it is a rook or a king.
+            if (Squares[move.TargetSquare] != Piece.None)
+            {
+                move = new Move(move, Squares[move.TargetSquare]);
+            }
             if (move.IsCapture)
             {
                 int enemyPiece = Squares[move.TargetSquare];
@@ -300,6 +304,10 @@ namespace DuckChess
 
         private void SwitchTurnForward()
         {
+            if (isGameOver)
+            {
+                return;
+            }
             turnIsDuck = !turnIsDuck;
 
             // the next turn we want is here.
