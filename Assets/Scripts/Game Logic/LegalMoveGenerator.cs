@@ -19,144 +19,198 @@ namespace DuckChess
         /// <param name="board">The board to use while checking for legal moves</param>
         public static void GeneratePawnMoves(ref List<Move> generatedMoves, Board board)
         {
+            if (board.isGameOver)
+            {
+                return;
+            }
             int pawnSpot;
             bool isWhite = board.turnColor == Piece.White;
-            PieceList pawnLocations = isWhite ? board.WhitePawns : board.BlackPawns;
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
+            int findSpotOneFront = isWhite ? 8 : -8;
+            int rowBeforePromotion = isWhite ? 6 : 1;
+            int startRow = isWhite ? 1 : 6;
+            int findCaptureSpotOnRight = isWhite ? 9 : -7;
+            int findCaptureSpotOnLeft = isWhite ? 7 : -9;
+            int enPassantRow = isWhite ? 4 : 3;
+            List<int> pawnLocations = GetLocationOfPieces(board, Piece.Pawn);
             for (int i = 0; i < pawnLocations.Count; i++)
             {
                 pawnSpot = pawnLocations[i];
-                GenerateOnePawnsMoves(ref generatedMoves, board, pawnSpot);
+                GenerateOnePawnsMoves(
+                    ref generatedMoves,
+                    board,
+                    pawnSpot,
+                    isWhite,
+                    enemyColor,
+                    findSpotOneFront,
+                    rowBeforePromotion,
+                    startRow,
+                    findCaptureSpotOnRight,
+                    findCaptureSpotOnLeft,
+                    enPassantRow
+                );
             }
+        }
+
+        public static List<int> GetLocationOfPieces(Board board, int pieceType)
+        {
+            int piece = board.turnColor | pieceType;
+            int pieceColor = Piece.Color(piece);
+            List<int> pieceLocations = new List<int>();
+            for (int i = 0; i < 64; i++)
+            {
+                int boardPieceType = Piece.PieceType(board[i]);
+                int boardPieceColor = Piece.Color(board[i]);
+                // Just in case the implementation of piece ever changes,
+                // (ex. new flags) hard code it to check the piece type and color
+                if (pieceType == boardPieceType && pieceColor == boardPieceColor)
+                {
+                    pieceLocations.Add(i);
+                }
+            }
+            return pieceLocations;
+        }
+
+        public static int GetLocationOfDuck(Board board)
+        {
+            for (int i = 0; i < 64; i++)
+            {
+                if (Piece.PieceType(board[i]) == Piece.Duck)
+                {
+                    return i;
+                }
+            }
+            return Board.NOT_ON_BOARD;
+        }
+
+        private static void GenerateOnePawnsMoves(
+            ref List<Move> generatedMoves,
+            Board board,
+            int pawnSpot,
+            bool isWhite,
+            int enemyColor,
+            int findSpotOneFront,
+            int rowBeforePromotion,
+            int startRow,
+            int findCaptureSpotOnRight,
+            int findCaptureSpotOnLeft,
+            int enPassantRow
+        )
+        {
+            GeneratePawnForwardMoves(ref generatedMoves, board, pawnSpot, isWhite, findSpotOneFront, rowBeforePromotion, startRow);
+            GeneratePawnCaptureMoves(ref generatedMoves, board, pawnSpot, enemyColor, findCaptureSpotOnRight, findCaptureSpotOnLeft, rowBeforePromotion);
+            GenerateEnPassantMoves(ref generatedMoves, board, pawnSpot, findCaptureSpotOnLeft, findCaptureSpotOnRight, enPassantRow);
+
         }
 
         public static void GenerateOnePawnsMoves(ref List<Move> generatedMoves, Board board, int pawnSpot)
         {
             bool isWhite = board.turnColor == Piece.White;
             int enemyColor = isWhite ? Piece.Black : Piece.White;
-            PieceList pawnLocations = isWhite ? board.WhitePawns : board.BlackPawns;
             int findSpotOneFront = isWhite ? 8 : -8;
             int rowBeforePromotion = isWhite ? 6 : 1;
             int startRow = isWhite ? 1 : 6;
             int findCaptureSpotOnRight = isWhite ? 9 : -7;
             int findCaptureSpotOnLeft = isWhite ? 7 : -9;
-            // Forward pawn moves
+            int enPassantRow = isWhite ? 4 : 3;
+            GeneratePawnForwardMoves(ref generatedMoves, board, pawnSpot, isWhite, findSpotOneFront, rowBeforePromotion, startRow);
+            GeneratePawnCaptureMoves(ref generatedMoves, board, pawnSpot, enemyColor, findCaptureSpotOnRight, findCaptureSpotOnLeft, rowBeforePromotion);
+            GenerateEnPassantMoves(ref generatedMoves, board, pawnSpot, findCaptureSpotOnLeft, findCaptureSpotOnRight, enPassantRow);
+        }
+
+        private static void GeneratePawnForwardMoves(ref List<Move> generatedMoves, Board board, int pawnSpot, bool isWhite, int findSpotOneFront, int rowBeforePromotion, int startRow)
+        {
             int spotInFrontOfPawn = pawnSpot + findSpotOneFront;
             int spotTwoInFrontOfPawn = spotInFrontOfPawn + findSpotOneFront;
-            int rightCaptureSpot = pawnSpot + findCaptureSpotOnRight;
-            int leftCaptureSpot = pawnSpot + findCaptureSpotOnLeft;
+
             if (Piece.PieceType(board[spotInFrontOfPawn]) == Piece.None)
             {
-                if (Board.GetRowOf(pawnSpot) == rowBeforePromotion)
+                if (BoardInfo.GetRow(pawnSpot) == rowBeforePromotion)
                 {
-                    #region Add Forward Pawn Promotions
-                    Move move = new Move(pawnSpot, spotInFrontOfPawn, Move.Flag.PromoteToKnight);
-                    generatedMoves.Add(move);
-
-                    move = new Move(pawnSpot, spotInFrontOfPawn, Move.Flag.PromoteToBishop);
-                    generatedMoves.Add(move);
-
-                    move = new Move(pawnSpot, spotInFrontOfPawn, Move.Flag.PromoteToRook);
-                    generatedMoves.Add(move);
-
-                    move = new Move(pawnSpot, spotInFrontOfPawn, Move.Flag.PromoteToQueen);
-                    generatedMoves.Add(move);
-                    #endregion
+                    AddPawnPromotions(ref generatedMoves, pawnSpot, spotInFrontOfPawn);
                 }
                 else
                 {
-                    // Normal pawn move
-                    Move move = new Move(pawnSpot, spotInFrontOfPawn);
-                    generatedMoves.Add(move);
+                    generatedMoves.Add(new Move(pawnSpot, spotInFrontOfPawn));
                 }
 
-                // Pawn move two forward
-                if (Board.GetRowOf(pawnSpot) == startRow)
+                if (BoardInfo.GetRow(pawnSpot) == startRow && Piece.PieceType(board[spotTwoInFrontOfPawn]) == Piece.None)
                 {
-                    if (Piece.PieceType(board[spotTwoInFrontOfPawn]) == Piece.None)
-                    {
-                        Move move = new Move(pawnSpot, spotTwoInFrontOfPawn, Move.Flag.PawnTwoForward);
-                        generatedMoves.Add(move);
-                    }
-                }
-                // En Passant
-                if (Board.GetRowOf(pawnSpot) == 4)
-                {
-                    if (
-                        leftCaptureSpot == board.enPassantSquare ||
-                        rightCaptureSpot == board.enPassantSquare
-                    )
-                    {
-                        if (board.Duck != board.enPassantSquare)
-                        {
-                            Move move = new Move(pawnSpot,
-                                board.enPassantSquare,
-                                Move.Flag.EnPassantCapture
-                            );
-                            generatedMoves.Add(move);
-                        }
-                    }
+                    generatedMoves.Add(new Move(pawnSpot, spotTwoInFrontOfPawn, Move.Flag.PawnTwoForward));
                 }
             }
-            // Normal pawn captures
-            int pawnCol = Board.GetColumnOf(pawnSpot);
-            if (pawnCol < 7)
+        }
+
+        private static void GeneratePawnCaptureMoves(ref List<Move> generatedMoves, Board board, int pawnSpot, int enemyColor, int findCaptureSpotOnRight, int findCaptureSpotOnLeft, int rowBeforePromotion)
+        {
+            int rightCaptureSpot = pawnSpot + findCaptureSpotOnRight;
+            int leftCaptureSpot = pawnSpot + findCaptureSpotOnLeft;
+
+            int pawnCol = BoardInfo.GetFile(pawnSpot);
+
+            if (pawnCol < 7 && Piece.Color(board[rightCaptureSpot]) == enemyColor)
             {
-                if (Piece.Color(board[rightCaptureSpot]) == enemyColor)
+                int enemyPiece = board[rightCaptureSpot];
+                if (BoardInfo.GetRow(pawnSpot) == rowBeforePromotion)
                 {
-                    if (Board.GetRowOf(pawnSpot) == rowBeforePromotion)
-                    {
-                        #region Add Forward Pawn Promotions
-                        Move move = new Move(pawnSpot, rightCaptureSpot, Move.Flag.PromoteToKnight);
-                        generatedMoves.Add(move);
-
-                        move = new Move(pawnSpot, rightCaptureSpot, Move.Flag.PromoteToBishop);
-                        generatedMoves.Add(move);
-
-                        move = new Move(pawnSpot, rightCaptureSpot, Move.Flag.PromoteToRook);
-                        generatedMoves.Add(move);
-
-                        move = new Move(pawnSpot, rightCaptureSpot, Move.Flag.PromoteToQueen);
-                        generatedMoves.Add(move);
-                        #endregion
-                    }
-                    else
-                    {
-                        Move move = new Move(pawnSpot, rightCaptureSpot);
-                        generatedMoves.Add(move);
-                    }
+                    AddPawnPromotions(ref generatedMoves, pawnSpot, rightCaptureSpot, enemyPiece);
+                }
+                else
+                {
+                    generatedMoves.Add(new Move(pawnSpot, rightCaptureSpot, Move.Flag.None, enemyPiece));
                 }
             }
-            if (pawnCol > 0)
+
+            if (pawnCol > 0 && Piece.Color(board[leftCaptureSpot]) == enemyColor)
             {
-                if (Piece.Color(board[leftCaptureSpot]) == enemyColor)
+                int enemyPiece = board[leftCaptureSpot];
+                if (BoardInfo.GetRow(pawnSpot) == rowBeforePromotion)
                 {
-                    if (Board.GetRowOf(pawnSpot) == rowBeforePromotion)
+                    AddPawnPromotions(ref generatedMoves, pawnSpot, leftCaptureSpot, enemyPiece);
+                }
+                else
+                {
+                    generatedMoves.Add(new Move(pawnSpot, leftCaptureSpot, Move.Flag.None, enemyPiece));
+                }
+            }
+        }
+
+        private static void GenerateEnPassantMoves(ref List<Move> generatedMoves, Board board, int pawnSpot, int findLeftCaptureSpot, int findRightCaptureSpot, int enPassantRow)
+        {
+            if (BoardInfo.GetRow(pawnSpot) == enPassantRow)
+            {
+                int leftCaptureSpot = pawnSpot + findLeftCaptureSpot;
+                int rightCaptureSpot = pawnSpot + findRightCaptureSpot;
+                if (leftCaptureSpot == board.enPassantSquare || rightCaptureSpot == board.enPassantSquare)
+                {
+                    if (board[board.enPassantSquare] != Piece.Duck)
                     {
-                        #region Add Forward Pawn Promotions
-                        Move move = new Move(pawnSpot, leftCaptureSpot, Move.Flag.PromoteToKnight);
-                        generatedMoves.Add(move);
-
-                        move = new Move(pawnSpot, leftCaptureSpot, Move.Flag.PromoteToBishop);
-                        generatedMoves.Add(move);
-
-                        move = new Move(pawnSpot, leftCaptureSpot, Move.Flag.PromoteToRook);
-                        generatedMoves.Add(move);
-
-                        move = new Move(pawnSpot, leftCaptureSpot, Move.Flag.PromoteToQueen);
-                        generatedMoves.Add(move);
-                        #endregion
-                    }
-                    else
-                    {
-                        Move move = new Move(pawnSpot, leftCaptureSpot);
-                        generatedMoves.Add(move);
+                        generatedMoves.Add(new Move(pawnSpot, board.enPassantSquare, Move.Flag.EnPassantCapture));
                     }
                 }
             }
         }
 
+        private static void AddPawnPromotions(ref List<Move> generatedMoves, int startSquare, int targetSquare)
+        {
+            generatedMoves.Add(new Move(startSquare, targetSquare, Move.Flag.PromoteToKnight));
+            generatedMoves.Add(new Move(startSquare, targetSquare, Move.Flag.PromoteToBishop));
+            generatedMoves.Add(new Move(startSquare, targetSquare, Move.Flag.PromoteToRook));
+            generatedMoves.Add(new Move(startSquare, targetSquare, Move.Flag.PromoteToQueen));
+        }
+        private static void AddPawnPromotions(ref List<Move> generatedMoves, int startSquare, int targetSquare, int enemyPiece)
+        {
+            generatedMoves.Add(new Move(startSquare, targetSquare, Move.Flag.PromoteToKnight, enemyPiece));
+            generatedMoves.Add(new Move(startSquare, targetSquare, Move.Flag.PromoteToBishop, enemyPiece));
+            generatedMoves.Add(new Move(startSquare, targetSquare, Move.Flag.PromoteToRook, enemyPiece));
+            generatedMoves.Add(new Move(startSquare, targetSquare, Move.Flag.PromoteToQueen, enemyPiece));
+        }
         public static void GenerateForOnePiece(ref List<Move> generatedMoves, Board board, int pieceSpot)
         {
+            if (board.plyCount == 1)
+            {
+                GenerateDuckMoves(ref generatedMoves, board);
+            }
             int piece = board[pieceSpot];
             switch (Piece.PieceType(piece))
             {
@@ -192,135 +246,103 @@ namespace DuckChess
         /// <param name="board">The board to use while checking for legal moves</param>
         public static void GenerateKnightMoves(ref List<Move> generatedMoves, Board board)
         {
-            bool isWhite = board.turnColor == Piece.White;
-            PieceList friendlyKnightSpots = isWhite ? board.WhiteKnights : board.BlackKnights;
-            for (int i = 0; i < friendlyKnightSpots.Count; i++)
+            if (board.isGameOver)
             {
-                int knightSpot = friendlyKnightSpots[i];
-                GenerateOneKnightsMoves(ref generatedMoves, board, knightSpot);
+                return;
             }
+            bool isWhite = board.isWhite;
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
+            int[] knightOffsets = { 15, 17, -15, -17, 10, -10, 6, -6 };
+            List<int> knightLocations = GetLocationOfPieces(board, Piece.Knight);
+            for (int i = 0; i < knightLocations.Count; i++)
+            {
+                int knightSpot = knightLocations[i];
+                GenerateOneKnightsMoves(ref generatedMoves, board, knightSpot, enemyColor, knightOffsets);
+            }
+        }
+
+        private static bool isKnightInBoundsForThisJump(int knightSpot, int jumpOffset)
+        {
+            bool rowIsInBounds = true;
+            bool fileIsInBounds = true;
+            int knightRow = BoardInfo.GetRow(knightSpot);
+            int knightCol = BoardInfo.GetFile(knightSpot);
+            switch (jumpOffset)
+            {
+                // jumps that move 1 left
+                case 15:
+                case -17:
+                    fileIsInBounds = knightCol > 0;
+                    break;
+                // jumps that move 2 left
+                case 6:
+                case -10:
+                    fileIsInBounds = knightCol > 1;
+                    break;
+                // jumps that move 1 right
+                case 17:
+                case -15:
+                    fileIsInBounds = knightCol < 7;
+                    break;
+                // jumps that move 2 right
+                case 10:
+                case -6:
+                    fileIsInBounds = knightCol < 6;
+                    break;
+            }
+            switch (jumpOffset)
+            {
+                // jumps that move 1 up
+                case 6:
+                case 10:
+                    rowIsInBounds = knightRow < 7;
+                    break;
+                // jumps that move 2 up
+                case 15:
+                case 17:
+                    rowIsInBounds = knightRow < 6;
+                    break;
+                // jumps that move 1 down
+                case -6:
+                case -10:
+                    rowIsInBounds = knightRow > 0;
+                    break;
+                // jumps that move 2 down
+                case -15:
+                case -17:
+                    rowIsInBounds = knightRow > 1;
+                    break;
+            }
+            return rowIsInBounds && fileIsInBounds;
         }
 
         public static void GenerateOneKnightsMoves(ref List<Move> generatedMoves, Board board, int knightSpot)
         {
-            bool isWhite = board.turnColor == Piece.White;
+            bool isWhite = board.isWhite;
             int enemyColor = isWhite ? Piece.Black : Piece.White;
-            int row = Board.GetRowOf(knightSpot);
-            int col = Board.GetColumnOf(knightSpot);
-
-            // jumps that are up 2 tiles
-            if (row < 6)
+            int[] knightOffsets = { 15, 17, -15, -17, 10, -10, 6, -6 };
+            for (int i = 0; i < knightOffsets.Length; i++)
             {
-                // left
-                if (col > 0)
+                int targetSpot = knightSpot + knightOffsets[i];
+
+                if (isKnightInBoundsForThisJump(knightSpot, knightOffsets[i]) &&
+                    (Piece.PieceType(board[targetSpot]) == Piece.None || Piece.Color(board[targetSpot]) == enemyColor))
                 {
-                    if (
-                        Piece.PieceType(board[knightSpot + 15]) == Piece.None ||
-                        Piece.Color(board[knightSpot + 15]) == enemyColor
-                    )
-                    {
-                        Move move = new Move(knightSpot, knightSpot + 15);
-                        generatedMoves.Add(move);
-                    }
-                }
-                // right
-                if (col < 7)
-                {
-                    if (
-                        Piece.PieceType(board[knightSpot + 17]) == Piece.None ||
-                        Piece.Color(board[knightSpot + 17]) == enemyColor
-                    )
-                    {
-                        Move move = new Move(knightSpot, knightSpot + 17);
-                        generatedMoves.Add(move);
-                    }
+                    generatedMoves.Add(new Move(knightSpot, targetSpot));
                 }
             }
+        }
 
-            // jumps that are down 2 tiles
-            if (row > 1)
+        public static void GenerateOneKnightsMoves(ref List<Move> generatedMoves, Board board, int knightSpot, int enemyColor, int[] knightOffsets)
+        {
+            for (int i = 0; i < knightOffsets.Length; i++)
             {
-                // left
-                if (col > 0)
-                {
-                    if (
-                        Piece.PieceType(board[knightSpot - 17]) == Piece.None ||
-                        Piece.Color(board[knightSpot - 17]) == enemyColor
-                    )
-                    {
-                        Move move = new Move(knightSpot, knightSpot - 17);
-                        generatedMoves.Add(move);
-                    }
-                }
-                // right
-                if (col < 7)
-                {
-                    if (
-                        Piece.PieceType(board[knightSpot - 15]) == Piece.None ||
-                        Piece.Color(board[knightSpot - 15]) == enemyColor
-                    )
-                    {
-                        Move move = new Move(knightSpot, knightSpot - 15);
-                        generatedMoves.Add(move);
-                    }
-                }
-            }
+                int targetSpot = knightSpot + knightOffsets[i];
 
-            // jumps that are left 2 tiles
-            if (col > 1)
-            {
-                // up
-                if (row < 7)
+                if (isKnightInBoundsForThisJump(knightSpot, knightOffsets[i]) &&
+                    (Piece.PieceType(board[targetSpot]) == Piece.None || Piece.Color(board[targetSpot]) == enemyColor))
                 {
-                    if (
-                        Piece.PieceType(board[knightSpot + 6]) == Piece.None ||
-                        Piece.Color(board[knightSpot + 6]) == enemyColor
-                    )
-                    {
-                        Move move = new Move(knightSpot, knightSpot + 6);
-                        generatedMoves.Add(move);
-                    }
-                }
-                // down
-                if (row > 0)
-                {
-                    if (
-                        Piece.PieceType(board[knightSpot - 10]) == Piece.None ||
-                        Piece.Color(board[knightSpot - 10]) == enemyColor
-                    )
-                    {
-                        Move move = new Move(knightSpot, knightSpot - 10);
-                        generatedMoves.Add(move);
-                    }
-                }
-            }
-
-            // jumps that are right 2 tiles
-            if (col < 6)
-            {
-                // up
-                if (row < 7)
-                {
-                    if (
-                        Piece.PieceType(board[knightSpot + 10]) == Piece.None ||
-                        Piece.Color(board[knightSpot + 10]) == enemyColor
-                    )
-                    {
-                        Move move = new Move(knightSpot, knightSpot + 10);
-                        generatedMoves.Add(move);
-                    }
-                }
-                // down
-                if (row > 0)
-                {
-                    if (
-                        Piece.PieceType(board[knightSpot - 6]) == Piece.None ||
-                        Piece.Color(board[knightSpot - 6]) == enemyColor
-                    )
-                    {
-                        Move move = new Move(knightSpot, knightSpot - 6);
-                        generatedMoves.Add(move);
-                    }
+                    generatedMoves.Add(new Move(knightSpot, targetSpot));
                 }
             }
         }
@@ -333,11 +355,15 @@ namespace DuckChess
         /// <param name="board">The board to use while checking for legal moves</param>
         public static void GenerateBishopMoves(ref List<Move> generatedMoves, Board board)
         {
-            bool isWhite = board.turnColor == Piece.White;
-            PieceList friendlyBishopSpots = isWhite ? board.WhiteBishops : board.BlackBishops;
-            for (int i = 0; i < friendlyBishopSpots.Count; i++)
+            if (board.isGameOver)
             {
-                int bishopSpot = friendlyBishopSpots[i];
+                return;
+            }
+            bool isWhite = board.turnColor == Piece.White;
+            List<int> bishopLocations = GetLocationOfPieces(board, Piece.Bishop);
+            for (int i = 0; i < bishopLocations.Count; i++)
+            {
+                int bishopSpot = bishopLocations[i];
                 GenerateOneBishopsMoves(ref generatedMoves, board, bishopSpot);
             }
         }
@@ -351,10 +377,14 @@ namespace DuckChess
 
         private static void GenerateDiagonalMoves(ref List<Move> generatedMoves, Board board, int spotOfPieceMoving, int enemyColor)
         {
+            if (board.isGameOver)
+            {
+                return;
+            }
             // Up left
             int potentialTarget = spotOfPieceMoving;
-            int rowOfPiece = Board.GetRowOf(spotOfPieceMoving);
-            int colOfPiece = Board.GetColumnOf(spotOfPieceMoving);
+            int rowOfPiece = BoardInfo.GetRow(spotOfPieceMoving);
+            int colOfPiece = BoardInfo.GetFile(spotOfPieceMoving);
             for (int i = 0; i < 8; i++)
             {
                 // If the piece itself is on one of these edges,
@@ -366,8 +396,8 @@ namespace DuckChess
 
                 potentialTarget += 7;
 
-                int rowOfTarget = Board.GetRowOf(potentialTarget);
-                int colOfTarget = Board.GetColumnOf(potentialTarget);
+                int rowOfTarget = BoardInfo.GetRow(potentialTarget);
+                int colOfTarget = BoardInfo.GetFile(potentialTarget);
 
                 // If the target is out of bounds, stop
                 if (potentialTarget > 63 || colOfTarget > colOfPiece)
@@ -405,8 +435,8 @@ namespace DuckChess
 
                 potentialTarget += 9;
 
-                int rowOfTarget = Board.GetRowOf(potentialTarget);
-                int colOfTarget = Board.GetColumnOf(potentialTarget);
+                int rowOfTarget = BoardInfo.GetRow(potentialTarget);
+                int colOfTarget = BoardInfo.GetFile(potentialTarget);
 
                 // If the target is out of bounds, stop
                 if (potentialTarget > 63 || colOfTarget < colOfPiece)
@@ -444,8 +474,8 @@ namespace DuckChess
 
                 potentialTarget -= 9;
 
-                int rowOfTarget = Board.GetRowOf(potentialTarget);
-                int colOfTarget = Board.GetColumnOf(potentialTarget);
+                int rowOfTarget = BoardInfo.GetRow(potentialTarget);
+                int colOfTarget = BoardInfo.GetFile(potentialTarget);
 
                 // If the target is out of bounds, stop
                 if (potentialTarget < 0 || colOfTarget > colOfPiece)
@@ -483,8 +513,8 @@ namespace DuckChess
 
                 potentialTarget -= 7;
 
-                int rowOfTarget = Board.GetRowOf(potentialTarget);
-                int colOfTarget = Board.GetColumnOf(potentialTarget);
+                int rowOfTarget = BoardInfo.GetRow(potentialTarget);
+                int colOfTarget = BoardInfo.GetFile(potentialTarget);
 
                 // If the target is out of bounds, stop
                 if (potentialTarget < 0 || colOfTarget < colOfPiece)
@@ -518,11 +548,15 @@ namespace DuckChess
         /// <param name="board">The board to use while checking for legal moves</param>
         public static void GenerateRookMoves(ref List<Move> generatedMoves, Board board)
         {
-            bool isWhite = board.turnColor == Piece.White;
-            PieceList friendlyRookSpots = isWhite ? board.WhiteRooks : board.BlackRooks;
-            for (int i = 0; i < friendlyRookSpots.Count; i++)
+            if (board.isGameOver)
             {
-                int rookSpot = friendlyRookSpots[i];
+                return;
+            }
+            bool isWhite = board.turnColor == Piece.White;
+            List<int> rookLocations = GetLocationOfPieces(board, Piece.Rook);
+            for (int i = 0; i < rookLocations.Count; i++)
+            {
+                int rookSpot = rookLocations[i];
                 GenerateOneRooksMoves(ref generatedMoves, board, rookSpot);
             }
         }
@@ -536,9 +570,13 @@ namespace DuckChess
 
         private static void GenerateOrthogonalMoves(ref List<Move> generatedMoves, Board board, int spotOfPieceMoving, int enemyColor)
         {
+            if (board.isGameOver)
+            {
+                return;
+            }
             int potentialTarget = spotOfPieceMoving;
-            int rowOfPiece = Board.GetRowOf(spotOfPieceMoving);
-            int colOfPiece = Board.GetColumnOf(spotOfPieceMoving);
+            int rowOfPiece = BoardInfo.GetRow(spotOfPieceMoving);
+            int colOfPiece = BoardInfo.GetFile(spotOfPieceMoving);
 
             // Up
             for (int i = 0; i < 8; i++)
@@ -558,7 +596,7 @@ namespace DuckChess
                     break;
                 }
 
-                int rowOfTarget = Board.GetRowOf(potentialTarget);
+                int rowOfTarget = BoardInfo.GetRow(potentialTarget);
                 int pieceAtTarget = board[potentialTarget];
                 bool targetIsEmpty = Piece.PieceType(pieceAtTarget) == Piece.None;
                 bool targetHasEnemy = Piece.Color(pieceAtTarget) == enemyColor;
@@ -595,7 +633,7 @@ namespace DuckChess
                     break;
                 }
 
-                int rowOfTarget = Board.GetRowOf(potentialTarget);
+                int rowOfTarget = BoardInfo.GetRow(potentialTarget);
                 int pieceAtTarget = board[potentialTarget];
                 bool targetIsEmpty = Piece.PieceType(pieceAtTarget) == Piece.None;
                 bool targetHasEnemy = Piece.Color(pieceAtTarget) == enemyColor;
@@ -626,7 +664,7 @@ namespace DuckChess
 
                 potentialTarget -= 1;
 
-                int colOfTarget = Board.GetColumnOf(potentialTarget);
+                int colOfTarget = BoardInfo.GetFile(potentialTarget);
 
                 // If the target is out of bounds, stop
                 if (colOfTarget > colOfPiece)
@@ -664,7 +702,7 @@ namespace DuckChess
 
                 potentialTarget += 1;
 
-                int colOfTarget = Board.GetColumnOf(potentialTarget);
+                int colOfTarget = BoardInfo.GetFile(potentialTarget);
 
                 // If the target is out of bounds, stop
                 if (colOfTarget < colOfPiece)
@@ -699,14 +737,17 @@ namespace DuckChess
         /// <param name="board">The board to use while checking for legal moves</param>
         public static void GenerateQueenMoves(ref List<Move> generatedMoves, Board board)
         {
-            bool isWhite = board.turnColor == Piece.White;
-            PieceList friendlyQueenSpots = isWhite ? board.WhiteQueens : board.BlackQueens;
-            int enemyColor = isWhite ? Piece.Black : Piece.White;
-            for (int i = 0; i < friendlyQueenSpots.Count; i++)
+            if (board.isGameOver)
             {
-                int queenSpot = friendlyQueenSpots[i];
-                GenerateDiagonalMoves(ref generatedMoves, board, queenSpot, enemyColor);
-                GenerateOrthogonalMoves(ref generatedMoves, board, queenSpot, enemyColor);
+                return;
+            }
+            bool isWhite = board.turnColor == Piece.White;
+            List<int> queenLocations = GetLocationOfPieces(board, Piece.Queen);
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
+            for (int i = 0; i < queenLocations.Count; i++)
+            {
+                int queenSpot = queenLocations[i];
+                GenerateOneQueensMoves(ref generatedMoves, board, queenSpot);
             }
         }
 
@@ -726,13 +767,23 @@ namespace DuckChess
         /// <param name="board">The board to use while checking for legal moves</param>
         public static void GenerateKingMoves(ref List<Move> generatedMoves, Board board)
         {
+            if (board.isGameOver)
+            {
+                return;
+            }
             bool isWhite = board.turnColor == Piece.White;
-            int kingSpot = isWhite ? board.WhiteKing : board.BlackKing;
+            List<int> kingSpots = GetLocationOfPieces(board, Piece.King);
+            int kingSpot = kingSpots.Count == 1 ? kingSpots[0] : -1;
+            if (kingSpot < 0)
+            {
+                board.isGameOver = true;
+                return;
+            }
             int enemyColor = isWhite ? Piece.Black : Piece.White;
-            bool isOnTopEdge = Board.GetRowOf(kingSpot) == 7;
-            bool isOnBottomEdge = Board.GetRowOf(kingSpot) == 0;
-            bool isOnLeftEdge = Board.GetColumnOf(kingSpot) == 0;
-            bool isOnRightEdge = Board.GetColumnOf(kingSpot) == 7;
+            bool isOnTopEdge = BoardInfo.GetRow(kingSpot) == 7;
+            bool isOnBottomEdge = BoardInfo.GetRow(kingSpot) == 0;
+            bool isOnLeftEdge = BoardInfo.GetFile(kingSpot) == 0;
+            bool isOnRightEdge = BoardInfo.GetFile(kingSpot) == 7;
             int potentialTarget = kingSpot + 7;
             if (
                 !(isOnTopEdge || isOnLeftEdge) &&
@@ -827,16 +878,6 @@ namespace DuckChess
                     {
                         Move move = new Move(kingSpot, kingSpot + 2, Move.Flag.Castling);
                         generatedMoves.Add(move);
-                    } else
-                    {
-                        // The rook was captured, so castling isn't actually valid
-                        if (isWhite)
-                        {
-                            board.CastleKingSideW = false;
-                        } else
-                        {
-                            board.CastleKingSideB = false;
-                        }
                     }
                 }
             }
@@ -853,18 +894,6 @@ namespace DuckChess
                         Move move = new Move(kingSpot, kingSpot - 2, Move.Flag.Castling);
                         generatedMoves.Add(move);
                     }
-                    else
-                    {
-                        // The rook was captured, so castling isn't actually valid
-                        if (isWhite)
-                        {
-                            board.CastleQueenSideW = false;
-                        }
-                        else
-                        {
-                            board.CastleQueenSideB = false;
-                        }
-                    }
                 }
             }
         }
@@ -877,21 +906,30 @@ namespace DuckChess
         /// <param name="board">The board to use while checking for legal moves</param>
         public static void GenerateDuckMoves(ref List<Move> generatedMoves, Board board)
         {
+            // The starting square for the duck (its current position).
+            int startSquare = GetLocationOfDuck(board);
+
+            // If the duck is not on the board, it starts at square 0.
             int firstDuckMoveFlag = Move.Flag.None;
-            int startSquare = board.Duck;
             if (startSquare == Board.NOT_ON_BOARD)
             {
                 startSquare = 0;
                 firstDuckMoveFlag = Move.Flag.FirstDuckMove;
             }
 
+            // Iterate over all squares to find empty ones for the duck to move to.
             for (int i = 0; i < board.Squares.Length; i++)
             {
-                if (board[i] == Piece.None)
+                // The duck can only move to empty squares.
+                if (Piece.PieceType(board[i]) == Piece.None)
                 {
                     int targetSquare = i;
-                    Move newMove = new Move(startSquare, targetSquare, firstDuckMoveFlag);
-                    generatedMoves.Add(newMove);
+
+                    // Create a duck move.
+                    Move duckMove = new Move(startSquare, targetSquare, firstDuckMoveFlag);
+
+                    // Add the move to the list of generated moves.
+                    generatedMoves.Add(duckMove);
                 }
             }
         }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using DuckChess;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,14 +10,6 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class BoardUI : MonoBehaviour
 {
-    #region Max number of each piece type, for one color
-    const int MAX_PAWN_COUNT = Board.MAX_PAWN_COUNT;
-    const int MAX_KNIGHT_COUNT = Board.MAX_KNIGHT_COUNT;
-    const int MAX_BISHOP_COUNT = Board.MAX_BISHOP_COUNT;
-    const int MAX_ROOK_COUNT = Board.MAX_ROOK_COUNT;
-    const int MAX_QUEEN_COUNT = Board.MAX_QUEEN_COUNT;
-    #endregion
-
     #region References to Prefabs of the pieces
     public GameObject BishopB;
     public GameObject BishopW;
@@ -42,6 +35,9 @@ public class BoardUI : MonoBehaviour
     public GameObject[] Pieces;
     public Board board;
     public GameObject[] Circles;
+    public TextMeshProUGUI boardType;
+    public TextMeshProUGUI displayIsDuckTurn;
+    public TextMeshProUGUI displayOtherInfo;
     #endregion
 
     public List<Move> highlightedMoves = new List<Move>();
@@ -61,22 +57,41 @@ public class BoardUI : MonoBehaviour
     /// </summary>
     private const int DRAG_LAYER = -3;
 
-    private int selectedSquare;
+    private int selectedStartSquare;
+    private int selectedTargetSquare;
 
     public Camera cam;
 
     private void Start()
     {
         cam = Camera.main;
-        Pieces = new GameObject[64];
-        Circles = new GameObject[64];
+        Pieces = null;
+        Circles = null;
         highlightedMoves = new List<Move>();
         board = null;
+        selectedStartSquare = 0;
+        boardType.text = "Real Board";
+        displayIsDuckTurn.text = "Normal Turn";
+    }
+
+    public void AISelectPiece(Move move)
+    {
+        Circles[selectedStartSquare].SetActive(false);
+        Circles[selectedTargetSquare].SetActive(false);
+        selectedStartSquare = move.StartSquare;
+        selectedTargetSquare = move.TargetSquare;
+        Circles[selectedStartSquare].SetActive(true);
+        Circles[selectedTargetSquare].SetActive(true);
     }
 
     public void SelectPiece(int square)
     {
-        selectedSquare = square;
+        if (Duck == null)
+        {
+            SelectDuckInitially();
+            return;
+        }
+        selectedStartSquare = square;
         highlightedMoves.Clear();
         LegalMoveGenerator.GenerateForOnePiece(ref highlightedMoves, board, square);
         foreach (Move move in highlightedMoves)
@@ -87,7 +102,7 @@ public class BoardUI : MonoBehaviour
 
     public void SelectDuckInitially()
     {
-        selectedSquare = -1;
+        selectedStartSquare = 0;
         highlightedMoves.Clear();
         LegalMoveGenerator.GenerateDuckMoves(ref highlightedMoves, board);
         foreach (Move move in highlightedMoves)
@@ -100,151 +115,13 @@ public class BoardUI : MonoBehaviour
     {
         Vector2 position = cam.ScreenToWorldPoint(Input.mousePosition);
         Vector3 newPosition = new Vector3(position.x, position.y, DRAG_LAYER);
-        Pieces[selectedSquare].transform.position = newPosition;
+        Pieces[selectedStartSquare].transform.position = newPosition;
     }
 
-    public void MakeMove(Move move)
-    {
-        foreach (Move possibleMove in highlightedMoves)
-        {
-            Circles[possibleMove.TargetSquare].SetActive(false);
-        }
-        highlightedMoves.Clear();
-        int newSquare = move.TargetSquare;
-        int squareToCapture = newSquare;
-        bool isWhite = board.turnColor == Piece.White;
-        if (move.MoveFlag == Move.Flag.EnPassantCapture)
-        {
-            squareToCapture += isWhite ? -8 : 8;
-            Destroy(Pieces[squareToCapture]);
-            Pieces[squareToCapture] = null;
-        }
-        if (Pieces[newSquare] != null)
-        {
-            Destroy(Pieces[squareToCapture]);
-            Pieces[squareToCapture] = null;
-        }
-        if (move.IsPromotion)
-        {
-            Destroy(Pieces[move.StartSquare]);
-            Pieces[move.StartSquare] = null;
-            GameObject newPiece = null;
-            switch(move.MoveFlag)
-            {
-                case Move.Flag.PromoteToKnight:
-                    newPiece = isWhite ? KnightW : KnightB;
-                    break;
-                case Move.Flag.PromoteToBishop:
-                    newPiece = isWhite ? BishopW : BishopB;
-                    break;
-                case Move.Flag.PromoteToRook:
-                    newPiece = isWhite ? RookW : RookB;
-                    break;
-                case Move.Flag.PromoteToQueen:
-                    newPiece = isWhite ? QueenW : QueenB;
-                    break;
-            }
-            Pieces[move.StartSquare] = Instantiate(newPiece);
-        }
-        if (move.MoveFlag == Move.Flag.Castling)
-        {
-            bool isKingSide = move.TargetSquare - move.StartSquare > 0;
-
-            int rookSpot = move.StartSquare;
-            rookSpot += isKingSide ? +3 : -4;
-
-            int newRookSpot = move.StartSquare;
-            newRookSpot += isKingSide ? 1 : -1;
-
-            Move moveRooks = new Move(rookSpot, newRookSpot);
-            MakeMove(moveRooks);
-        }
-        if (board.duckTurn && board.Duck == Board.NOT_ON_BOARD)
-        {
-            Pieces[newSquare] = Instantiate(Duck);
-        } else
-        {
-            Pieces[newSquare] = Pieces[move.StartSquare];
-            Pieces[move.StartSquare] = null;
-        }
-        Vector3 newPosition = SquareToWorldCoordinates(newSquare, PLACE_LAYER);
-        Pieces[newSquare].transform.position = newPosition;
-    }
-
-    public void UnmakeMove(Move move)
-    {
-        bool isWhite = board.turnColor == Piece.White;
-        int currentSquare = move.TargetSquare;
-        int originalSquare = move.StartSquare;
-
-        // En passant
-        if (move.MoveFlag == Move.Flag.EnPassantCapture)
-        {
-            int enemyPawnSpot = isWhite ? -1 : 1;
-            enemyPawnSpot += currentSquare;
-
-            Pieces[enemyPawnSpot] = isWhite ? Instantiate(PawnB) : Instantiate(PawnW);
-            Pieces[enemyPawnSpot].transform.position = SquareToWorldCoordinates(enemyPawnSpot, PLACE_LAYER);
-        }
-
-        // Castling
-        if (move.MoveFlag == Move.Flag.Castling) {
-            int kingSpot = isWhite ? board.WhiteKing : board.BlackKing;
-            bool wasKingSide = Board.GetColumnOf(kingSpot) == 6;
-            int rookSpot = wasKingSide ? -1 : 1;
-            int originalRookSpot = wasKingSide ? 1 : -2;
-            Pieces[originalRookSpot] = Pieces[rookSpot];
-            Pieces[originalRookSpot].transform.position = SquareToWorldCoordinates(originalRookSpot, PLACE_LAYER);
-            Pieces[rookSpot] = null;
-        }
-
-        // Update the squares
-        // Not the first duck move
-        if (board.plyCount != 2)
-        {
-            Pieces[originalSquare] = Pieces[currentSquare];
-            Pieces[originalSquare].transform.position = SquareToWorldCoordinates(originalSquare, PLACE_LAYER);
-        }
-        else
-        {
-            Destroy(Pieces[currentSquare]);
-            Pieces[currentSquare] = null;
-        }
-        GameObject capturedPiecePrefab = null;
-        switch (Piece.PieceType(move.CapturedPiece))
-        {
-            case Piece.Pawn:
-                capturedPiecePrefab = isWhite ? PawnB : PawnW;
-                break;
-            case Piece.Knight:
-                capturedPiecePrefab = isWhite ? KnightB : KnightW;
-                break;
-            case Piece.Bishop:
-                capturedPiecePrefab = isWhite ? BishopB : BishopW;
-                break;
-            case Piece.Rook:
-                capturedPiecePrefab = isWhite ? RookB : RookW;
-                break;
-            case Piece.Queen:
-                capturedPiecePrefab = isWhite ? QueenB : QueenW;
-                break;
-            case Piece.King:
-                capturedPiecePrefab = isWhite ? KingB : KingW;
-                break;
-        }
-        if (capturedPiecePrefab != null)
-        {
-            Pieces[currentSquare] = Instantiate(capturedPiecePrefab);
-            Pieces[currentSquare].transform.position = SquareToWorldCoordinates(currentSquare, PLACE_LAYER);
-        } else
-        {
-            Pieces[currentSquare] = null;
-        }
-    }
 
     public void SnapPieceBack()
     {
-        Pieces[selectedSquare].transform.position = SquareToWorldCoordinates(selectedSquare, PLACE_LAYER);
+        Pieces[selectedStartSquare].transform.position = SquareToWorldCoordinates(selectedStartSquare, PLACE_LAYER);
         foreach (Move possibleMove in highlightedMoves)
         {
             Circles[possibleMove.TargetSquare].SetActive(false);
@@ -255,107 +132,92 @@ public class BoardUI : MonoBehaviour
     public void CancelSelection()
     {
         SnapPieceBack();
-        selectedSquare = -1;
+        selectedStartSquare = -1;
     }
-
+    private void GetPrefabOfPiece(ref GameObject whereToPlacePrefab, int piece)
+    {
+        switch (piece)
+        {
+            case Piece.White | Piece.Pawn:
+                whereToPlacePrefab = PawnW;
+                break;
+            case Piece.Black | Piece.Pawn:
+                whereToPlacePrefab = PawnB;
+                break;
+            case Piece.White | Piece.Knight:
+                whereToPlacePrefab = KnightW;
+                break;
+            case Piece.Black | Piece.Knight:
+                whereToPlacePrefab = KnightB;
+                break;
+            case Piece.White | Piece.Bishop:
+                whereToPlacePrefab = BishopW;
+                break;
+            case Piece.Black | Piece.Bishop:
+                whereToPlacePrefab = BishopB;
+                break;
+            case Piece.White | Piece.Rook:
+                whereToPlacePrefab = RookW;
+                break;
+            case Piece.Black | Piece.Rook:
+                whereToPlacePrefab = RookB;
+                break;
+            case Piece.White | Piece.Queen:
+                whereToPlacePrefab = QueenW;
+                break;
+            case Piece.Black | Piece.Queen:
+                whereToPlacePrefab = QueenB;
+                break;
+            case Piece.White | Piece.King:
+                whereToPlacePrefab = KingW;
+                break;
+            case Piece.Black | Piece.King:
+                whereToPlacePrefab = KingB;
+                break;
+            case Piece.Duck:
+                whereToPlacePrefab = Duck;
+                break;
+        }
+    }
     /// <summary>
     /// Loads a given position into the game world.
     /// </summary>
-    public void LoadPosition(ref Board board)
+    public void LoadPosition(ref Board board, bool isSearchBoard, string InfoToDisplay)
     {
+        boardType.text = isSearchBoard ? "AI Search Board" : "Real Board";
+        displayIsDuckTurn.text = board.turnIsDuck ? "Duck Turn" : "Normal Turn";
+        displayOtherInfo.text = InfoToDisplay;
+        this.board = board;
+        if (Pieces != null)
+        {
+            foreach (GameObject piece in Pieces)
+            {
+                Destroy(piece);
+            }
+        }
+        if (Circles != null)
+        {
+            foreach (GameObject circle in Circles)
+            {
+                Destroy(circle);
+            }
+        }
         // Create a new array and save the board
         Pieces = new GameObject[64];
         Circles = new GameObject[64];
-        for (int i = 0; i< 64; i++)
+        for (int i = 0; i < 64; i++)
         {
             Circles[i] = Instantiate(Circle);
             Circles[i].SetActive(false);
             Circles[i].transform.position = SquareToWorldCoordinates(i, SELECT_LAYER);
-        }
-        this.board = board;
-
-        // Place the pawns
-        for (int i = 0; i < board.WhitePawns.Count; i++)
-        {
-            int square = board.WhitePawns[i];
-            Pieces[square] = Instantiate(PawnW);
-            Pieces[square].transform.position = SquareToWorldCoordinates(square, PLACE_LAYER);
-        }
-        for (int i = 0; i < board.BlackPawns.Count; i++)
-        {
-            int square = board.BlackPawns[i];
-            Pieces[square] = Instantiate(PawnB);
-            Pieces[square].transform.position = SquareToWorldCoordinates(square, PLACE_LAYER);
-        }
-
-        // Place the knights
-        for (int i = 0; i < board.WhiteKnights.Count; i++)
-        {
-            int square = board.WhiteKnights[i];
-            Pieces[square] = Instantiate(KnightW);
-            Pieces[square].transform.position = SquareToWorldCoordinates(square, PLACE_LAYER);
-        }
-        for (int i = 0; i < board.BlackKnights.Count; i++)
-        {
-            int square = board.BlackKnights[i];
-            Pieces[square] = Instantiate(KnightB);
-            Pieces[square].transform.position = SquareToWorldCoordinates(square, PLACE_LAYER);
-        }
-
-        // Place the bishops
-        for (int i = 0; i < board.WhiteBishops.Count; i++)
-        {
-            int square = board.WhiteBishops[i];
-            Pieces[square] = Instantiate(BishopW);
-            Pieces[square].transform.position = SquareToWorldCoordinates(square, PLACE_LAYER);
-        }
-        for (int i = 0; i < board.BlackBishops.Count; i++)
-        {
-            int square = board.BlackBishops[i];
-            Pieces[square] = Instantiate(BishopB);
-            Pieces[square].transform.position = SquareToWorldCoordinates(square, PLACE_LAYER);
-        }
-
-        // Place the rooks
-        for (int i = 0; i < board.WhiteRooks.Count; i++)
-        {
-            int square = board.WhiteRooks[i];
-            Pieces[square] = Instantiate(RookW);
-            Pieces[square].transform.position = SquareToWorldCoordinates(square, PLACE_LAYER);
-        }
-        for (int i = 0; i < board.BlackRooks.Count; i++)
-        {
-            int square = board.BlackRooks[i];
-            Pieces[square] = Instantiate(RookB);
-            Pieces[square].transform.position = SquareToWorldCoordinates(square, PLACE_LAYER);
-        }
-
-        // Place the queens
-        for (int i = 0; i < board.WhiteQueens.Count; i++)
-        {
-            int square = board.WhiteQueens[i];
-            Pieces[square] = Instantiate(QueenW);
-            Pieces[square].transform.position = SquareToWorldCoordinates(square, PLACE_LAYER);
-        }
-        for (int i = 0; i < board.BlackQueens.Count; i++)
-        {
-            int square = board.BlackQueens[i];
-            Pieces[square] = Instantiate(QueenB);
-            Pieces[square].transform.position = SquareToWorldCoordinates(square, PLACE_LAYER);
-        }
-
-        // Place the kings
-        Pieces[board.WhiteKing] = Instantiate(KingW);
-        Pieces[board.BlackKing] = Instantiate(KingB);
-
-        Pieces[board.WhiteKing].transform.position = SquareToWorldCoordinates(board.WhiteKing, PLACE_LAYER);
-        Pieces[board.BlackKing].transform.position = SquareToWorldCoordinates(board.BlackKing, PLACE_LAYER);
-
-        // Place the duck
-        if (board.Duck != Board.NOT_ON_BOARD)
-        {
-            Pieces[board.Duck] = Instantiate(Duck);
-            Pieces[board.Duck].transform.position = SquareToWorldCoordinates(board.Duck, PLACE_LAYER);
+            GameObject piecePrefab = null;
+            GetPrefabOfPiece(ref piecePrefab, board[i]);
+            if (piecePrefab != null)
+            {
+                Pieces[i] = Instantiate(piecePrefab);
+                Pieces[i].SetActive(true);
+                Pieces[i].transform.position = SquareToWorldCoordinates(i, PLACE_LAYER);
+            }
         }
     }
 

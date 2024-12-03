@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace DuckChess
@@ -90,6 +91,10 @@ namespace DuckChess
         {
             moveValue = startSquare | targetSquare << 6 | flag << 12;
         }
+        public Move(int startSquare, int targetSquare, int flag, int capturedPiece)
+        {
+            moveValue = startSquare | targetSquare << 6 | flag << 12 | capturedPiece << 16;
+        }
 
         /// <summary>
         /// Use to add a captured piece to a move. Note that this must be a normal capture,
@@ -137,11 +142,14 @@ namespace DuckChess
             }
         }
 
+        /// <summary>
+        /// Note that this is a normal capture not en passant
+        /// </summary>
         public bool IsCapture
         {
             get
             {
-                return Piece.PieceType(CapturedPiece) != Piece.None || MoveFlag == Flag.EnPassantCapture;
+                return Piece.PieceType(CapturedPiece) != Piece.None;
             }
         }
 
@@ -166,7 +174,7 @@ namespace DuckChess
         {
             get
             {
-                return moveValue >> 12;
+                return (moveValue & flagMask) >> 12;
             }
         }
 
@@ -231,8 +239,34 @@ namespace DuckChess
         public override string ToString()
         {
             string moveString = "";
-            moveString += StartSquare + " to " + TargetSquare + " flag: " + MoveFlag;
+            moveString += StartSquare + " to " + TargetSquare + " flag: " + MoveFlag + " captured " + CapturedPiece;
             return moveString;
+        }
+
+        public bool isDuckMove(Board board) 
+        {
+            if (Move.Flag.FirstDuckMove != MoveFlag) {
+                return board[StartSquare] == Piece.Duck;
+            } else {
+                return true;
+            }
+           
+        }
+
+        public int StartPiece(Board board) {
+            if (Move.Flag.FirstDuckMove == MoveFlag) {
+                return Piece.Duck;
+            } else {
+                return board[StartSquare];
+            }
+        }
+
+        public int TargetPiece(Board board) {
+            if (Move.Flag.FirstDuckMove == MoveFlag) {
+                return Piece.Duck;
+            } else {
+                return board[TargetSquare];
+            }
         }
 
         //public string Name

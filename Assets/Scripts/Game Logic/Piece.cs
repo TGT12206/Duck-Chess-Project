@@ -1,3 +1,5 @@
+using System;
+
 namespace DuckChess
 {
     /// <summary>
@@ -89,6 +91,23 @@ namespace DuckChess
         public static int PieceType(int piece)
         {
             return piece & typeMask;
+        }
+
+       public static String PieceStr(int piece)
+        {
+            string pieceChar = Piece.PieceType(piece) switch
+            {
+                Piece.Pawn => "P",
+                Piece.Knight => "N",
+                Piece.Bishop => "B",
+                Piece.Rook => "R",
+                Piece.Queen => "Q",
+                Piece.King => "K",
+                Piece.Duck => "D",
+                _ => "-"
+            };
+            string color = Piece.Color(piece) == Piece.White ? "W" : Piece.Color(piece) == Piece.Black ? "B" : " ";
+            return $"{color}{pieceChar}";
         }
 
         //public static bool IsRookOrQueen(int piece)

@@ -1,4 +1,5 @@
 using DuckChess;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem.LowLevel;
 
@@ -53,8 +54,9 @@ public class HumanPlayer : RealTimePlayer
         int mouseSquare = BoardUI.GetMouseSquare();
         if (currentState == InputState.None)
         {
-            if (board.duckTurn && board.Duck == Board.NOT_ON_BOARD)
+            if (board.plyCount == 1)
             {
+                // If it is the first duck move, auto select
                 mouseSquare = 0;
                 selectedSquare = 0;
                 boardUI.SelectDuckInitially();
@@ -81,20 +83,20 @@ public class HumanPlayer : RealTimePlayer
 
     private void HandlePieceSelection(int mouseSquare)
     {
-        if (Input.GetMouseButtonDown(0))
+        // If square contains a piece, select that piece for dragging
+        if (board.turnIsDuck)
+        {
+            selectedSquare = LegalMoveGenerator.GetLocationOfDuck(board);
+            boardUI.SelectPiece(selectedSquare);
+            currentState = InputState.DraggingPiece;
+        }
+        else if (Input.GetMouseButtonDown(0))
         {
             // If square contains a piece, select that piece for dragging
-            if (
-                (!board.duckTurn &&
-                Piece.IsColor(board[mouseSquare], Color))
-                ||
-                (board.duckTurn &&
-                Piece.PieceType(board[mouseSquare]) == Piece.Duck)
-            )
+            if (Piece.IsColor(board[mouseSquare], Color))
             {
-                // boardUI.HighlightLegalMoves(board, selectedPieceSquare);
                 selectedSquare = mouseSquare;
-                boardUI.SelectPiece(mouseSquare);
+                boardUI.SelectPiece(selectedSquare);
                 currentState = InputState.DraggingPiece;
             }
         }
@@ -133,44 +135,20 @@ public class HumanPlayer : RealTimePlayer
         {
             targetSquare = mouseSquare;
             currentState = InputState.None;
-            Move newMove;
-            if (board.duckTurn && board.Duck == Board.NOT_ON_BOARD)
+            List<Move> legalMovesForThisPiece = new List<Move>();
+            LegalMoveGenerator.GenerateForOnePiece(ref legalMovesForThisPiece, board, selectedSquare);
+            Move newMove = new Move();
+            foreach (Move legalMove in legalMovesForThisPiece)
             {
-                newMove = new Move(0, targetSquare, Move.Flag.FirstDuckMove);
-            } else if (
-                ((Color == Piece.White && targetSquare > 55) ||
-                (Color == Piece.Black && targetSquare < 8)) &&
-                Piece.PieceType(board[selectedSquare]) == Piece.Pawn
-            )
-            {
-                newMove = new Move(selectedSquare, targetSquare, Move.Flag.PromoteToQueen);
-            } else if (
-                targetSquare == board.enPassantSquare &&
-                Piece.PieceType(board[selectedSquare]) == Piece.Pawn
-            )
-            {
-                newMove = new Move(selectedSquare, targetSquare, Move.Flag.EnPassantCapture);
-            } else if (
-                Mathf.Abs(targetSquare - selectedSquare) == 16 &&
-                Piece.PieceType(board[selectedSquare]) == Piece.Pawn
-            )
-            {
-                newMove = new Move(selectedSquare, targetSquare, Move.Flag.PawnTwoForward);
-            } else if (
-                Mathf.Abs(targetSquare - selectedSquare) == 2 &&
-                Piece.PieceType(board[selectedSquare]) == Piece.King
-            )
-            {
-                newMove = new Move(selectedSquare, targetSquare, Move.Flag.Castling);
+                if (selectedSquare == legalMove.StartSquare && targetSquare == legalMove.TargetSquare)
+                {
+                    newMove = legalMove;
+                }
             }
-            else
-            {
-                newMove = new Move(selectedSquare, targetSquare);
-            }
-
             if (board.IsMoveLegal(ref newMove))
             {
                 ChooseMove(newMove);
+                currentState = InputState.None;
             } else
             {
                 boardUI.CancelSelection();
