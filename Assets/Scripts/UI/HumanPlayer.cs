@@ -93,7 +93,6 @@ public class HumanPlayer : RealTimePlayer
                 Piece.PieceType(board[mouseSquare]) == Piece.Duck)
             )
             {
-                // boardUI.HighlightLegalMoves(board, selectedPieceSquare);
                 selectedSquare = mouseSquare;
                 boardUI.SelectPiece(mouseSquare);
                 currentState = InputState.DraggingPiece;

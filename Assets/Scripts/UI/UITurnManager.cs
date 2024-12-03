@@ -16,8 +16,10 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     public bool haltForError;
     public int framesToWaitWhite = 1;
     public int framesToWaitBlack = 1;
-    public bool WhiteBot;
-    public bool BlackBot;
+    public bool WhiteIsBot;
+    public bool BlackIsBot;
+    public bool showWhiteSearchBoard;
+    public bool showBlackSearchBoard;
     public int framesToWait;
     public int framesWaited = 0;
 
@@ -68,8 +70,10 @@ public class UITurnManager : MonoBehaviour, ITurnManager
         framesWaited++;
         if (!board.isGameOver && !haltForError && framesWaited >= framesToWait)
         {
-            RealTimePlayer WhitePlayer = WhiteBot ? AlphaBetaAIWhitePlayer : HumanWhitePlayer;
-            RealTimePlayer BlackPlayer = BlackBot ? AlphaBetaAIBlackPlayer : HumanBlackPlayer;
+            RealTimePlayer WhitePlayer = WhiteIsBot ? AlphaBetaAIWhitePlayer : HumanWhitePlayer;
+            RealTimePlayer BlackPlayer = BlackIsBot ? AlphaBetaAIBlackPlayer : HumanBlackPlayer;
+            AlphaBetaAIWhitePlayer.showSearchBoard = showWhiteSearchBoard;
+            AlphaBetaAIBlackPlayer.showSearchBoard = showBlackSearchBoard;
             PlayerToMove = board.turnColor == Piece.White ? WhitePlayer : BlackPlayer;
             try
             {

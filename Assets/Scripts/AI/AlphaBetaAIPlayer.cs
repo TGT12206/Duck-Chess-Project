@@ -27,6 +27,7 @@ namespace DuckChess
 
         // Debugging, can delete
         private int numMovesLookedAt;
+        public bool showSearchBoard;
 
         public AlphaBetaAIPlayer(Board board, int color, int maxDepth, BoardUI boardUI)
         {
@@ -115,8 +116,10 @@ namespace DuckChess
             int indexOfNextMove = parent.indexLeftOffAt;
             Move nextMove = legalMoves[indexOfNextMove];
 
-            boardUI.AISelectPiece(nextMove);
-            boardUI.LoadPosition(ref searchBoard, true, "Depth: " + currentDepth);
+            if (showSearchBoard)
+            {
+                boardUI.LoadPosition(ref searchBoard, true, "Depth: " + currentDepth);
+            }
 
             // Make the new node
             searchBoard.MakeMove(ref nextMove);
@@ -137,8 +140,10 @@ namespace DuckChess
 
             currentDepth--;
 
-            boardUI.AISelectPiece(node.moveFromParent);
-            boardUI.LoadPosition(ref searchBoard, true, "Depth: " + currentDepth);
+            if (showSearchBoard)
+            {
+                boardUI.LoadPosition(ref searchBoard, true, "Depth: " + currentDepth);
+            }
 
             if (currentDepth == 0)
             {
