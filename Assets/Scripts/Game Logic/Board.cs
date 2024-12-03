@@ -289,38 +289,15 @@ namespace DuckChess
             }
         }
 
-        private void SwitchTurnBackward(ref Move move)
-        {
-            bool duckMove = move.isDuckMove(this);
-            Debug.Log("We are undoing move for: " + turnColor + " move type: " + (duckMove ? "Duck" : "Regular") + " board type (should be opposite): " + (turnIsDuck ? "Duck" : "Regular"));
-
-            turnIsDuck = !turnIsDuck;
-
-            // the next turn we want is here.
-            if (turnIsDuck)
-            {
-                GenerateDuckMoves();
-            }
-            else
-            {
-                // keep as same color.
-                // turnColor = turnColor == Piece.White ? Piece.Black : Piece.White;
-                GenerateNormalMoves();
-            }
-
-
-
-        }
-
         /// <summary>
         /// Makes a move on the board and updates its state.
         /// </summary>
-        public InfoToUnmakeMove MakeMove(ref Move move)
+        public PreviousBoardInfo MakeMove(ref Move move)
         {
             plyCount++;
 
             bool isWhite = turnColor == Piece.White;
-            InfoToUnmakeMove infoToStore = StoreInfoToUnmakeMove(move);
+            PreviousBoardInfo infoToStore = StoreInfoToUnmakeMove(move);
             UpdateBoard(ref move, isWhite);
 
             Debug.Log("Just performed move for: " + turnColor + " move type: " + (turnIsDuck ? "Duck" : "Regular") + "\n" + move.ToString());
@@ -329,13 +306,16 @@ namespace DuckChess
             return infoToStore;
         }
 
-        private InfoToUnmakeMove StoreInfoToUnmakeMove(Move move)
+        private PreviousBoardInfo StoreInfoToUnmakeMove(Move move)
         {
-            InfoToUnmakeMove infoToStore = new InfoToUnmakeMove();
-            infoToStore.moveToUnmake = move;
+            PreviousBoardInfo infoToStore = new PreviousBoardInfo();
+            infoToStore.moveBackToPreviousBoard = move;
             infoToStore.enPassantSquare = enPassantSquare;
             infoToStore.turnColor = turnColor;
             infoToStore.turnIsDuck = turnIsDuck;
+            infoToStore.legalMoves = new List<Move>(legalMoves);
+            infoToStore.squares = new int[Squares.Length];
+            Array.Copy(Squares, infoToStore.squares, Squares.Length);
             return infoToStore;
         }
 
@@ -371,63 +351,32 @@ namespace DuckChess
         /// </summary>
         /// <param name="move">The move to undo.</param>
         /// <param name="previousNumPlySinceLastEvent">The draw counter value before the move was made.</param>
-        public void UnmakeMove(InfoToUnmakeMove previousBoardInfo)
+        public void UnmakeMove(PreviousBoardInfo previousBoardInfo)
         {
-            Move move = previousBoardInfo.moveToUnmake;
+            Move move = previousBoardInfo.moveBackToPreviousBoard;
 
             // Set the board info back to what it was before
             plyCount--;
             enPassantSquare = previousBoardInfo.enPassantSquare;
             turnColor = previousBoardInfo.turnColor;
             turnIsDuck = previousBoardInfo.turnIsDuck;
-
-            /*
-             * - set board info based on undo move info
-             * -- set the en passant square back to where it was
-             * -- set the countdown timer (not done)
-             * - place the square at the target square into the start square
-             * -- do not do so if it is the first duck move
-             * - if it is a normal capture, put the captured piece back onto the target
-             * - if it is a promotion, replace the start square with a pawn
-             * - if it is en passant, place the pawn back
-             * 
-             * - place the piece on the target square
-             * -- if it is the first duck move, replace the piece to place with Piece.Duck
-             * - if it is en passant, remove the pawn behind the target square
-             * to do:
-             * - handle castling
-             * - handle giving castling rights back
-             * - probably more?
-             */
-            // if it is not the first duck move,
-            // place the piece back onto the start square
-            if (move.MoveFlag != Move.Flag.FirstDuckMove)
-            {
-                Squares[move.StartSquare] = Squares[move.TargetSquare];
-            }
-            // replace the target square with the captured piece.
-            // if there was no capture, captured piece is already Piece.None
-            Squares[move.TargetSquare] = move.CapturedPiece;
-
-            // If it was a promotion
-            if (move.IsPromotion)
-            {
-                int promotedPawn = turnColor | Piece.Pawn;
-                Squares[move.StartSquare] = promotedPawn;
-            }
+            legalMoves = previousBoardInfo.legalMoves;
+            Squares = previousBoardInfo.squares;
         }
 
         /// <summary>
         /// Stores all of the info that can't easily be undone,
         /// such as the draw counter that is sometimes reset.
         /// </summary>
-        public class InfoToUnmakeMove
+        public class PreviousBoardInfo
         {
-            public Move moveToUnmake;
+            public Move moveBackToPreviousBoard;
             // int previousNumPlySinceLastEvent;
             internal int enPassantSquare;
             internal int turnColor;
             internal bool turnIsDuck;
+            internal List<Move> legalMoves;
+            internal int[] squares;
         }
     }
 

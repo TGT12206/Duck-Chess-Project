@@ -134,7 +134,7 @@ namespace DuckChess
 
             // Making a move on a board saves any captured piece onto the move,
             // so we need to make the move before saving.
-            Board.InfoToUnmakeMove undoMoveInfo = searchBoard.MakeMove(ref nextMove);
+            Board.PreviousBoardInfo undoMoveInfo = searchBoard.MakeMove(ref nextMove);
             AlphaBetaNode newNode = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, undoMoveInfo);
 
             legalMoves = searchBoard.legalMoves;

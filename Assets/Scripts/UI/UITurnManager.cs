@@ -11,7 +11,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     public RealTimePlayer PlayerToMove;
     public BoardUI boardUI;
     public Board board;
-    public Stack<Board.InfoToUnmakeMove> UndoMoveInfo;
+    public Stack<Board.PreviousBoardInfo> UndoMoveInfo;
     public bool haltForError;
     public int framesToWaitWhite = 1;
     public int framesToWaitBlack = 1;
@@ -25,7 +25,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
 
     public void MakeMove(Move move)
     {
-        Board.InfoToUnmakeMove infoToStore = board.MakeMove(ref move);
+        Board.PreviousBoardInfo infoToStore = board.MakeMove(ref move);
         UndoMoveInfo.Push(infoToStore);
         boardUI.LoadPosition(ref board, false, "");
         Debug.Log("UI\n" + board.ToString());
@@ -43,7 +43,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     {
         // Instantiating fields
         board = new Board();
-        UndoMoveInfo = new Stack<Board.InfoToUnmakeMove>();
+        UndoMoveInfo = new Stack<Board.PreviousBoardInfo>();
 
         // Load the start position
         board.LoadStartPosition();
@@ -52,9 +52,9 @@ public class UITurnManager : MonoBehaviour, ITurnManager
 
         // Create the appropriate player types
         // placeholder
-        //WhitePlayer = new HumanPlayer(boardUI, ref board, Piece.White);
+        WhitePlayer = new HumanPlayer(boardUI, ref board, Piece.White);
         BlackPlayer = new HumanPlayer(boardUI, ref board, Piece.Black);
-        WhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 2, boardUI);
+        //WhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 2, boardUI);
         //BlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 2, boardUI);
 
         // Set the MakeMove method to be called whenever either player makes a move

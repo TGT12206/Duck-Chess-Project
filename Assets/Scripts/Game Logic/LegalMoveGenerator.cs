@@ -981,12 +981,6 @@ namespace DuckChess
                     // Create a duck move.
                     Move duckMove = new Move(startSquare, targetSquare, firstDuckMoveFlag);
 
-                    // Debugging: Log invalid duck moves.
-                    if (duckMove.StartSquare == 0 && duckMove.TargetSquare == 0)
-                    {
-                        Debug.LogWarning("Generated invalid duck move: " + board.ToString());
-                    }
-
                     // Add the move to the list of generated moves.
                     generatedMoves.Add(duckMove);
                 }
