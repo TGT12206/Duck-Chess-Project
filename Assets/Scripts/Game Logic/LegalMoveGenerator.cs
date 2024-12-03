@@ -32,8 +32,8 @@ namespace DuckChess
             int findCaptureSpotOnRight = isWhite ? 9 : -7;
             int findCaptureSpotOnLeft = isWhite ? 7 : -9;
             int enPassantRow = isWhite ? 4 : 3;
-            Board.PieceList pawnLocations = board.GetLocationOfPieces(Piece.Pawn);
-            for (int i = 0; i < pawnLocations.Length; i++)
+            List<int> pawnLocations = GetLocationOfPieces(board, Piece.Pawn);
+            for (int i = 0; i < pawnLocations.Count; i++)
             {
                 pawnSpot = pawnLocations[i];
                 GenerateOnePawnsMoves(
@@ -50,6 +50,37 @@ namespace DuckChess
                     enPassantRow
                 );
             }
+        }
+
+        public static List<int> GetLocationOfPieces(Board board, int pieceType)
+        {
+            int piece = board.turnColor | pieceType;
+            int pieceColor = Piece.Color(piece);
+            List<int> pieceLocations = new List<int>();
+            for (int i = 0; i < 64; i++)
+            {
+                int boardPieceType = Piece.PieceType(board[i]);
+                int boardPieceColor = Piece.Color(board[i]);
+                // Just in case the implementation of piece ever changes,
+                // (ex. new flags) hard code it to check the piece type and color
+                if (pieceType == boardPieceType && pieceColor == boardPieceColor)
+                {
+                    pieceLocations.Add(i);
+                }
+            }
+            return pieceLocations;
+        }
+
+        public static int GetLocationOfDuck(Board board)
+        {
+            for (int i = 0; i < 64; i++)
+            {
+                if (Piece.PieceType(board[i]) == Piece.Duck)
+                {
+                    return i;
+                }
+            }
+            return Board.NOT_ON_BOARD;
         }
 
         private static void GenerateOnePawnsMoves(
@@ -222,8 +253,8 @@ namespace DuckChess
             bool isWhite = board.isWhite;
             int enemyColor = isWhite ? Piece.Black : Piece.White;
             int[] knightOffsets = { 15, 17, -15, -17, 10, -10, 6, -6 };
-            Board.PieceList knightLocations = board.GetLocationOfPieces(Piece.Knight);
-            for (int i = 0; i < knightLocations.Length; i++)
+            List<int> knightLocations = GetLocationOfPieces(board, Piece.Knight);
+            for (int i = 0; i < knightLocations.Count; i++)
             {
                 int knightSpot = knightLocations[i];
                 GenerateOneKnightsMoves(ref generatedMoves, board, knightSpot, enemyColor, knightOffsets);
@@ -329,8 +360,8 @@ namespace DuckChess
                 return;
             }
             bool isWhite = board.turnColor == Piece.White;
-            Board.PieceList bishopLocations = board.GetLocationOfPieces(Piece.Bishop);
-            for (int i = 0; i < bishopLocations.Length; i++)
+            List<int> bishopLocations = GetLocationOfPieces(board, Piece.Bishop);
+            for (int i = 0; i < bishopLocations.Count; i++)
             {
                 int bishopSpot = bishopLocations[i];
                 GenerateOneBishopsMoves(ref generatedMoves, board, bishopSpot);
@@ -522,8 +553,8 @@ namespace DuckChess
                 return;
             }
             bool isWhite = board.turnColor == Piece.White;
-            Board.PieceList rookLocations = board.GetLocationOfPieces(Piece.Rook);
-            for (int i = 0; i < rookLocations.Length; i++)
+            List<int> rookLocations = GetLocationOfPieces(board, Piece.Rook);
+            for (int i = 0; i < rookLocations.Count; i++)
             {
                 int rookSpot = rookLocations[i];
                 GenerateOneRooksMoves(ref generatedMoves, board, rookSpot);
@@ -711,9 +742,9 @@ namespace DuckChess
                 return;
             }
             bool isWhite = board.turnColor == Piece.White;
-            Board.PieceList queenLocations = board.GetLocationOfPieces(Piece.Queen);
+            List<int> queenLocations = GetLocationOfPieces(board, Piece.Queen);
             int enemyColor = isWhite ? Piece.Black : Piece.White;
-            for (int i = 0; i < queenLocations.Length; i++)
+            for (int i = 0; i < queenLocations.Count; i++)
             {
                 int queenSpot = queenLocations[i];
                 GenerateOneQueensMoves(ref generatedMoves, board, queenSpot);
@@ -741,66 +772,130 @@ namespace DuckChess
                 return;
             }
             bool isWhite = board.turnColor == Piece.White;
-            int kingSpot = board.GetLocationOfPieces(Piece.King)[0];
+            List<int> kingSpots = GetLocationOfPieces(board, Piece.King);
+            int kingSpot = kingSpots.Count == 1 ? kingSpots[0] : -1;
+            if (kingSpot < 0)
+            {
+                board.isGameOver = true;
+                return;
+            }
             int enemyColor = isWhite ? Piece.Black : Piece.White;
-            int[] kingOffsets = { 1, -1, 8, -8, 9, -9, 7, -7 };
-
-            foreach (int offset in kingOffsets)
-            {
-                int targetSpot = kingSpot + offset;
-                if (IsKingInBoundsForOffset(kingSpot, offset) && (targetSpot < 0 || targetSpot > 63))
-                {
-                    Debug.Log("wut " + board.turnColor + " kingSpot " + kingSpot + " " + offset);
-                    Debug.Log(board.ToString());
-                }
-                if (IsKingInBoundsForOffset(kingSpot, offset) &&
-                    (Piece.PieceType(board[targetSpot]) == Piece.None ||
-                    Piece.Color(board[targetSpot]) == enemyColor))
-                {
-                    generatedMoves.Add(new Move(kingSpot, targetSpot));
-                }
-            }
-
-            // Castling
-            if (isWhite ? board.CastleKingSideW : board.CastleKingSideB)
-            {
-                if (Piece.PieceType(board[kingSpot + 1]) == Piece.None &&
-                    Piece.PieceType(board[kingSpot + 2]) == Piece.None &&
-                    Piece.PieceType(board[kingSpot + 3]) == Piece.Rook)
-                {
-                    generatedMoves.Add(new Move(kingSpot, kingSpot + 2, Move.Flag.Castling));
-                }
-            }
-
-            if (isWhite ? board.CastleQueenSideW : board.CastleQueenSideB)
-            {
-                if (Piece.PieceType(board[kingSpot - 1]) == Piece.None &&
-                    Piece.PieceType(board[kingSpot - 2]) == Piece.None &&
-                    Piece.PieceType(board[kingSpot - 3]) == Piece.None &&
-                    Piece.PieceType(board[kingSpot - 4]) == Piece.Rook)
-                {
-                    generatedMoves.Add(new Move(kingSpot, kingSpot - 2, Move.Flag.Castling));
-                }
-            }
-        }
-
-        private static bool IsKingInBoundsForOffset(int kingSpot, int offset) {
             bool isOnTopEdge = BoardInfo.GetRow(kingSpot) == 7;
             bool isOnBottomEdge = BoardInfo.GetRow(kingSpot) == 0;
             bool isOnLeftEdge = BoardInfo.GetFile(kingSpot) == 0;
             bool isOnRightEdge = BoardInfo.GetFile(kingSpot) == 7;
-            return offset switch
+            int potentialTarget = kingSpot + 7;
+            if (
+                !(isOnTopEdge || isOnLeftEdge) &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
             {
-                1 => !isOnRightEdge,
-                -1 => !isOnLeftEdge,
-                8 => !isOnTopEdge,
-                -8 => !isOnBottomEdge,
-                7 => !(isOnTopEdge || isOnLeftEdge),
-                -9 => !(isOnBottomEdge || isOnLeftEdge),
-                9 => !(isOnTopEdge || isOnRightEdge),
-                -7 => !(isOnBottomEdge || isOnRightEdge),
-                _ => false
-            };
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot + 8;
+            if (
+                !isOnTopEdge &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot + 9;
+            if (
+                !(isOnTopEdge || isOnRightEdge) &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot + 1;
+            if (
+                !isOnRightEdge &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot - 7;
+            if (
+                !(isOnBottomEdge || isOnRightEdge) &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot - 8;
+            if (
+                !isOnBottomEdge &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot - 9;
+            if (
+                !(isOnBottomEdge || isOnLeftEdge) &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot - 1;
+            if (
+                !isOnLeftEdge &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            // Remember to add castling
+            bool kingSideCastle = isWhite ? board.CastleKingSideW : board.CastleKingSideB;
+            bool queenSideCastle = isWhite ? board.CastleQueenSideW : board.CastleQueenSideB;
+            if (kingSideCastle)
+            {
+                if (
+                    Piece.PieceType(board[kingSpot + 1]) == Piece.None &&
+                    Piece.PieceType(board[kingSpot + 2]) == Piece.None
+                )
+                {
+                    if (Piece.PieceType(board[kingSpot + 3]) == Piece.Rook)
+                    {
+                        Move move = new Move(kingSpot, kingSpot + 2, Move.Flag.Castling);
+                        generatedMoves.Add(move);
+                    }
+                }
+            }
+            if (queenSideCastle)
+            {
+                if (
+                    Piece.PieceType(board[kingSpot - 1]) == Piece.None &&
+                    Piece.PieceType(board[kingSpot - 2]) == Piece.None &&
+                    Piece.PieceType(board[kingSpot - 3]) == Piece.None
+                )
+                {
+                    if (Piece.PieceType(board[kingSpot - 4]) == Piece.Rook)
+                    {
+                        Move move = new Move(kingSpot, kingSpot - 2, Move.Flag.Castling);
+                        generatedMoves.Add(move);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -812,7 +907,7 @@ namespace DuckChess
         public static void GenerateDuckMoves(ref List<Move> generatedMoves, Board board)
         {
             // The starting square for the duck (its current position).
-            int startSquare = board.GetLocationOfPieces(Piece.Duck)[0];
+            int startSquare = GetLocationOfDuck(board);
 
             // If the duck is not on the board, it starts at square 0.
             int firstDuckMoveFlag = Move.Flag.None;

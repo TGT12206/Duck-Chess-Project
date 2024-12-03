@@ -47,12 +47,6 @@ namespace DuckChess
         {
             if (startSearch)
             {
-                if (board.turnIsDuck)
-                {
-                    bestMove = topNode.child.moveToValue;
-                    ChooseMove(bestMove);
-                    return;
-                }
                 InitializeSearch();
             }
 
