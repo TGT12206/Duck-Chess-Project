@@ -10,7 +10,7 @@ namespace DuckChess
         public override string Type { get { return "AlphaBetaAIPlayer"; } }
         public override int Color { get; set; }
 
-        private const int NumActionsPerFrame = 1;
+        private const int NumActionsPerFrame = 100;
 
         private Board board;
         private BoardUI boardUI;
@@ -82,15 +82,6 @@ namespace DuckChess
 
         private void FinishSearch()
         {
-            // Search is complete
-            String dbgStr = "Looked at " + numMovesLookedAt + " moves before choosing\n";
-            dbgStr += "Turn is white: " + (board.turnColor == Piece.White) + "\n";
-            dbgStr += "Turn is duck: " + (board.turnIsDuck) + "\n";
-            dbgStr += "Piece: " + Piece.PieceStr(board[topNode.moveToValue.StartSquare]) + "\n";
-            dbgStr += topNode.ToString() + "\n";
-            dbgStr += board.ToString() + "\n";
-            dbgStr += searchBoard.ToString() + "\n";
-            Debug.Log(dbgStr);
             ChooseMove(bestMove);
             startSearch = true;
         }
@@ -157,8 +148,6 @@ namespace DuckChess
             if (parent.JudgeNewValue(node.value, node.moveFromParent, node) && currentDepth == 1)
             {
                 bestMove = node.moveFromParent;
-                Debug.Log("Changed best move to " + bestMove.ToString());
-                boardUI.AISelectPiece(bestMove);
             }
 
             parent.indexLeftOffAt++;

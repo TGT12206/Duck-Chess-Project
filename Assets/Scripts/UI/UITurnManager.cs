@@ -32,7 +32,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     {
         board.MakeMove(ref move);
         boardUI.LoadPosition(ref board, false, "");
-        Debug.Log("UI\n" + board.ToString());
+        //Debug.Log("UI\n" + board.ToString());
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -51,8 +51,8 @@ public class UITurnManager : MonoBehaviour, ITurnManager
         // placeholder
         HumanWhitePlayer = new HumanPlayer(boardUI, ref board, Piece.White);
         HumanBlackPlayer = new HumanPlayer(boardUI, ref board, Piece.Black);
-        AlphaBetaAIWhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 2, boardUI);
-        AlphaBetaAIBlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 2, boardUI);
+        AlphaBetaAIWhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 5, boardUI);
+        AlphaBetaAIBlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 5, boardUI);
 
         // Set the MakeMove method to be called whenever either player makes a move
         HumanWhitePlayer.OnMoveChosen.AddListener(MakeMove);

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Mono.Cecil.Cil;
 using UnityEngine;
 
 namespace DuckChess
@@ -27,7 +26,7 @@ namespace DuckChess
         public bool isGameOver;
 
         public int plyCount;
-        //public int numPlySinceLastEvent;
+        public int numPlySinceLastEvent;
 
         public List<Move> legalMoves;
 
@@ -57,7 +56,7 @@ namespace DuckChess
             winnerColor = otherBoard.winnerColor;
             isGameOver = otherBoard.isGameOver;
             plyCount = otherBoard.plyCount;
-            //numPlySinceLastEvent = numPlySinceLastEvent
+            numPlySinceLastEvent = otherBoard.numPlySinceLastEvent;
             // Clone legal moves
             legalMoves = new List<Move>(otherBoard.legalMoves);
         }
@@ -159,10 +158,36 @@ namespace DuckChess
              * - 
              * TO DO (LATER):
              * - castling
+             * -- the king goes from start to target (alr handled)
+             * -- the rook goes from initial pos to castled spot
+             * -- if the king moves, disable both castles
+             * -- if the rook moves, disable the right castling based on the exact row and col
              * -- if the move is a capture, check if it is an enemy rook
+             * --- if it is a rook disable the right castling based on exact row and col
              * - if it is a capture or a pawn move, reset the counter for a draw
              * - idk
              */
+
+            // Check if this is a capture, and if so, check if it is a rook or a king.
+            if (move.IsCapture)
+            {
+                int enemyPiece = Squares[move.TargetSquare];
+                // If it is a rook, disable castling
+                if (Piece.PieceType(enemyPiece) == Piece.Rook)
+                {
+                    DisableCastlingOnRookSide(move.TargetSquare, !isWhite);
+                }
+                else if (Piece.PieceType(enemyPiece) == Piece.King)
+                {
+                    isGameOver = true;
+                    winnerColor = turnColor;
+                }
+            }
+            // Check if this is a rook move, and if so, disable castling if first rook move
+            if (Piece.PieceType(Squares[move.StartSquare]) == Piece.Rook)
+            {
+                DisableCastlingOnRookSide(move.StartSquare, isWhite);
+            }
 
             #region place the piece on the target square
             int pieceToMove = Squares[move.StartSquare];
@@ -182,18 +207,27 @@ namespace DuckChess
                 Squares[move.StartSquare] = Piece.None;
             }
 
+            // If it is a king move, disable castling on both sides
+            if (Piece.PieceType(pieceToMove) == Piece.King)
+            {
+                if (isWhite)
+                {
+                    CastleKingSideW = false;
+                    CastleQueenSideW = false;
+                } else
+                {
+                    CastleKingSideB = false;
+                    CastleQueenSideB = false;
+                }
+            }
+            
             if (move.MoveFlag == Move.Flag.Castling)
             {
-                if (Squares[move.TargetSquare + 1] == Piece.Rook)
-                {
-                    Squares[move.TargetSquare + 1] = Piece.None;
-                    Squares[move.TargetSquare - 1] = Piece.Rook;
-                }
-                else if (Squares[move.TargetSquare - 1] == Piece.Rook)
-                {
-                    Squares[move.TargetSquare - 1] = Piece.None;
-                    Squares[move.TargetSquare + 1] = Piece.Rook;
-                }
+                bool isKingSide = move.TargetSquare > move.StartSquare;
+                int rookSpot = move.TargetSquare + (isKingSide ? 1 : -2);
+                int newRookSpot = move.TargetSquare + (isKingSide ? -1 : 1);
+                Squares[newRookSpot] = Squares[rookSpot];
+                Squares[rookSpot] = Piece.None;
             }
 
             if (move.MoveFlag == Move.Flag.PawnTwoForward)
@@ -219,33 +253,49 @@ namespace DuckChess
             if (Piece.PieceType(pieceToMove) == Piece.Pawn || move.IsCapture)
             {
                 // Reset the timer
-                // numPlySinceLastEvent = 0;
+                numPlySinceLastEvent = 0;
             } else
             {
                 // Add to the timer
-                // numPlySinceLastEvent++;
+                numPlySinceLastEvent++;
             }
         }
 
-        private void PromotePawn(Move move, bool isWhite)
+        private void DisableCastlingOnRookSide(int rookSpot, bool isWhiteRook)
         {
-            Squares[move.TargetSquare] = move.PromotionPieceType | (isWhite ? Piece.White : Piece.Black);
-            Squares[move.StartSquare] = Piece.None;
-        }
-
-        private void HandleCastling(Move move, bool isWhite)
-        {
-            bool isKingSide = move.TargetSquare > move.StartSquare;
-            int rookStart = isKingSide ? (isWhite ? 7 : 63) : (isWhite ? 0 : 56);
-            int rookEnd = isKingSide ? move.TargetSquare - 1 : move.TargetSquare + 1;
-
-            // Update squares for king
-            Squares[move.TargetSquare] = Squares[move.StartSquare];
-            Squares[move.StartSquare] = Piece.None;
-
-            // Update squares for the rook
-            Squares[rookEnd] = Squares[rookStart];
-            Squares[rookStart] = Piece.None;
+            int rook = Squares[rookSpot];
+            // Is on start square
+            bool isOnStartSquare = false;
+            int row = BoardInfo.GetRow(rook);
+            int file = BoardInfo.GetFile(rook);
+            int startRow = isWhiteRook ? 0 : 7;
+            int kingSideCol = 7;
+            int queenSideCol = 0;
+            isOnStartSquare = (row == startRow) && (file == kingSideCol || file == queenSideCol);
+            if (isOnStartSquare)
+            {
+                bool isKingSideRook = file == kingSideCol;
+                if (isKingSideRook)
+                {
+                    if (isWhiteRook)
+                    {
+                        CastleKingSideW = false;
+                    } else
+                    {
+                        CastleKingSideB = false;
+                    }
+                } else
+                {
+                    if (isWhiteRook)
+                    {
+                        CastleQueenSideW = false;
+                    }
+                    else
+                    {
+                        CastleQueenSideB = false;
+                    }
+                }
+            }
         }
 
         private void SwitchTurnForward()
@@ -262,6 +312,12 @@ namespace DuckChess
                 turnColor = turnColor == Piece.White ? Piece.Black : Piece.White;
                 GenerateNormalMoves();
             }
+            if (numPlySinceLastEvent >= 200)
+            {
+                // 50 move draw
+                isGameOver = true;
+                winnerColor = Piece.NoColor;
+            }
         }
 
         /// <summary>
@@ -273,8 +329,6 @@ namespace DuckChess
 
             bool isWhite = turnColor == Piece.White;
             UpdateBoard(ref move, isWhite);
-
-            Debug.Log("Just performed move for: " + turnColor + " move type: " + (turnIsDuck ? "Duck" : "Regular") + "\n" + move.ToString());
 
             SwitchTurnForward();
         }

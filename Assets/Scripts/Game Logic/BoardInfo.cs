@@ -92,8 +92,25 @@ namespace DuckChess
         public static bool IsIsolatedPawn(Board board, int pawnLocation, int color)
         {
             int file = GetFile(pawnLocation);
-            return CountPawnsInFile(board, file - 1, color) == 0 &&
-                   CountPawnsInFile(board, file + 1, color) == 0;
+            bool isIsolated = false;
+            bool leftFileEmpty = false;
+            bool rightFileEmpty = false;
+            if (file > 0)
+            {
+                leftFileEmpty = CountPawnsInFile(board, file - 1, color) == 0;
+            }
+            else
+            {
+                leftFileEmpty = true;
+            }
+            if (file < 7)
+            {
+                rightFileEmpty = CountPawnsInFile(board, file + 1, color) == 0;
+            } else
+            {
+                rightFileEmpty = true;
+            }
+            return leftFileEmpty && rightFileEmpty;
         }
 
         /// <summary>

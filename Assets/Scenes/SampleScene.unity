@@ -927,6 +927,10 @@ MonoBehaviour:
   haltForError: 0
   framesToWaitWhite: 1
   framesToWaitBlack: 1
+  WhiteIsBot: 1
+  BlackIsBot: 1
+  showWhiteSearchBoard: 1
+  showBlackSearchBoard: 0
   framesToWait: 1
   framesWaited: 0
 --- !u!4 &1854159110

@@ -13,10 +13,10 @@ namespace DuckChess
         private const int QueenValue = 9000;
         private const int KingValue = 100000;
 
-        //private const int CenterBonus = 20;
-        //private const int DoubledPawnPenalty = -20;
-        //private const int IsolatedPawnPenalty = -10;
-        //private const int KingSafetyPenalty = -50;
+        private const int CenterBonus = 20;
+        private const int DoubledPawnPenalty = -20;
+        private const int IsolatedPawnPenalty = -10;
+        private const int KingSafetyPenalty = -50;
 
         private static readonly HashSet<int> CenterSquares = new HashSet<int> { 27, 28, 35, 36 }; // Example indices for d4, d5, e4, e5
 
@@ -38,17 +38,17 @@ namespace DuckChess
 
                 int score = GetPieceValue(pieceType);
 
-                //// Positional bonus
-                //if (CenterSquares.Contains(pieceLocation))
-                //{
-                //    score += CenterBonus;
-                //}
+                // Positional bonus
+                if (CenterSquares.Contains(i))
+                {
+                    score += CenterBonus;
+                }
 
-                //// King safety penalty
-                //if (pieceType == Piece.King && IsKingExposed(board, pieceLocation))
-                //{
-                //    score += KingSafetyPenalty;
-                //}
+                // King safety penalty
+                if (pieceType == Piece.King && IsKingExposed(board, i))
+                {
+                    score += KingSafetyPenalty;
+                }
 
                 // Accumulate the score based on piece color
                 evaluation += (pieceColor == color) ? score : -score;
@@ -89,18 +89,18 @@ namespace DuckChess
         {
             int score = 0;
 
-            //foreach (int pawnLocation in BoardInfo.PawnLocations(board, color))
-            //{
-            //    if (IsDoubledPawn(board, pawnLocation, color))
-            //    {
-            //        score += DoubledPawnPenalty;
-            //    }
+            foreach (int pawnLocation in BoardInfo.PawnLocations(board, color))
+            {
+                if (IsDoubledPawn(board, pawnLocation, color))
+                {
+                    score += DoubledPawnPenalty;
+                }
 
-            //    if (IsIsolatedPawn(board, pawnLocation, color))
-            //    {
-            //        score += IsolatedPawnPenalty;
-            //    }
-            //}
+                if (IsIsolatedPawn(board, pawnLocation, color))
+                {
+                    score += IsolatedPawnPenalty;
+                }
+            }
 
             return score;
         }

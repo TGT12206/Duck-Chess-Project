@@ -50,13 +50,6 @@ namespace DuckChess
                     enPassantRow
                 );
             }
-
-            string moves = "ALL MOVES\n";
-            foreach (Move move in generatedMoves)
-            {
-                moves += "Piece: " + Piece.PieceStr(board[move.StartSquare]) + " | " + move.ToString() + "\n";
-            }
-            Debug.Log( moves );
         }
 
         public static List<int> GetLocationOfPieces(Board board, int pieceType)
@@ -87,7 +80,6 @@ namespace DuckChess
                     return i;
                 }
             }
-            Debug.Log("First Duck move");
             return Board.NOT_ON_BOARD;
         }
 
@@ -185,18 +177,14 @@ namespace DuckChess
 
         private static void GenerateEnPassantMoves(ref List<Move> generatedMoves, Board board, int pawnSpot, int findLeftCaptureSpot, int findRightCaptureSpot, int enPassantRow)
         {
-            Debug.Log("Legal Moves Check for En Passant");
             if (BoardInfo.GetRow(pawnSpot) == enPassantRow)
             {
                 int leftCaptureSpot = pawnSpot + findLeftCaptureSpot;
                 int rightCaptureSpot = pawnSpot + findRightCaptureSpot;
-                Debug.Log("On En Passant Row");
                 if (leftCaptureSpot == board.enPassantSquare || rightCaptureSpot == board.enPassantSquare)
                 {
-                    Debug.Log("En Passant Square is there");
                     if (board[board.enPassantSquare] != Piece.Duck)
                     {
-                        Debug.Log("Generating En Passant");
                         generatedMoves.Add(new Move(pawnSpot, board.enPassantSquare, Move.Flag.EnPassantCapture));
                     }
                 }
@@ -891,18 +879,6 @@ namespace DuckChess
                         Move move = new Move(kingSpot, kingSpot + 2, Move.Flag.Castling);
                         generatedMoves.Add(move);
                     }
-                    else
-                    {
-                        // The rook was captured, so castling isn't actually valid
-                        if (isWhite)
-                        {
-                            board.CastleKingSideW = false;
-                        }
-                        else
-                        {
-                            board.CastleKingSideB = false;
-                        }
-                    }
                 }
             }
             if (queenSideCastle)
@@ -917,18 +893,6 @@ namespace DuckChess
                     {
                         Move move = new Move(kingSpot, kingSpot - 2, Move.Flag.Castling);
                         generatedMoves.Add(move);
-                    }
-                    else
-                    {
-                        // The rook was captured, so castling isn't actually valid
-                        if (isWhite)
-                        {
-                            board.CastleQueenSideW = false;
-                        }
-                        else
-                        {
-                            board.CastleQueenSideB = false;
-                        }
                     }
                 }
             }
@@ -963,11 +927,6 @@ namespace DuckChess
 
                     // Create a duck move.
                     Move duckMove = new Move(startSquare, targetSquare, firstDuckMoveFlag);
-
-                    //if (duckMove.StartSquare == 0)
-                    //{
-                    //    Debug.Log(duckMove.ToString());
-                    //}
 
                     // Add the move to the list of generated moves.
                     generatedMoves.Add(duckMove);
