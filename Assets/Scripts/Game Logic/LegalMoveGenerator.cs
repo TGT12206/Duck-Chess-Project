@@ -31,6 +31,7 @@ namespace DuckChess
             int startRow = isWhite ? 1 : 6;
             int findCaptureSpotOnRight = isWhite ? 9 : -7;
             int findCaptureSpotOnLeft = isWhite ? 7 : -9;
+            int enPassantRow = isWhite ? 4 : 3;
             List<int> pawnLocations = GetLocationOfPieces(board, Piece.Pawn);
             for (int i = 0; i < pawnLocations.Count; i++)
             {
@@ -45,7 +46,8 @@ namespace DuckChess
                     rowBeforePromotion,
                     startRow,
                     findCaptureSpotOnRight,
-                    findCaptureSpotOnLeft
+                    findCaptureSpotOnLeft,
+                    enPassantRow
                 );
             }
 
@@ -85,6 +87,7 @@ namespace DuckChess
                     return i;
                 }
             }
+            Debug.Log("First Duck move");
             return Board.NOT_ON_BOARD;
         }
 
@@ -98,12 +101,13 @@ namespace DuckChess
             int rowBeforePromotion,
             int startRow,
             int findCaptureSpotOnRight,
-            int findCaptureSpotOnLeft
+            int findCaptureSpotOnLeft,
+            int enPassantRow
         )
         {
             GeneratePawnForwardMoves(ref generatedMoves, board, pawnSpot, isWhite, findSpotOneFront, rowBeforePromotion, startRow);
             GeneratePawnCaptureMoves(ref generatedMoves, board, pawnSpot, enemyColor, findCaptureSpotOnRight, findCaptureSpotOnLeft, rowBeforePromotion);
-            GenerateEnPassantMoves(ref generatedMoves, board, pawnSpot, findCaptureSpotOnLeft, findCaptureSpotOnRight);
+            GenerateEnPassantMoves(ref generatedMoves, board, pawnSpot, findCaptureSpotOnLeft, findCaptureSpotOnRight, enPassantRow);
 
         }
 
@@ -116,9 +120,10 @@ namespace DuckChess
             int startRow = isWhite ? 1 : 6;
             int findCaptureSpotOnRight = isWhite ? 9 : -7;
             int findCaptureSpotOnLeft = isWhite ? 7 : -9;
+            int enPassantRow = isWhite ? 4 : 3;
             GeneratePawnForwardMoves(ref generatedMoves, board, pawnSpot, isWhite, findSpotOneFront, rowBeforePromotion, startRow);
             GeneratePawnCaptureMoves(ref generatedMoves, board, pawnSpot, enemyColor, findCaptureSpotOnRight, findCaptureSpotOnLeft, rowBeforePromotion);
-            GenerateEnPassantMoves(ref generatedMoves, board, pawnSpot, findCaptureSpotOnLeft, findCaptureSpotOnRight);
+            GenerateEnPassantMoves(ref generatedMoves, board, pawnSpot, findCaptureSpotOnLeft, findCaptureSpotOnRight, enPassantRow);
         }
 
         private static void GeneratePawnForwardMoves(ref List<Move> generatedMoves, Board board, int pawnSpot, bool isWhite, int findSpotOneFront, int rowBeforePromotion, int startRow)
@@ -178,14 +183,20 @@ namespace DuckChess
             }
         }
 
-        private static void GenerateEnPassantMoves(ref List<Move> generatedMoves, Board board, int pawnSpot, int leftCaptureSpot, int rightCaptureSpot)
+        private static void GenerateEnPassantMoves(ref List<Move> generatedMoves, Board board, int pawnSpot, int findLeftCaptureSpot, int findRightCaptureSpot, int enPassantRow)
         {
-            if (BoardInfo.GetRow(pawnSpot) == 4)
+            Debug.Log("Legal Moves Check for En Passant");
+            if (BoardInfo.GetRow(pawnSpot) == enPassantRow)
             {
+                int leftCaptureSpot = pawnSpot + findLeftCaptureSpot;
+                int rightCaptureSpot = pawnSpot + findRightCaptureSpot;
+                Debug.Log("On En Passant Row");
                 if (leftCaptureSpot == board.enPassantSquare || rightCaptureSpot == board.enPassantSquare)
                 {
+                    Debug.Log("En Passant Square is there");
                     if (board[board.enPassantSquare] != Piece.Duck)
                     {
+                        Debug.Log("Generating En Passant");
                         generatedMoves.Add(new Move(pawnSpot, board.enPassantSquare, Move.Flag.EnPassantCapture));
                     }
                 }
@@ -980,6 +991,11 @@ namespace DuckChess
 
                     // Create a duck move.
                     Move duckMove = new Move(startSquare, targetSquare, firstDuckMoveFlag);
+
+                    //if (duckMove.StartSquare == 0)
+                    //{
+                    //    Debug.Log(duckMove.ToString());
+                    //}
 
                     // Add the move to the list of generated moves.
                     generatedMoves.Add(duckMove);

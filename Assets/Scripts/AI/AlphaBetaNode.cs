@@ -13,23 +13,25 @@ namespace DuckChess
         public int indexLeftOffAt;
         public Move moveToValue;
         public AlphaBetaNode child;
-        public Board.PreviousBoardInfo InfoToUndoMove;
-        public Move moveFromParent { get { return InfoToUndoMove.moveBackToPreviousBoard; } }
-        public AlphaBetaNode(int alpha, int beta, bool isMaximizing)
+        public Board currentBoard;
+        public Move moveFromParent;
+        public AlphaBetaNode(int alpha, int beta, bool isMaximizing, Board board)
         {
             this.alpha = alpha;
             this.beta = beta;
             this.isMaximizing = isMaximizing;
             indexLeftOffAt = 0;
             value = isMaximizing ? alpha : beta;
+            currentBoard = board;
         }
-        public AlphaBetaNode(int alpha, int beta, bool isMaximizing, PreviousBoardInfo InfoToUndoMove)
+        public AlphaBetaNode(int alpha, int beta, bool isMaximizing, Board board, Move moveFromParent)
         {
             this.alpha = alpha;
             this.beta = beta;
             this.isMaximizing = isMaximizing;
             indexLeftOffAt = 0;
-            this.InfoToUndoMove = InfoToUndoMove;
+            currentBoard = board;
+            this.moveFromParent = moveFromParent;
             value = isMaximizing ? alpha : beta;
         }
 

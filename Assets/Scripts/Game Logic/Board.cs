@@ -10,37 +10,26 @@ namespace DuckChess
     /// </summary>
     public class Board
     {
-        public int[] Squares;
-
         public const int NOT_ON_BOARD = -2; // 63 is max
 
-        #region Turn Information
+        public int[] Squares;
+
         public int turnColor;
         public bool isWhite { get { return turnColor == Piece.White; } }
-        public bool turnIsDuck = false;
-        #endregion
+        public bool turnIsDuck;
 
         public int enPassantSquare;
 
-        #region Castling Info
         public bool CastleKingSideW, CastleQueenSideW;
         public bool CastleKingSideB, CastleQueenSideB;
 
-        private int PlyWhereLostKingSideCastleW, PlyWhereLostQueenSideCastleW;
-        private int PlyWhereLostKingSideCastleB, PlyWhereLostQueenSideCastleB;
-        #endregion
-
-        #region Game End Info
         public int winnerColor;
         public bool isGameOver;
 
         public int plyCount;
         //public int numPlySinceLastEvent;
-        #endregion
 
-        #region Lists of Legal Moves
         public List<Move> legalMoves;
-        #endregion
 
         public int this[int index]
         {
@@ -54,6 +43,24 @@ namespace DuckChess
             ResetBoardState();
         }
 
+        public Board(Board otherBoard)
+        {
+            Squares = new int[64];
+            Array.Copy(otherBoard.Squares, Squares, 64);
+            turnColor = otherBoard.turnColor;
+            turnIsDuck = otherBoard.turnIsDuck;
+            enPassantSquare = otherBoard.enPassantSquare;
+            CastleKingSideW = otherBoard.CastleKingSideW;
+            CastleQueenSideW = otherBoard.CastleQueenSideW;
+            CastleKingSideB = otherBoard.CastleKingSideB;
+            CastleQueenSideB = otherBoard.CastleQueenSideB;
+            winnerColor = otherBoard.winnerColor;
+            isGameOver = otherBoard.isGameOver;
+            plyCount = otherBoard.plyCount;
+            //numPlySinceLastEvent = numPlySinceLastEvent
+            // Clone legal moves
+            legalMoves = new List<Move>(otherBoard.legalMoves);
+        }
 
         /// <summary>
         /// Checks whether the given move is legal in the current board position.
@@ -62,11 +69,6 @@ namespace DuckChess
         /// <returns>True if the move is legal, otherwise false.</returns>
         public bool IsMoveLegal(ref Move move)
         {
-            // If this move looks like a capture, make it a capture
-            if (this[move.TargetSquare] != Piece.None)
-            {
-                move = new Move(move, this[move.TargetSquare]);
-            }
             // Iterate through all generated legal moves for the current position
             foreach (Move legalMove in legalMoves)
             {
@@ -78,35 +80,6 @@ namespace DuckChess
             return false; // The move is not legal
         }
 
-        public Board Clone()
-        {
-            // Create a new board instance
-            Board copy = new Board
-            {
-                Squares = (int[])Squares.Clone(),
-                turnColor = turnColor,
-                turnIsDuck = turnIsDuck,
-                enPassantSquare = enPassantSquare,
-                CastleKingSideW = CastleKingSideW,
-                CastleQueenSideW = CastleQueenSideW,
-                CastleKingSideB = CastleKingSideB,
-                CastleQueenSideB = CastleQueenSideB,
-                PlyWhereLostKingSideCastleW = PlyWhereLostKingSideCastleW,
-                PlyWhereLostQueenSideCastleW = PlyWhereLostQueenSideCastleW,
-                PlyWhereLostKingSideCastleB = PlyWhereLostKingSideCastleB,
-                PlyWhereLostQueenSideCastleB = PlyWhereLostQueenSideCastleB,
-                winnerColor = winnerColor,
-                isGameOver = isGameOver,
-                plyCount = plyCount //,
-                //numPlySinceLastEvent = numPlySinceLastEvent
-            };
-            // Clone legal moves
-            copy.legalMoves = new List<Move>(legalMoves);
-
-            return copy;
-        }
-
-
         private void ResetBoardState()
         {
             legalMoves = new List<Move>();
@@ -117,8 +90,6 @@ namespace DuckChess
             isGameOver = false;
             //numPlySinceLastEvent = 0;
             plyCount = 0;
-            PlyWhereLostKingSideCastleW = PlyWhereLostQueenSideCastleW = NOT_ON_BOARD;
-            PlyWhereLostKingSideCastleB = PlyWhereLostQueenSideCastleB = NOT_ON_BOARD;
             enPassantSquare = -1;
         }
 
@@ -147,6 +118,7 @@ namespace DuckChess
 
             PlaceKings();
             turnColor = Piece.White;
+            turnIsDuck = false;
             GenerateNormalMoves();
         }
 
@@ -212,7 +184,7 @@ namespace DuckChess
 
             if (move.MoveFlag == Move.Flag.PawnTwoForward)
             {
-                enPassantSquare = move.TargetSquare;
+                enPassantSquare = move.TargetSquare + (isWhite ? -8 : 8);
             }
             else if (!turnIsDuck)
             {
@@ -239,17 +211,6 @@ namespace DuckChess
                 // Add to the timer
                 // numPlySinceLastEvent++;
             }
-
-            String dbgStr = "Updating board (move attempt).\n";
-            dbgStr += "Turn is white: " + (turnColor == Piece.White) + "\n";
-            dbgStr += "turn is duck: " + turnIsDuck + "\n";
-            dbgStr += "Piece: " + Piece.PieceStr(pieceToMove) + "\n";
-            dbgStr += "Is white: " + isWhite + "\n";
-            dbgStr += "Move: " + move + "\n";
-            dbgStr += "Board: " + this + "\n";
-            Debug.Log(dbgStr);
-
-            Debug.Log("After attempt:\nBoard: " + this);
         }
 
         private void PromotePawn(Move move, bool isWhite)
@@ -292,31 +253,16 @@ namespace DuckChess
         /// <summary>
         /// Makes a move on the board and updates its state.
         /// </summary>
-        public PreviousBoardInfo MakeMove(ref Move move)
+        public void MakeMove(ref Move move)
         {
             plyCount++;
 
             bool isWhite = turnColor == Piece.White;
-            PreviousBoardInfo infoToStore = StoreInfoToUnmakeMove(move);
             UpdateBoard(ref move, isWhite);
 
             Debug.Log("Just performed move for: " + turnColor + " move type: " + (turnIsDuck ? "Duck" : "Regular") + "\n" + move.ToString());
 
             SwitchTurnForward();
-            return infoToStore;
-        }
-
-        private PreviousBoardInfo StoreInfoToUnmakeMove(Move move)
-        {
-            PreviousBoardInfo infoToStore = new PreviousBoardInfo();
-            infoToStore.moveBackToPreviousBoard = move;
-            infoToStore.enPassantSquare = enPassantSquare;
-            infoToStore.turnColor = turnColor;
-            infoToStore.turnIsDuck = turnIsDuck;
-            infoToStore.legalMoves = new List<Move>(legalMoves);
-            infoToStore.squares = new int[Squares.Length];
-            Array.Copy(Squares, infoToStore.squares, Squares.Length);
-            return infoToStore;
         }
 
         private void GenerateNormalMoves()
@@ -343,40 +289,6 @@ namespace DuckChess
                 boardString += "\n";
             }
             return boardString;
-        }
-
-
-        /// <summary>
-        /// Reverts the given move, restoring the previous board state.
-        /// </summary>
-        /// <param name="move">The move to undo.</param>
-        /// <param name="previousNumPlySinceLastEvent">The draw counter value before the move was made.</param>
-        public void UnmakeMove(PreviousBoardInfo previousBoardInfo)
-        {
-            Move move = previousBoardInfo.moveBackToPreviousBoard;
-
-            // Set the board info back to what it was before
-            plyCount--;
-            enPassantSquare = previousBoardInfo.enPassantSquare;
-            turnColor = previousBoardInfo.turnColor;
-            turnIsDuck = previousBoardInfo.turnIsDuck;
-            legalMoves = previousBoardInfo.legalMoves;
-            Squares = previousBoardInfo.squares;
-        }
-
-        /// <summary>
-        /// Stores all of the info that can't easily be undone,
-        /// such as the draw counter that is sometimes reset.
-        /// </summary>
-        public class PreviousBoardInfo
-        {
-            public Move moveBackToPreviousBoard;
-            // int previousNumPlySinceLastEvent;
-            internal int enPassantSquare;
-            internal int turnColor;
-            internal bool turnIsDuck;
-            internal List<Move> legalMoves;
-            internal int[] squares;
         }
     }
 

@@ -57,7 +57,8 @@ public class BoardUI : MonoBehaviour
     /// </summary>
     private const int DRAG_LAYER = -3;
 
-    private int selectedSquare;
+    private int selectedStartSquare;
+    private int selectedTargetSquare;
 
     public Camera cam;
 
@@ -68,16 +69,19 @@ public class BoardUI : MonoBehaviour
         Circles = null;
         highlightedMoves = new List<Move>();
         board = null;
-        selectedSquare = 0;
+        selectedStartSquare = 0;
         boardType.text = "Real Board";
         displayIsDuckTurn.text = "Normal Turn";
     }
 
     public void AISelectPiece(Move move)
     {
-        Circles[selectedSquare].SetActive(false);
-        selectedSquare = move.TargetSquare;
-        Circles[move.TargetSquare].SetActive(true);
+        Circles[selectedStartSquare].SetActive(false);
+        Circles[selectedTargetSquare].SetActive(false);
+        selectedStartSquare = move.StartSquare;
+        selectedTargetSquare = move.TargetSquare;
+        Circles[selectedStartSquare].SetActive(true);
+        Circles[selectedTargetSquare].SetActive(true);
     }
 
     public void SelectPiece(int square)
@@ -86,7 +90,7 @@ public class BoardUI : MonoBehaviour
         {
             SelectDuckInitially();
         }
-        selectedSquare = square;
+        selectedStartSquare = square;
         highlightedMoves.Clear();
         LegalMoveGenerator.GenerateForOnePiece(ref highlightedMoves, board, square);
         foreach (Move move in highlightedMoves)
@@ -97,7 +101,7 @@ public class BoardUI : MonoBehaviour
 
     public void SelectDuckInitially()
     {
-        selectedSquare = 0;
+        selectedStartSquare = 0;
         highlightedMoves.Clear();
         LegalMoveGenerator.GenerateDuckMoves(ref highlightedMoves, board);
         foreach (Move move in highlightedMoves)
@@ -110,13 +114,13 @@ public class BoardUI : MonoBehaviour
     {
         Vector2 position = cam.ScreenToWorldPoint(Input.mousePosition);
         Vector3 newPosition = new Vector3(position.x, position.y, DRAG_LAYER);
-        Pieces[selectedSquare].transform.position = newPosition;
+        Pieces[selectedStartSquare].transform.position = newPosition;
     }
 
 
     public void SnapPieceBack()
     {
-        Pieces[selectedSquare].transform.position = SquareToWorldCoordinates(selectedSquare, PLACE_LAYER);
+        Pieces[selectedStartSquare].transform.position = SquareToWorldCoordinates(selectedStartSquare, PLACE_LAYER);
         foreach (Move possibleMove in highlightedMoves)
         {
             Circles[possibleMove.TargetSquare].SetActive(false);
@@ -127,7 +131,7 @@ public class BoardUI : MonoBehaviour
     public void CancelSelection()
     {
         SnapPieceBack();
-        selectedSquare = -1;
+        selectedStartSquare = -1;
     }
     private void GetPrefabOfPiece(ref GameObject whereToPlacePrefab, int piece)
     {

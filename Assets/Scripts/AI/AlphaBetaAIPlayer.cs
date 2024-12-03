@@ -26,7 +26,7 @@ namespace DuckChess
         private AlphaBetaNode topNode;
 
         // Debugging, can delete
-        private int movesLookedAt;
+        private int numMovesLookedAt;
 
         public AlphaBetaAIPlayer(Board board, int color, int maxDepth, BoardUI boardUI)
         {
@@ -39,16 +39,7 @@ namespace DuckChess
 
         public override void Update()
         {
-            try
-            {
-                LookForBestMove();
-            }
-            catch (Exception e)
-            {
-                Debug.Log("Invalid Move" + movesLookedAt + "\n" + topNode.ToString() + "\n" + board.ToString() + "\n" + searchBoard.ToString() + "\n");
-                Debug.LogException(e);
-                throw e;
-            }
+            LookForBestMove();
         }
 
         private void LookForBestMove()
@@ -60,7 +51,6 @@ namespace DuckChess
 
             for (int i = 0; i < NumActionsPerFrame; i++)
             {
-                boardUI.LoadPosition(ref searchBoard, true, "Depth: " + currentDepth);
                 AlphaBetaNode currentNode = alphaBetaNodes.Peek();
 
                 if (currentDepth < maxDepth && !searchBoard.isGameOver && currentNode.indexLeftOffAt < legalMoves.Count)
@@ -92,7 +82,7 @@ namespace DuckChess
         private void FinishSearch()
         {
             // Search is complete
-            String dbgStr = "Chose Node: " + movesLookedAt + "\n";
+            String dbgStr = "Looked at " + numMovesLookedAt + " moves before choosing\n";
             dbgStr += "Turn is white: " + (board.turnColor == Piece.White) + "\n";
             dbgStr += "Turn is duck: " + (board.turnIsDuck) + "\n";
             dbgStr += "Piece: " + Piece.PieceStr(board[topNode.moveToValue.StartSquare]) + "\n";
@@ -107,35 +97,31 @@ namespace DuckChess
         private void InitializeSearch()
         {
             bestMove = new Move();
-            searchBoard = board.Clone();
+            searchBoard = new Board(board);
             legalMoves = searchBoard.legalMoves;
             alphaBetaNodes = new Stack<AlphaBetaNode>();
-            topNode = new AlphaBetaNode(int.MinValue, int.MaxValue, true);
+            topNode = new AlphaBetaNode(int.MinValue, int.MaxValue, true, new Board(searchBoard));
             alphaBetaNodes.Push(topNode);
             currentDepth = 1;
             startSearch = false;
-            movesLookedAt = 0;
+            numMovesLookedAt = 0;
         }
 
         private void ExpandNode()
         {
             currentDepth++;
-            movesLookedAt++;
+            numMovesLookedAt++;
             AlphaBetaNode parent = alphaBetaNodes.Peek();
             int indexOfNextMove = parent.indexLeftOffAt;
             Move nextMove = legalMoves[indexOfNextMove];
 
-            if (nextMove.StartSquare == 33 && nextMove.TargetSquare == 24)
-            {
-                Debug.Log("Search Board: " + searchBoard.ToString());
-            }
+            boardUI.AISelectPiece(nextMove);
+            boardUI.LoadPosition(ref searchBoard, true, "Depth: " + currentDepth);
 
-            bool isMaximizing = searchBoard.turnIsDuck ? !parent.isMaximizing : parent.isMaximizing;
-
-            // Making a move on a board saves any captured piece onto the move,
-            // so we need to make the move before saving.
-            Board.PreviousBoardInfo undoMoveInfo = searchBoard.MakeMove(ref nextMove);
-            AlphaBetaNode newNode = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, undoMoveInfo);
+            // Make the new node
+            searchBoard.MakeMove(ref nextMove);
+            bool isMaximizing = searchBoard.turnColor == Color;
+            AlphaBetaNode newNode = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, new Board(searchBoard), nextMove);
 
             legalMoves = searchBoard.legalMoves;
             alphaBetaNodes.Push(newNode);
@@ -151,18 +137,22 @@ namespace DuckChess
 
             currentDepth--;
 
+            boardUI.AISelectPiece(node.moveFromParent);
+            boardUI.LoadPosition(ref searchBoard, true, "Depth: " + currentDepth);
+
             if (currentDepth == 0)
             {
                 return true;
             }
 
             AlphaBetaNode parent = alphaBetaNodes.Peek();
-            searchBoard.UnmakeMove(node.InfoToUndoMove);
+            searchBoard = new Board(parent.currentBoard);
             legalMoves = searchBoard.legalMoves;
 
             if (parent.JudgeNewValue(node.value, node.moveFromParent, node) && currentDepth == 1)
             {
                 bestMove = node.moveFromParent;
+                Debug.Log("Changed best move to " + bestMove.ToString());
                 boardUI.AISelectPiece(bestMove);
             }
 
