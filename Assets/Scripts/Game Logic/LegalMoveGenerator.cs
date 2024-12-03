@@ -56,7 +56,7 @@ namespace DuckChess
             {
                 moves += "Piece: " + Piece.PieceStr(board[move.StartSquare]) + " | " + move.ToString() + "\n";
             }
-            Debug.Log( moves );
+           // Debug.Log( moves );
         }
 
         public static List<int> GetLocationOfPieces(Board board, int pieceType)
@@ -185,18 +185,18 @@ namespace DuckChess
 
         private static void GenerateEnPassantMoves(ref List<Move> generatedMoves, Board board, int pawnSpot, int findLeftCaptureSpot, int findRightCaptureSpot, int enPassantRow)
         {
-            Debug.Log("Legal Moves Check for En Passant");
+            //Debug.Log("Legal Moves Check for En Passant");
             if (BoardInfo.GetRow(pawnSpot) == enPassantRow)
             {
                 int leftCaptureSpot = pawnSpot + findLeftCaptureSpot;
                 int rightCaptureSpot = pawnSpot + findRightCaptureSpot;
-                Debug.Log("On En Passant Row");
+                //Debug.Log("On En Passant Row");
                 if (leftCaptureSpot == board.enPassantSquare || rightCaptureSpot == board.enPassantSquare)
                 {
-                    Debug.Log("En Passant Square is there");
+                    //Debug.Log("En Passant Square is there");
                     if (board[board.enPassantSquare] != Piece.Duck)
                     {
-                        Debug.Log("Generating En Passant");
+                        //Debug.Log("Generating En Passant");
                         generatedMoves.Add(new Move(pawnSpot, board.enPassantSquare, Move.Flag.EnPassantCapture));
                     }
                 }

@@ -51,8 +51,8 @@ public class UITurnManager : MonoBehaviour, ITurnManager
         // placeholder
         HumanWhitePlayer = new HumanPlayer(boardUI, ref board, Piece.White);
         HumanBlackPlayer = new HumanPlayer(boardUI, ref board, Piece.Black);
-        AlphaBetaAIWhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 2, boardUI);
-        AlphaBetaAIBlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 2, boardUI);
+        AlphaBetaAIWhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 5, boardUI);
+        AlphaBetaAIBlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 5, boardUI);
 
         // Set the MakeMove method to be called whenever either player makes a move
         HumanWhitePlayer.OnMoveChosen.AddListener(MakeMove);

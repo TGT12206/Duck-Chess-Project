@@ -10,7 +10,7 @@ namespace DuckChess
         public override string Type { get { return "AlphaBetaAIPlayer"; } }
         public override int Color { get; set; }
 
-        private const int NumActionsPerFrame = 1;
+        private const int NumActionsPerFrame = 5;
 
         private Board board;
         private BoardUI boardUI;

@@ -104,5 +104,61 @@ namespace DuckChess
             int file = GetFile(kingLocation);
             return IsOpenFile(board, file);
         }
+
+        /// <summary>
+        /// Calculates the rank (row) number of a given square (0 to 7 for rows 1 to 8).
+        /// </summary>
+        /// <param name="square">The square index (0 to 63).</param>
+        /// <returns>The rank (row) number (0 to 7).</returns>
+        public static int GetRank(int square)
+        {
+            return GetRow(square);
+        }
+
+        /// <summary>
+        /// Calculates the square index from a given rank and file.
+        /// </summary>
+        /// <param name="rank">The rank (row) number (0 to 7).</param>
+        /// <param name="file">The file (column) number (0 to 7).</param>
+        /// <returns>The square index (0 to 63).</returns>
+        public static int GetSquare(int rank, int file)
+        {
+            return rank * 8 + file;
+        }
+
+        /// <summary>
+        /// Finds the location of the king of the specified color.
+        /// </summary>
+        /// <param name="board">The board to analyze.</param>
+        /// <param name="color">The color of the king to locate (Piece.White or Piece.Black).</param>
+        /// <returns>The square index of the king (0 to 63) or -1 if not found.</returns>
+        public static int KingLocation(Board board, int color)
+        {
+            for (int square = 0; square < board.Squares.Length; square++)
+            {
+                int piece = board.Squares[square];
+                if (Piece.PieceType(piece) == Piece.King && Piece.Color(piece) == color)
+                {
+                    return square;
+                }
+            }
+            return -1; // King not found
+        }
+
+        /// <summary>
+        /// Finds the position of the duck on the board.
+        /// </summary>
+        public static int GetDuckPosition(Board board)
+        {
+            for (int square = 0; square < board.Squares.Length; square++)
+            {
+                int piece = board.Squares[square];
+                if (Piece.PieceType(piece) == Piece.Duck)
+                {
+                    return square;
+                }
+            }
+            return -1; // Duck not found
+        }
     }
 }

@@ -274,7 +274,12 @@ namespace DuckChess
             bool isWhite = turnColor == Piece.White;
             UpdateBoard(ref move, isWhite);
 
-            Debug.Log("Just performed move for: " + turnColor + " move type: " + (turnIsDuck ? "Duck" : "Regular") + "\n" + move.ToString());
+            if (Squares[move.TargetSquare] == Piece.King)
+            {
+
+            }
+
+            //Debug.Log("Just performed move for: " + turnColor + " move type: " + (turnIsDuck ? "Duck" : "Regular") + "\n" + move.ToString());
 
             SwitchTurnForward();
         }
