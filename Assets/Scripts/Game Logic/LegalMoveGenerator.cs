@@ -575,9 +575,9 @@ namespace DuckChess
 
         public static void GenerateOneRooksMoves(ref List<Move> generatedMoves, Board board, int rookSpot)
         {
-            //bool isWhite = board.turnColor == Piece.White;
-            //int enemyColor = isWhite ? Piece.Black : Piece.White;
-            //GenerateOrthogonalMoves(ref generatedMoves, board, rookSpot, enemyColor);
+            bool isWhite = board.turnColor == Piece.White;
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
+            GenerateOrthogonalMoves(ref generatedMoves, board, rookSpot, enemyColor);
         }
 
         private static void GenerateOrthogonalMoves(ref List<Move> generatedMoves, Board board, int spotOfPieceMoving, int enemyColor)
@@ -765,10 +765,10 @@ namespace DuckChess
 
         public static void GenerateOneQueensMoves(ref List<Move> generatedMoves, Board board, int queenSpot)
         {
-            //bool isWhite = board.turnColor == Piece.White;
-            //int enemyColor = isWhite ? Piece.Black : Piece.White;
-            //GenerateDiagonalMoves(ref generatedMoves, board, queenSpot, enemyColor);
-            //GenerateOrthogonalMoves(ref generatedMoves, board, queenSpot, enemyColor);
+            bool isWhite = board.turnColor == Piece.White;
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
+            GenerateDiagonalMoves(ref generatedMoves, board, queenSpot, enemyColor);
+            GenerateOrthogonalMoves(ref generatedMoves, board, queenSpot, enemyColor);
         }
 
         /// <summary>
@@ -779,151 +779,159 @@ namespace DuckChess
         /// <param name="board">The board to use while checking for legal moves</param>
         public static void GenerateKingMoves(ref List<Move> generatedMoves, Board board)
         {
-            //if (board.isGameOver)
-            //{
-            //    return;
-            //}
-            //bool isWhite = board.turnColor == Piece.White;
-            //int kingSpot = isWhite ? board.WhiteKing : board.BlackKing;
-            //int enemyColor = isWhite ? Piece.Black : Piece.White;
-            //bool isOnTopEdge = BoardInfo.GetRow(kingSpot) == 7;
-            //bool isOnBottomEdge = BoardInfo.GetRow(kingSpot) == 0;
-            //bool isOnLeftEdge = BoardInfo.GetFile(kingSpot) == 0;
-            //bool isOnRightEdge = BoardInfo.GetFile(kingSpot) == 7;
-            //int potentialTarget = kingSpot + 7;
-            //if (
-            //    !(isOnTopEdge || isOnLeftEdge) &&
-            //    (Piece.PieceType(board[potentialTarget]) == Piece.None ||
-            //    Piece.Color(board[potentialTarget]) == enemyColor)
-            //)
-            //{
-            //    Move move = new Move(kingSpot, potentialTarget);
-            //    generatedMoves.Add(move);
-            //}
-            //potentialTarget = kingSpot + 8;
-            //if (
-            //    !isOnTopEdge &&
-            //    (Piece.PieceType(board[potentialTarget]) == Piece.None ||
-            //    Piece.Color(board[potentialTarget]) == enemyColor)
-            //)
-            //{
-            //    Move move = new Move(kingSpot, potentialTarget);
-            //    generatedMoves.Add(move);
-            //}
-            //potentialTarget = kingSpot + 9;
-            //if (
-            //    !(isOnTopEdge || isOnRightEdge) &&
-            //    (Piece.PieceType(board[potentialTarget]) == Piece.None ||
-            //    Piece.Color(board[potentialTarget]) == enemyColor)
-            //)
-            //{
-            //    Move move = new Move(kingSpot, potentialTarget);
-            //    generatedMoves.Add(move);
-            //}
-            //potentialTarget = kingSpot + 1;
-            //if (
-            //    !isOnRightEdge &&
-            //    (Piece.PieceType(board[potentialTarget]) == Piece.None ||
-            //    Piece.Color(board[potentialTarget]) == enemyColor)
-            //)
-            //{
-            //    Move move = new Move(kingSpot, potentialTarget);
-            //    generatedMoves.Add(move);
-            //}
-            //potentialTarget = kingSpot - 7;
-            //if (
-            //    !(isOnBottomEdge || isOnRightEdge) &&
-            //    (Piece.PieceType(board[potentialTarget]) == Piece.None ||
-            //    Piece.Color(board[potentialTarget]) == enemyColor)
-            //)
-            //{
-            //    Move move = new Move(kingSpot, potentialTarget);
-            //    generatedMoves.Add(move);
-            //}
-            //potentialTarget = kingSpot - 8;
-            //if (
-            //    !isOnBottomEdge &&
-            //    (Piece.PieceType(board[potentialTarget]) == Piece.None ||
-            //    Piece.Color(board[potentialTarget]) == enemyColor)
-            //)
-            //{
-            //    Move move = new Move(kingSpot, potentialTarget);
-            //    generatedMoves.Add(move);
-            //}
-            //potentialTarget = kingSpot - 9;
-            //if (
-            //    !(isOnBottomEdge || isOnLeftEdge) &&
-            //    (Piece.PieceType(board[potentialTarget]) == Piece.None ||
-            //    Piece.Color(board[potentialTarget]) == enemyColor)
-            //)
-            //{
-            //    Move move = new Move(kingSpot, potentialTarget);
-            //    generatedMoves.Add(move);
-            //}
-            //potentialTarget = kingSpot - 1;
-            //if (
-            //    !isOnLeftEdge &&
-            //    (Piece.PieceType(board[potentialTarget]) == Piece.None ||
-            //    Piece.Color(board[potentialTarget]) == enemyColor)
-            //)
-            //{
-            //    Move move = new Move(kingSpot, potentialTarget);
-            //    generatedMoves.Add(move);
-            //}
-            //// Remember to add castling
-            //bool kingSideCastle = isWhite ? board.CastleKingSideW : board.CastleKingSideB;
-            //bool queenSideCastle = isWhite ? board.CastleQueenSideW : board.CastleQueenSideB;
-            //if (kingSideCastle)
-            //{
-            //    if (
-            //        Piece.PieceType(board[kingSpot + 1]) == Piece.None &&
-            //        Piece.PieceType(board[kingSpot + 2]) == Piece.None
-            //    )
-            //    {
-            //        if (Piece.PieceType(board[kingSpot + 3]) == Piece.Rook)
-            //        {
-            //            Move move = new Move(kingSpot, kingSpot + 2, Move.Flag.Castling);
-            //            generatedMoves.Add(move);
-            //        } else
-            //        {
-            //            // The rook was captured, so castling isn't actually valid
-            //            if (isWhite)
-            //            {
-            //                board.CastleKingSideW = false;
-            //            } else
-            //            {
-            //                board.CastleKingSideB = false;
-            //            }
-            //        }
-            //    }
-            //}
-            //if (queenSideCastle)
-            //{
-            //    if (
-            //        Piece.PieceType(board[kingSpot - 1]) == Piece.None &&
-            //        Piece.PieceType(board[kingSpot - 2]) == Piece.None &&
-            //        Piece.PieceType(board[kingSpot - 3]) == Piece.None
-            //    )
-            //    {
-            //        if (Piece.PieceType(board[kingSpot - 4]) == Piece.Rook)
-            //        {
-            //            Move move = new Move(kingSpot, kingSpot - 2, Move.Flag.Castling);
-            //            generatedMoves.Add(move);
-            //        }
-            //        else
-            //        {
-            //            // The rook was captured, so castling isn't actually valid
-            //            if (isWhite)
-            //            {
-            //                board.CastleQueenSideW = false;
-            //            }
-            //            else
-            //            {
-            //                board.CastleQueenSideB = false;
-            //            }
-            //        }
-            //    }
-            //}
+            if (board.isGameOver)
+            {
+                return;
+            }
+            bool isWhite = board.turnColor == Piece.White;
+            List<int> kingSpots = GetLocationOfPieces(board, Piece.King);
+            int kingSpot = kingSpots.Count == 1 ? kingSpots[0] : -1;
+            if (kingSpot < 0)
+            {
+                board.isGameOver = true;
+                return;
+            }
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
+            bool isOnTopEdge = BoardInfo.GetRow(kingSpot) == 7;
+            bool isOnBottomEdge = BoardInfo.GetRow(kingSpot) == 0;
+            bool isOnLeftEdge = BoardInfo.GetFile(kingSpot) == 0;
+            bool isOnRightEdge = BoardInfo.GetFile(kingSpot) == 7;
+            int potentialTarget = kingSpot + 7;
+            if (
+                !(isOnTopEdge || isOnLeftEdge) &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot + 8;
+            if (
+                !isOnTopEdge &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot + 9;
+            if (
+                !(isOnTopEdge || isOnRightEdge) &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot + 1;
+            if (
+                !isOnRightEdge &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot - 7;
+            if (
+                !(isOnBottomEdge || isOnRightEdge) &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot - 8;
+            if (
+                !isOnBottomEdge &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot - 9;
+            if (
+                !(isOnBottomEdge || isOnLeftEdge) &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            potentialTarget = kingSpot - 1;
+            if (
+                !isOnLeftEdge &&
+                (Piece.PieceType(board[potentialTarget]) == Piece.None ||
+                Piece.Color(board[potentialTarget]) == enemyColor)
+            )
+            {
+                Move move = new Move(kingSpot, potentialTarget);
+                generatedMoves.Add(move);
+            }
+            // Remember to add castling
+            bool kingSideCastle = isWhite ? board.CastleKingSideW : board.CastleKingSideB;
+            bool queenSideCastle = isWhite ? board.CastleQueenSideW : board.CastleQueenSideB;
+            if (kingSideCastle)
+            {
+                if (
+                    Piece.PieceType(board[kingSpot + 1]) == Piece.None &&
+                    Piece.PieceType(board[kingSpot + 2]) == Piece.None
+                )
+                {
+                    if (Piece.PieceType(board[kingSpot + 3]) == Piece.Rook)
+                    {
+                        Move move = new Move(kingSpot, kingSpot + 2, Move.Flag.Castling);
+                        generatedMoves.Add(move);
+                    }
+                    else
+                    {
+                        // The rook was captured, so castling isn't actually valid
+                        if (isWhite)
+                        {
+                            board.CastleKingSideW = false;
+                        }
+                        else
+                        {
+                            board.CastleKingSideB = false;
+                        }
+                    }
+                }
+            }
+            if (queenSideCastle)
+            {
+                if (
+                    Piece.PieceType(board[kingSpot - 1]) == Piece.None &&
+                    Piece.PieceType(board[kingSpot - 2]) == Piece.None &&
+                    Piece.PieceType(board[kingSpot - 3]) == Piece.None
+                )
+                {
+                    if (Piece.PieceType(board[kingSpot - 4]) == Piece.Rook)
+                    {
+                        Move move = new Move(kingSpot, kingSpot - 2, Move.Flag.Castling);
+                        generatedMoves.Add(move);
+                    }
+                    else
+                    {
+                        // The rook was captured, so castling isn't actually valid
+                        if (isWhite)
+                        {
+                            board.CastleQueenSideW = false;
+                        }
+                        else
+                        {
+                            board.CastleQueenSideB = false;
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>

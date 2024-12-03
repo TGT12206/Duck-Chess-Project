@@ -182,6 +182,20 @@ namespace DuckChess
                 Squares[move.StartSquare] = Piece.None;
             }
 
+            if (move.MoveFlag == Move.Flag.Castling)
+            {
+                if (Squares[move.TargetSquare + 1] == Piece.Rook)
+                {
+                    Squares[move.TargetSquare + 1] = Piece.None;
+                    Squares[move.TargetSquare - 1] = Piece.Rook;
+                }
+                else if (Squares[move.TargetSquare - 1] == Piece.Rook)
+                {
+                    Squares[move.TargetSquare - 1] = Piece.None;
+                    Squares[move.TargetSquare + 1] = Piece.Rook;
+                }
+            }
+
             if (move.MoveFlag == Move.Flag.PawnTwoForward)
             {
                 enPassantSquare = move.TargetSquare + (isWhite ? -8 : 8);
@@ -271,7 +285,9 @@ namespace DuckChess
             LegalMoveGenerator.GeneratePawnMoves(ref legalMoves, this);
             LegalMoveGenerator.GenerateKnightMoves(ref legalMoves, this);
             LegalMoveGenerator.GenerateBishopMoves(ref legalMoves, this);
-
+            LegalMoveGenerator.GenerateRookMoves(ref legalMoves, this);
+            LegalMoveGenerator.GenerateKingMoves(ref legalMoves, this);
+            LegalMoveGenerator.GenerateQueenMoves(ref legalMoves, this);
         }
         private void GenerateDuckMoves()
         {
