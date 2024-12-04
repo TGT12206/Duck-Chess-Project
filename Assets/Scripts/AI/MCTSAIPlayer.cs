@@ -11,7 +11,9 @@ namespace DuckChess
 
         private const int NumSimulationsPerFrame = 100;
 
-        private const int NumSimulationsPerTurn = 1000;
+        private const int NumSimulationsPerTurn = 1500;
+
+        private const int maxSimulationDepth = 20; // Adjust as needed
 
         private Board board;
         private BoardUI boardUI;
@@ -111,7 +113,6 @@ namespace DuckChess
             int currentPlayer = simulationBoard.turnColor;
 
             int simulationDepth = 0;
-            const int maxSimulationDepth = 20; // Adjust as needed
 
             while (!simulationBoard.isGameOver && simulationDepth < maxSimulationDepth)
             {
