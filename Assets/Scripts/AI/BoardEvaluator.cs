@@ -142,11 +142,6 @@ namespace DuckChess
             }
 
             int evaluation = 0;
-            int material = 0;
-            int positionalScore = 0;
-            int pawnStructureScore = 0;
-            int kingSafetyScore = 0;
-            int centerControlScore = 0;
 
             Board.PieceList[] pieceLocations = board.AllPieceLocations;
             bool isEndGame = IsEndGame(board, pieceLocations);
@@ -162,9 +157,9 @@ namespace DuckChess
                 bool isEnemyPiece = !Piece.IsColor(pieceLocation.piece, playerColor);
                 // Evaluate the material bonus based on the number of
                 // pieces of this type and color on the board
-                material += EvaluateMaterial(pieceLocation, playerColor);
+                evaluation += EvaluateMaterial(pieceLocation, playerColor);
                 // Control of the center
-                centerControlScore += EvaluateCenterControl(board, playerColor);
+                evaluation += EvaluateCenterControl(board, playerColor);
 
                 // In each iteration of this loop, we are checking out
                 // a specific piece
@@ -172,7 +167,7 @@ namespace DuckChess
                 {
                     int pos = pieceLocation[j];
                     // Evaluate how good the position of this piece is
-                    positionalScore += EvaluatePosition(
+                    evaluation += EvaluatePosition(
                         board,
                         pos,
                         isEnemyPiece,
@@ -181,7 +176,7 @@ namespace DuckChess
                     // If this is a pawn piece list, evaluate the structure
                     if (Piece.PieceType(pieceLocations[i].piece) == Piece.Pawn)
                     {
-                        pawnStructureScore += EvaluatePawnStructure(
+                        evaluation += EvaluatePawnStructure(
                             board,
                             pos,
                             playerColor,
@@ -191,7 +186,7 @@ namespace DuckChess
                     // If this is a king piece list, evaluate the king safety
                     if (Piece.PieceType(pieceLocations[i].piece) == Piece.Pawn)
                     {
-                        kingSafetyScore += EvaluateKingSafety(
+                        evaluation += EvaluateKingSafety(
                             board,
                             pos,
                             isEnemyPiece
@@ -574,8 +569,8 @@ namespace DuckChess
             return board.winnerColor switch
             {
                 Piece.NoColor => 0, // Draw
-                Piece.White => color == Piece.White ? int.MaxValue : int.MinValue,
-                Piece.Black => color == Piece.Black ? int.MaxValue : int.MinValue,
+                Piece.White => color == Piece.White ? 1000000 : -1000000,
+                Piece.Black => color == Piece.Black ? 1000000 : -1000000,
                 _ => 0
             };
         }

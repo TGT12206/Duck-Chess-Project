@@ -35,6 +35,7 @@ public class BoardUI : MonoBehaviour
     public GameObject[] Pieces;
     public Board board;
     public GameObject[] Circles;
+    public TextMeshProUGUI playerMoving;
     public TextMeshProUGUI boardType;
     public TextMeshProUGUI displayIsDuckTurn;
     public TextMeshProUGUI displayOtherInfo;
@@ -184,7 +185,16 @@ public class BoardUI : MonoBehaviour
     /// </summary>
     public void LoadPosition(ref Board board, bool isSearchBoard, string InfoToDisplay)
     {
-        boardType.text = isSearchBoard ? "AI Search Board" : "Real Board";
+        playerMoving.text = board.isWhite ? "White to Move" : "Black to Move";
+        if (isSearchBoard)
+        {
+            boardType.text = "AI Search Board";
+            boardType.color = Color.cyan;
+        } else
+        {
+            boardType.text = "Real Board";
+            boardType.color = Color.white;
+        }
         displayIsDuckTurn.text = board.turnIsDuck ? "Duck Turn" : "Normal Turn";
         displayOtherInfo.text = InfoToDisplay;
         this.board = board;

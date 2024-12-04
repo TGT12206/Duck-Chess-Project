@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace DuckChess
 {
@@ -70,8 +71,62 @@ namespace DuckChess
 
             return childNode;
         }
+        public MCTSNode Expand(BoardUI boardUI)
+        {
+            if (untriedMoves.Count == 0)
+            {
+                return null;
+            }
+
+            // Randomly select an untried move
+            int index = random.Next(untriedMoves.Count);
+            Move move = untriedMoves[index];
+            untriedMoves.RemoveAt(index);
+
+            // Apply the move to create a new board state
+            Board newBoard = new Board(BoardState);
+            newBoard.MakeMove(ref move);
+
+            // Create the new child node
+            MCTSNode childNode = new MCTSNode(this, move, newBoard, PlayerColor);
+            boardUI.LoadPosition(ref newBoard, true, "");
+            Children.Add(childNode);
+
+            if (untriedMoves.Count == 0)
+            {
+                IsFullyExpanded = true;
+            }
+
+            return childNode;
+        }
 
         public MCTSNode GetBestUCTChild()
+        {
+            MCTSNode bestChild = null;
+            float bestUCTValue = float.MinValue;
+
+            foreach (var child in Children)
+            {
+                if (child.Visits == 0)
+                {
+                    // Handle case where Visits is zero to avoid division by zero
+                    return child;
+                }
+
+                float exploitation = child.TotalScore / child.Visits;
+                float exploration = Mathf.Sqrt(2 * Mathf.Log(Visits) / child.Visits);
+                float uctValue = exploitation + exploration;
+
+                if (uctValue > bestUCTValue)
+                {
+                    bestUCTValue = uctValue;
+                    bestChild = child;
+                }
+            }
+
+            return bestChild;
+        }
+        public MCTSNode GetBestUCTChild(BoardUI boardUI)
         {
             MCTSNode bestChild = null;
             float bestUCTValue = float.MinValue;

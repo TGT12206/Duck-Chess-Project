@@ -59,7 +59,6 @@ namespace DuckChess
             }
 
             if (numSims >= NumSimulationsPerTurn) {
-
                 bestMove = rootNode.GetBestMove();
 
                 if (bestMove.IsValid())
@@ -99,6 +98,10 @@ namespace DuckChess
 
             if (node != null && !node.IsTerminal)
             {
+                if (showSearchBoard)
+                {
+                    node = node.Expand(boardUI);
+                }
                 node = node.Expand();
             }
 
@@ -111,7 +114,7 @@ namespace DuckChess
             int currentPlayer = simulationBoard.turnColor;
 
             int simulationDepth = 0;
-            const int maxSimulationDepth = 20; // Adjust as needed
+            const int maxSimulationDepth = 10; // Adjust as needed
 
             while (!simulationBoard.isGameOver && simulationDepth < maxSimulationDepth)
             {
@@ -119,6 +122,11 @@ namespace DuckChess
                 if (legalMoves.Count == 0)
                 {
                     break;
+                }
+
+                if (showSearchBoard)
+                {
+                    boardUI.LoadPosition(ref simulationBoard, true, "");
                 }
 
                 // Randomly select a move
