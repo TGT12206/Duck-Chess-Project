@@ -61,8 +61,8 @@ public class UITurnManager : MonoBehaviour, ITurnManager
         HumanWhitePlayer = new HumanPlayer(boardUI, ref board, Piece.White);
         HumanBlackPlayer = new HumanPlayer(boardUI, ref board, Piece.Black);
 
-        AlphaBetaAIWhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 5, boardUI);
-        AlphaBetaAIBlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 5, boardUI);
+        AlphaBetaAIWhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 4, boardUI);
+        AlphaBetaAIBlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 4, boardUI);
 
         MCTSAIWhitePlayer = new MCTSAIPlayer(board, Piece.White, boardUI);
         MCTSAIBlackPlayer = new MCTSAIPlayer(board, Piece.Black, boardUI);

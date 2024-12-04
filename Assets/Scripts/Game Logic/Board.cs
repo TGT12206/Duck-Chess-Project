@@ -325,6 +325,10 @@ namespace DuckChess
         /// </summary>
         public void MakeMove(ref Move move)
         {
+            if (Squares[move.TargetSquare] != Piece.None)
+            {
+                move = new Move(move, Squares[move.TargetSquare]);
+            }
             plyCount++;
 
             bool isWhite = turnColor == Piece.White;
