@@ -11,12 +11,16 @@ namespace DuckChess
 
         private const int NumSimulationsPerFrame = 100;
 
+        private const int NumSimulationsPerTurn = 1000;
+
         private Board board;
         private BoardUI boardUI;
         private Move bestMove;
         private bool startSearch;
         private MCTSNode rootNode;
         private Board searchBoard;
+
+        private int numSims = 0;
 
         // Debugging
         public bool showSearchBoard;
@@ -51,14 +55,20 @@ namespace DuckChess
 
                 int result = Simulation(node);
                 Backpropagation(node, result);
+                numSims++;
             }
 
-            bestMove = rootNode.GetBestMove();
+            if (numSims >= NumSimulationsPerTurn) {
 
-            if (bestMove.IsValid())
-            {
-                FinishSearch();
+                bestMove = rootNode.GetBestMove();
+
+                if (bestMove.IsValid())
+                {
+                    FinishSearch();
+                }
+                numSims = 0;
             }
+
         }
 
         private void FinishSearch()
