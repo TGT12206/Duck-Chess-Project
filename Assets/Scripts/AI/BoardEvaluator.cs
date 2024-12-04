@@ -195,8 +195,6 @@ namespace DuckChess
                 }
             }
 
-            evaluation = evaluation + kingSafetyScore + pawnStructureScore + positionalScore + material + centerControlScore;
-
             // Duck-specific evaluation
             evaluation += EvaluateDuckImpact(board, playerColor);
 
