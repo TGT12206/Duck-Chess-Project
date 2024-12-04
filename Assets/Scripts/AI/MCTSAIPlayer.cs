@@ -11,9 +11,9 @@ namespace DuckChess
 
         private const int NumSimulationsPerFrame = 100;
 
-        private const int NumSimulationsPerTurn = 1500;
+        private const int NumSimulationsPerTurn = 50000;
 
-        private const int maxSimulationDepth = 20; // Adjust as needed
+        private const int maxSimulationDepth = 10; // Adjust as needed
 
         private Board board;
         private BoardUI boardUI;
@@ -146,28 +146,28 @@ namespace DuckChess
 
         private int EvaluateResult(Board board)
         {
-            if (board.isGameOver)
-            {
-                if (board.winnerColor == Color)
-                {
-                    return 1; // Win
-                }
-                else if (board.winnerColor == Piece.NoColor)
-                {
-                    return 0; // Draw
-                }
-                else
-                {
-                    return -1; // Loss
-                }
-            }
-            else
-            {
-                // Use heuristic evaluation if the game hasn't ended
-                int evaluation = BoardEvaluator.Evaluate(board, Color);
-                // Normalize evaluation to -1, 0, or 1
-                return Math.Sign(evaluation);
-            }
+            // if (board.isGameOver)
+            // {
+            //     if (board.winnerColor == Color)
+            //     {
+            //         return 1; // Win
+            //     }
+            //     else if (board.winnerColor == Piece.NoColor)
+            //     {
+            //         return 0; // Draw
+            //     }
+            //     else
+            //     {
+            //         return -1; // Loss
+            //     }
+            // }
+            // else
+            // {
+            // Use heuristic evaluation if the game hasn't ended
+            int evaluation = BoardEvaluator.Evaluate(board, Color);
+            // Normalize evaluation to -1, 0, or 1
+            return Math.Sign(evaluation);
+            // }
         }
 
         public override void UnmakeMove()
