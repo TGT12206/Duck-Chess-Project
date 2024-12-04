@@ -200,6 +200,8 @@ namespace DuckChess
                 }
             }
 
+            evaluation = evaluation + kingSafetyScore + pawnStructureScore + positionalScore + material + centerControlScore;
+
             // Duck-specific evaluation
             evaluation += EvaluateDuckImpact(board, playerColor);
 
@@ -574,12 +576,11 @@ namespace DuckChess
             return board.winnerColor switch
             {
                 Piece.NoColor => 0, // Draw
-                Piece.White => color == Piece.White ? int.MaxValue : int.MinValue,
-                Piece.Black => color == Piece.Black ? int.MaxValue : int.MinValue,
+                Piece.White => color == Piece.White ? 1000000 : -1000000,
+                Piece.Black => color == Piece.Black ? 1000000 : -1000000,
                 _ => 0
             };
         }
 
-        // Additional Helper Functions can be added here as needed
     }
 }
