@@ -11,9 +11,13 @@ namespace DuckChess
 
         private const int NumSimulationsPerFrame = 100;
 
+<<<<<<< HEAD
         private const int NumSimulationsPerTurn = 1500;
 
         private const int maxSimulationDepth = 20; // Adjust as needed
+=======
+        private const int NumSimulationsPerTurn = 1000;
+>>>>>>> refs/remotes/origin/main
 
         private Board board;
         private BoardUI boardUI;
