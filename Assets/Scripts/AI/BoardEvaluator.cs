@@ -9,11 +9,11 @@ namespace DuckChess
     public static class BoardEvaluator
     {
         // Piece Values
-        private const int PawnValue = 1000;
-        private const int KnightValue = 3200;
-        private const int BishopValue = 3300;
-        private const int RookValue = 5000;
-        private const int QueenValue = 9000;
+        private const int PawnValue = 100;
+        private const int KnightValue = 320;
+        private const int BishopValue = 330;
+        private const int RookValue = 500;
+        private const int QueenValue = 900;
         private const int KingValue = 100000;
 
         // Positional Bonuses
@@ -29,7 +29,10 @@ namespace DuckChess
         private const int KingSafetyPenalty = -50;
 
         // Duck-Specific Bonuses
-        private const int DuckBlockageBonus = 15;
+        private const int DuckProtectionBonus = 1500;
+
+        private const int DuckBlockingBonus = 1500;
+
         private const int DuckMobilityBonus = 5;
 
         // Piece-Square Tables (values scaled by 10 for precision)
@@ -202,7 +205,7 @@ namespace DuckChess
         }
 
         // 1. Material Evaluation
-        private static int EvaluateMaterial(Board.PieceList pieceList, int playerColor)
+        private static int EvaluateMaterial(PieceList pieceList, int playerColor)
         {
             int pieceType = Piece.PieceType(pieceList.piece);
             int pieceColor = Piece.Color(pieceList.piece);
@@ -329,6 +332,33 @@ namespace DuckChess
             return isEnemy ? -score : score;
         }
 
+
+        private static int EvaluatePieceSafety(Board board, int piecePos, bool isEnemy) 
+        {
+            List<Move> moves = isEnemy ? board.otherPlayerLegalMoves : board.currentPlayerLegalMoves;
+            List<Move> otherMoves = isEnemy ? board.currentPlayerLegalMoves : board.otherPlayerLegalMoves;
+
+            HashSet<int> isProtected = new();
+            HashSet<int> checkedTarget = new();
+
+            int score = 0;
+
+            foreach (Move move in moves) 
+            {
+                int piece = board[move.StartSquare];
+                int type = Piece.PieceType(piece);
+                if (type == Piece.None || type == Piece.Duck) continue;
+
+                if (checkedTarget.Contains(move.TargetSquare)) 
+                {
+                    
+                }
+
+
+
+            }
+        }
+
         private static bool IsKingExposed(Board board, int kingPosition)
         {
             // number of enemy pieces attacking the king
@@ -403,7 +433,7 @@ namespace DuckChess
             int score = 0;
 
             // check mobility of all legal moves
-            foreach (Move move in board.legalMoves)
+            foreach (Move move in board.currentPlayerLegalMoves)
             {
                 // check piece color
                 int piece = board[move.StartSquare];
@@ -445,16 +475,20 @@ namespace DuckChess
         {
             int score = 0;
 
-            // Assess how the duck is affecting the opponent
-            score += EvaluateDuckBlockage(board, color);
+            // Assess how the duck is protecting our pieces
+            score += EvaluateDuckProtection(board, color);
+
+            // Assess how the duck is affecting opponent movement
+            score += EvaluateDuckBlocking(board);
 
             // Potential duck placements
             score += EvaluateDuckPlacementOptions(board, color);
 
+
             return score;
         }
 
-        private static int EvaluateDuckBlockage(Board board, int color)
+        private static int EvaluateDuckProtection(Board board, int color)
         {
             int score = 0;
 
@@ -470,14 +504,14 @@ namespace DuckChess
             int kingPosition = board.GetLocationOfPieces(Piece.King, color)[0];
 
             // Check legal moves to identify enemy piece attacks
-            foreach (Move move in board.legalMoves)
+            foreach (Move move in board.otherPlayerLegalMoves)
             {
                 int movingPiece = board[move.StartSquare];
                 int pieceType = Piece.PieceType(movingPiece);
                 int pieceColor = Piece.Color(movingPiece);
 
                 // Only consider moves from the opponent
-                if (pieceColor == color)
+                if (pieceColor == color || pieceColor == Piece.NoColor)
                 {
                     continue;
                 }
@@ -488,7 +522,42 @@ namespace DuckChess
                     // Check if the duck blocks the line between the attacking piece and the king
                     if (IsBlocking(move.StartSquare, kingPosition, duckPosition))
                     {
-                        score += DuckBlockageBonus;
+                        score += DuckProtectionBonus * 10; // NEEDS to block king.
+                    }
+                }
+            }
+
+            return score;
+        }
+
+          private static int EvaluateDuckBlocking(Board board)
+        {
+            int score = 0;
+
+           
+
+            // Get the duck's position
+            int duckPosition = board.GetLocationOfPieces(Piece.Duck)[0];
+            if (duckPosition == -1)
+            {
+                // If the duck is not on the board, no blockage can occur
+                return score;
+            }
+
+            // Check legal moves to identify enemy piece attacks
+            foreach (Move move in board.otherPlayerLegalMoves)
+            {
+                int movingPiece = board[move.StartSquare];
+                int pieceType = Piece.PieceType(movingPiece);
+                int pieceColor = Piece.Color(movingPiece);
+
+                // Focus on sliding pieces (Queen, Rook, Bishop)
+                if (pieceType == Piece.Queen || pieceType == Piece.Rook || pieceType == Piece.Bishop)
+                {
+                    // Check if the duck blocks the line between the attacking piece and the king
+                    if (IsBlocking(move.StartSquare, move.TargetSquare, duckPosition))
+                    {
+                        score += DuckBlockingBonus; // NEEDS to block king.
                     }
                 }
             }
@@ -533,7 +602,7 @@ namespace DuckChess
             int score = 0;
 
             // Filter legalMoves for duck moves
-            foreach (Move move in board.legalMoves)
+            foreach (Move move in board.currentPlayerLegalMoves)
             {
                 // Check if the move is a duck move
                 int movingPiece = board[move.StartSquare];

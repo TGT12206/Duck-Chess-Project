@@ -94,7 +94,7 @@ public class BoardUI : MonoBehaviour
         }
         selectedStartSquare = square;
         highlightedMoves.Clear();
-        LegalMoveGenerator.GenerateForOnePiece(ref highlightedMoves, board, square);
+        LegalMoveGenerator.GenerateForOnePiece(ref highlightedMoves, board, square, board.turnColor);
         foreach (Move move in highlightedMoves)
         {
             Circles[move.TargetSquare].SetActive(true);

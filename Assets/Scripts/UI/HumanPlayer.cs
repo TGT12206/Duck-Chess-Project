@@ -136,7 +136,7 @@ public class HumanPlayer : RealTimePlayer
             targetSquare = mouseSquare;
             currentState = InputState.None;
             List<Move> legalMovesForThisPiece = new List<Move>();
-            LegalMoveGenerator.GenerateForOnePiece(ref legalMovesForThisPiece, board, selectedSquare);
+            LegalMoveGenerator.GenerateForOnePiece(ref legalMovesForThisPiece, board, selectedSquare, board.turnColor);
             Move newMove = new Move();
             foreach (Move legalMove in legalMovesForThisPiece)
             {

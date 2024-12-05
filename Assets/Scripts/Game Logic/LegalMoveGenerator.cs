@@ -17,15 +17,15 @@ namespace DuckChess
         /// </summary>
         /// <param name="generatedMoves">The list to add the generated moves into</param>
         /// <param name="board">The board to use while checking for legal moves</param>
-        public static void GeneratePawnMoves(ref List<Move> generatedMoves, Board board)
+        public static void GeneratePawnMoves(ref List<Move> generatedMoves, Board board, int wantedColor)
         {
             if (board.isGameOver)
             {
                 return;
             }
             int pawnSpot;
-            bool isWhite = board.turnColor == Piece.White;
-            int enemyColor = isWhite ? Piece.Black : Piece.White;
+            bool isWhite = wantedColor == Piece.White;
+            // int enemyColor = isWhite ? Piece.Black : Piece.White;
             int findSpotOneFront = isWhite ? 8 : -8;
             int rowBeforePromotion = isWhite ? 6 : 1;
             int startRow = isWhite ? 1 : 6;
@@ -40,8 +40,8 @@ namespace DuckChess
                     ref generatedMoves,
                     board,
                     pawnSpot,
-                    isWhite,
-                    enemyColor,
+                    wantedColor,
+                    // enemyColor,
                     findSpotOneFront,
                     rowBeforePromotion,
                     startRow,
@@ -56,8 +56,8 @@ namespace DuckChess
             ref List<Move> generatedMoves,
             Board board,
             int pawnSpot,
-            bool isWhite,
-            int enemyColor,
+            int wantedColor,
+            // int enemyColor,
             int findSpotOneFront,
             int rowBeforePromotion,
             int startRow,
@@ -66,15 +66,17 @@ namespace DuckChess
             int enPassantRow
         )
         {
+            bool isWhite = wantedColor == Piece.White;
+            int enemyColor = isWhite ? Piece.Black : Piece.White;
             GeneratePawnForwardMoves(ref generatedMoves, board, pawnSpot, isWhite, findSpotOneFront, rowBeforePromotion, startRow);
             GeneratePawnCaptureMoves(ref generatedMoves, board, pawnSpot, enemyColor, findCaptureSpotOnRight, findCaptureSpotOnLeft, rowBeforePromotion);
             GenerateEnPassantMoves(ref generatedMoves, board, pawnSpot, findCaptureSpotOnLeft, findCaptureSpotOnRight, enPassantRow);
 
         }
 
-        public static void GenerateOnePawnsMoves(ref List<Move> generatedMoves, Board board, int pawnSpot)
+        public static void GenerateOnePawnsMoves(ref List<Move> generatedMoves, Board board, int pawnSpot, int wantedColor)
         {
-            bool isWhite = board.turnColor == Piece.White;
+            bool isWhite = wantedColor == Piece.White;
             int enemyColor = isWhite ? Piece.Black : Piece.White;
             int findSpotOneFront = isWhite ? 8 : -8;
             int rowBeforePromotion = isWhite ? 6 : 1;
@@ -174,7 +176,7 @@ namespace DuckChess
             generatedMoves.Add(new Move(startSquare, targetSquare, Move.Flag.PromoteToRook, enemyPiece));
             generatedMoves.Add(new Move(startSquare, targetSquare, Move.Flag.PromoteToQueen, enemyPiece));
         }
-        public static void GenerateForOnePiece(ref List<Move> generatedMoves, Board board, int pieceSpot)
+        public static void GenerateForOnePiece(ref List<Move> generatedMoves, Board board, int pieceSpot, int wantedColor)
         {
             if (board.plyCount == 1)
             {
@@ -184,22 +186,22 @@ namespace DuckChess
             switch (Piece.PieceType(piece))
             {
                 case Piece.Pawn:
-                    GenerateOnePawnsMoves(ref generatedMoves, board, pieceSpot);
+                    GenerateOnePawnsMoves(ref generatedMoves, board, pieceSpot, wantedColor);
                     break;
                 case Piece.Knight:
-                    GenerateOneKnightsMoves(ref generatedMoves, board, pieceSpot);
+                    GenerateOneKnightsMoves(ref generatedMoves, board, pieceSpot, wantedColor);
                     break;
                 case Piece.Bishop:
-                    GenerateOneBishopsMoves(ref generatedMoves, board, pieceSpot);
+                    GenerateOneBishopsMoves(ref generatedMoves, board, pieceSpot, wantedColor);
                     break;
                 case Piece.Rook:
-                    GenerateOneRooksMoves(ref generatedMoves, board, pieceSpot);
+                    GenerateOneRooksMoves(ref generatedMoves, board, pieceSpot, wantedColor);
                     break;
                 case Piece.Queen:
-                    GenerateOneQueensMoves(ref generatedMoves, board, pieceSpot);
+                    GenerateOneQueensMoves(ref generatedMoves, board, pieceSpot, wantedColor);
                     break;
                 case Piece.King:
-                    GenerateKingMoves(ref generatedMoves, board);
+                    GenerateKingMoves(ref generatedMoves, board, wantedColor);
                     break;
                 case Piece.Duck:
                     GenerateDuckMoves(ref generatedMoves, board);
@@ -213,13 +215,13 @@ namespace DuckChess
         /// </summary>
         /// <param name="generatedMoves">The list to add the generated moves into</param>
         /// <param name="board">The board to use while checking for legal moves</param>
-        public static void GenerateKnightMoves(ref List<Move> generatedMoves, Board board)
+        public static void GenerateKnightMoves(ref List<Move> generatedMoves, Board board, int wantedColor)
         {
             if (board.isGameOver)
             {
                 return;
             }
-            bool isWhite = board.isWhite;
+            bool isWhite = wantedColor == Piece.White;
             int enemyColor = isWhite ? Piece.Black : Piece.White;
             int[] knightOffsets = { 15, 17, -15, -17, 10, -10, 6, -6 };
             Board.PieceList knightLocations = board.GetLocationOfPieces(Piece.Knight);
@@ -230,7 +232,7 @@ namespace DuckChess
             }
         }
 
-        private static bool isKnightInBoundsForThisJump(int knightSpot, int jumpOffset)
+        private static bool IsKnightInBoundsForThisJump(int knightSpot, int jumpOffset)
         {
             bool rowIsInBounds = true;
             bool fileIsInBounds = true;
@@ -285,16 +287,16 @@ namespace DuckChess
             return rowIsInBounds && fileIsInBounds;
         }
 
-        public static void GenerateOneKnightsMoves(ref List<Move> generatedMoves, Board board, int knightSpot)
+        public static void GenerateOneKnightsMoves(ref List<Move> generatedMoves, Board board, int knightSpot, int wantedColor)
         {
-            bool isWhite = board.isWhite;
+            bool isWhite = wantedColor == Piece.White;
             int enemyColor = isWhite ? Piece.Black : Piece.White;
             int[] knightOffsets = { 15, 17, -15, -17, 10, -10, 6, -6 };
             for (int i = 0; i < knightOffsets.Length; i++)
             {
                 int targetSpot = knightSpot + knightOffsets[i];
 
-                if (isKnightInBoundsForThisJump(knightSpot, knightOffsets[i]) &&
+                if (IsKnightInBoundsForThisJump(knightSpot, knightOffsets[i]) &&
                     (Piece.PieceType(board[targetSpot]) == Piece.None || Piece.Color(board[targetSpot]) == enemyColor))
                 {
                     generatedMoves.Add(new Move(knightSpot, targetSpot));
@@ -308,7 +310,7 @@ namespace DuckChess
             {
                 int targetSpot = knightSpot + knightOffsets[i];
 
-                if (isKnightInBoundsForThisJump(knightSpot, knightOffsets[i]) &&
+                if (IsKnightInBoundsForThisJump(knightSpot, knightOffsets[i]) &&
                     (Piece.PieceType(board[targetSpot]) == Piece.None || Piece.Color(board[targetSpot]) == enemyColor))
                 {
                     generatedMoves.Add(new Move(knightSpot, targetSpot));
@@ -322,24 +324,24 @@ namespace DuckChess
         /// </summary>
         /// <param name="generatedMoves">The list to add the generated moves into</param>
         /// <param name="board">The board to use while checking for legal moves</param>
-        public static void GenerateBishopMoves(ref List<Move> generatedMoves, Board board)
+        public static void GenerateBishopMoves(ref List<Move> generatedMoves, Board board, int wantedColor)
         {
             if (board.isGameOver)
             {
                 return;
             }
-            bool isWhite = board.turnColor == Piece.White;
-            Board.PieceList bishopLocations = board.GetLocationOfPieces(Piece.Bishop);
+            // bool isWhite = board.turnColor == Piece.White;
+            Board.PieceList bishopLocations = board.GetLocationOfPieces(Piece.Bishop, wantedColor);
             for (int i = 0; i < bishopLocations.Length; i++)
             {
                 int bishopSpot = bishopLocations[i];
-                GenerateOneBishopsMoves(ref generatedMoves, board, bishopSpot);
+                GenerateOneBishopsMoves(ref generatedMoves, board, bishopSpot, wantedColor);
             }
         }
 
-        public static void GenerateOneBishopsMoves(ref List<Move> generatedMoves, Board board, int bishopSpot)
+        public static void GenerateOneBishopsMoves(ref List<Move> generatedMoves, Board board, int bishopSpot, int wantedColor)
         {
-            bool isWhite = board.turnColor == Piece.White;
+            bool isWhite = wantedColor == Piece.White;
             int enemyColor = isWhite ? Piece.Black : Piece.White;
             GenerateDiagonalMoves(ref generatedMoves, board, bishopSpot, enemyColor);
         }
@@ -515,24 +517,23 @@ namespace DuckChess
         /// </summary>
         /// <param name="generatedMoves">The list to add the generated moves into</param>
         /// <param name="board">The board to use while checking for legal moves</param>
-        public static void GenerateRookMoves(ref List<Move> generatedMoves, Board board)
+        public static void GenerateRookMoves(ref List<Move> generatedMoves, Board board, int wantedColor)
         {
             if (board.isGameOver)
             {
                 return;
             }
-            bool isWhite = board.turnColor == Piece.White;
-            Board.PieceList rookLocations = board.GetLocationOfPieces(Piece.Rook);
+            Board.PieceList rookLocations = board.GetLocationOfPieces(Piece.Rook, wantedColor);
             for (int i = 0; i < rookLocations.Length; i++)
             {
                 int rookSpot = rookLocations[i];
-                GenerateOneRooksMoves(ref generatedMoves, board, rookSpot);
+                GenerateOneRooksMoves(ref generatedMoves, board, rookSpot, wantedColor);
             }
         }
 
-        public static void GenerateOneRooksMoves(ref List<Move> generatedMoves, Board board, int rookSpot)
+        public static void GenerateOneRooksMoves(ref List<Move> generatedMoves, Board board, int rookSpot, int wantedColor)
         {
-            bool isWhite = board.turnColor == Piece.White;
+            bool isWhite = wantedColor == Piece.White;
             int enemyColor = isWhite ? Piece.Black : Piece.White;
             GenerateOrthogonalMoves(ref generatedMoves, board, rookSpot, enemyColor);
         }
@@ -704,25 +705,24 @@ namespace DuckChess
         /// </summary>
         /// <param name="generatedMoves">The list to add the generated moves into</param>
         /// <param name="board">The board to use while checking for legal moves</param>
-        public static void GenerateQueenMoves(ref List<Move> generatedMoves, Board board)
+        public static void GenerateQueenMoves(ref List<Move> generatedMoves, Board board, int wantedColor)
         {
             if (board.isGameOver)
             {
                 return;
             }
-            bool isWhite = board.turnColor == Piece.White;
-            Board.PieceList queenLocations = board.GetLocationOfPieces(Piece.Queen);
-            int enemyColor = isWhite ? Piece.Black : Piece.White;
+
+            Board.PieceList queenLocations = board.GetLocationOfPieces(Piece.Queen, wantedColor);
             for (int i = 0; i < queenLocations.Length; i++)
             {
                 int queenSpot = queenLocations[i];
-                GenerateOneQueensMoves(ref generatedMoves, board, queenSpot);
+                GenerateOneQueensMoves(ref generatedMoves, board, queenSpot, wantedColor);
             }
         }
 
-        public static void GenerateOneQueensMoves(ref List<Move> generatedMoves, Board board, int queenSpot)
+        public static void GenerateOneQueensMoves(ref List<Move> generatedMoves, Board board, int queenSpot, int wantedColor)
         {
-            bool isWhite = board.turnColor == Piece.White;
+            bool isWhite = wantedColor == Piece.White;
             int enemyColor = isWhite ? Piece.Black : Piece.White;
             GenerateDiagonalMoves(ref generatedMoves, board, queenSpot, enemyColor);
             GenerateOrthogonalMoves(ref generatedMoves, board, queenSpot, enemyColor);
@@ -734,13 +734,13 @@ namespace DuckChess
         /// </summary>
         /// <param name="generatedMoves">The list to add the generated moves into</param>
         /// <param name="board">The board to use while checking for legal moves</param>
-        public static void GenerateKingMoves(ref List<Move> generatedMoves, Board board)
+        public static void GenerateKingMoves(ref List<Move> generatedMoves, Board board, int wantedColor)
         {
             if (board.isGameOver)
             {
                 return;
             }
-            bool isWhite = board.turnColor == Piece.White;
+            bool isWhite = wantedColor == Piece.White;
             int kingSpot = board.GetLocationOfPieces(Piece.King)[0];
             int enemyColor = isWhite ? Piece.Black : Piece.White;
             int[] kingOffsets = { 1, -1, 8, -8, 9, -9, 7, -7 };

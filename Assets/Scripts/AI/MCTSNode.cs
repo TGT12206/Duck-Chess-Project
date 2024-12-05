@@ -34,7 +34,7 @@ namespace DuckChess
 
             if (!IsTerminal)
             {
-                untriedMoves = new List<Move>(boardState.legalMoves);
+                untriedMoves = new List<Move>(boardState.currentPlayerLegalMoves);
                 IsFullyExpanded = untriedMoves.Count == 0;
             }
             else

@@ -15,6 +15,9 @@ namespace DuckChess
         public int[] Squares;
 
         public int turnColor;
+
+        public int otherTurnColor { get { return isWhite ? Piece.Black : Piece.White; } }
+
         public bool isWhite { get { return turnColor == Piece.White; } }
         public bool turnIsDuck;
 
@@ -29,7 +32,9 @@ namespace DuckChess
         public int plyCount;
         public int numPlySinceLastEvent;
 
-        public List<Move> legalMoves;
+        public List<Move> currentPlayerLegalMoves;
+
+        public List<Move> otherPlayerLegalMoves;
 
         public PieceList WhitePawnLocations;
         public PieceList BlackPawnLocations;
@@ -89,7 +94,8 @@ namespace DuckChess
             isGameOver = otherBoard.isGameOver;
             plyCount = otherBoard.plyCount;
             numPlySinceLastEvent = otherBoard.numPlySinceLastEvent;
-            legalMoves = new List<Move>(otherBoard.legalMoves);
+            currentPlayerLegalMoves = new List<Move>(otherBoard.currentPlayerLegalMoves);
+            otherPlayerLegalMoves = new List<Move>(otherBoard.otherPlayerLegalMoves);
             WhitePawnLocations = new PieceList(otherBoard.WhitePawnLocations);
             BlackPawnLocations = new PieceList(otherBoard.BlackPawnLocations);
             WhiteKnightLocations = new PieceList(otherBoard.WhiteKnightLocations);
@@ -122,7 +128,7 @@ namespace DuckChess
         public bool IsMoveLegal(ref Move move)
         {
             // Iterate through all generated legal moves for the current position
-            foreach (Move legalMove in legalMoves)
+            foreach (Move legalMove in currentPlayerLegalMoves)
             {
                 if (Move.SameMove(move, legalMove))
                 {
@@ -134,7 +140,8 @@ namespace DuckChess
 
         private void ResetBoardState()
         {
-            legalMoves = new List<Move>();
+            currentPlayerLegalMoves = new List<Move>();
+            otherPlayerLegalMoves = new List<Move>();
             CastleKingSideW = CastleQueenSideW = true;
             CastleKingSideB = CastleQueenSideB = true;
             turnColor = Piece.NoColor;
@@ -421,18 +428,31 @@ namespace DuckChess
 
         private void GenerateNormalMoves()
         {
-            legalMoves = new List<Move>();
-            LegalMoveGenerator.GeneratePawnMoves(ref legalMoves, this);
-            LegalMoveGenerator.GenerateKnightMoves(ref legalMoves, this);
-            LegalMoveGenerator.GenerateBishopMoves(ref legalMoves, this);
-            LegalMoveGenerator.GenerateRookMoves(ref legalMoves, this);
-            LegalMoveGenerator.GenerateKingMoves(ref legalMoves, this);
-            LegalMoveGenerator.GenerateQueenMoves(ref legalMoves, this);
+            currentPlayerLegalMoves = new List<Move>();
+
+            otherPlayerLegalMoves = new List<Move>();
+            LegalMoveGenerator.GeneratePawnMoves(ref currentPlayerLegalMoves, this, this.turnColor);
+            LegalMoveGenerator.GenerateKnightMoves(ref currentPlayerLegalMoves, this, this.turnColor);
+            LegalMoveGenerator.GenerateBishopMoves(ref currentPlayerLegalMoves, this, this.turnColor);
+            LegalMoveGenerator.GenerateRookMoves(ref currentPlayerLegalMoves, this, this.turnColor);
+            LegalMoveGenerator.GenerateKingMoves(ref currentPlayerLegalMoves, this, this.turnColor);
+            LegalMoveGenerator.GenerateQueenMoves(ref currentPlayerLegalMoves, this, this.turnColor);
+
+             LegalMoveGenerator.GeneratePawnMoves(ref  otherPlayerLegalMoves, this, this.otherTurnColor);
+            LegalMoveGenerator.GenerateKnightMoves(ref  otherPlayerLegalMoves, this, this.otherTurnColor);
+            LegalMoveGenerator.GenerateBishopMoves(ref  otherPlayerLegalMoves, this, this.otherTurnColor);
+            LegalMoveGenerator.GenerateRookMoves(ref  otherPlayerLegalMoves, this, this.otherTurnColor);
+            LegalMoveGenerator.GenerateKingMoves(ref  otherPlayerLegalMoves, this, this.otherTurnColor);
+            LegalMoveGenerator.GenerateQueenMoves(ref  otherPlayerLegalMoves, this, this.otherTurnColor);
         }
         private void GenerateDuckMoves()
         {
-            legalMoves = new List<Move>();
-            LegalMoveGenerator.GenerateDuckMoves(ref legalMoves, this);
+            currentPlayerLegalMoves = new List<Move>();
+
+            otherPlayerLegalMoves = new List<Move>();
+            LegalMoveGenerator.GenerateDuckMoves(ref currentPlayerLegalMoves, this);
+
+            LegalMoveGenerator.GenerateDuckMoves(ref otherPlayerLegalMoves, this);
         }
 
         public override string ToString()

@@ -90,7 +90,7 @@ namespace DuckChess
         {
             bestMove = new Move();
             searchBoard = new Board(board);
-            legalMoves = searchBoard.legalMoves;
+            legalMoves = searchBoard.currentPlayerLegalMoves;
             alphaBetaNodes = new Stack<AlphaBetaNode>();
             topNode = new AlphaBetaNode(int.MinValue, int.MaxValue, true, new Board(board));
             alphaBetaNodes.Push(topNode);
@@ -117,7 +117,7 @@ namespace DuckChess
             bool isMaximizing = searchBoard.turnColor == Color;
             AlphaBetaNode newNode = new AlphaBetaNode(parent.alpha, parent.beta, isMaximizing, new Board(searchBoard), nextMove);
 
-            legalMoves = searchBoard.legalMoves;
+            legalMoves = searchBoard.currentPlayerLegalMoves;
             alphaBetaNodes.Push(newNode);
         }
 
@@ -143,7 +143,7 @@ namespace DuckChess
 
             AlphaBetaNode parent = alphaBetaNodes.Peek();
             searchBoard = new Board(parent.currentBoard);
-            legalMoves = searchBoard.legalMoves;
+            legalMoves = searchBoard.currentPlayerLegalMoves;
 
             if (parent.JudgeNewValue(node.value, node.moveFromParent, node) && currentDepth == 1)
             {

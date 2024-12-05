@@ -11,9 +11,9 @@ namespace DuckChess
 
         private const int NumSimulationsPerFrame = 100;
 
-        private const int NumSimulationsPerTurn = 50000;
+        private const int NumSimulationsPerTurn = 15000;
 
-        private const int maxSimulationDepth = 10; // Adjust as needed
+        private const int maxSimulationDepth = 4; // Adjust as needed
 
         private Board board;
         private BoardUI boardUI;
@@ -119,7 +119,7 @@ namespace DuckChess
 
             while (!simulationBoard.isGameOver && simulationDepth < maxSimulationDepth)
             {
-                List<Move> legalMoves = simulationBoard.legalMoves;
+                List<Move> legalMoves = simulationBoard.currentPlayerLegalMoves;
                 if (legalMoves.Count == 0)
                 {
                     break;
