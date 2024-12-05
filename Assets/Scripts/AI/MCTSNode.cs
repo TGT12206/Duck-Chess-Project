@@ -126,32 +126,6 @@ namespace DuckChess
 
             return bestChild;
         }
-        public MCTSNode GetBestUCTChild(BoardUI boardUI)
-        {
-            MCTSNode bestChild = null;
-            float bestUCTValue = float.MinValue;
-
-            foreach (var child in Children)
-            {
-                if (child.Visits == 0)
-                {
-                    // Handle case where Visits is zero to avoid division by zero
-                    return child;
-                }
-
-                float exploitation = child.TotalScore / child.Visits;
-                float exploration = Mathf.Sqrt(2 * Mathf.Log(Visits) / child.Visits);
-                float uctValue = exploitation + exploration;
-
-                if (uctValue > bestUCTValue)
-                {
-                    bestUCTValue = uctValue;
-                    bestChild = child;
-                }
-            }
-
-            return bestChild;
-        }
 
         public Move GetBestMove()
         {

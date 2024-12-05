@@ -21,6 +21,7 @@ namespace DuckChess
         private Stack<AlphaBetaNode> alphaBetaNodes;
         private Board searchBoard;
         private int currentDepth;
+        public bool skipDuckSearch;
 
         // For debugging, but might be useful
         private AlphaBetaNode topNode;
@@ -47,6 +48,16 @@ namespace DuckChess
         {
             if (startSearch)
             {
+                if (skipDuckSearch)
+                {
+                    if (board.turnIsDuck)
+                    {
+                        topNode = topNode.child;
+                        bestMove = topNode.moveToValue;
+                        ChooseMove(bestMove);
+                        return;
+                    }
+                }
                 InitializeSearch();
             }
 

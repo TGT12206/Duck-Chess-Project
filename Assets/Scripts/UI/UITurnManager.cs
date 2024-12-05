@@ -31,6 +31,10 @@ public class UITurnManager : MonoBehaviour, ITurnManager
 
     public bool showWhiteSearchBoard;
     public bool showBlackSearchBoard;
+
+    public bool ABSkipDuckSearchWhite;
+    public bool ABSkipDuckSearchBlack;
+
     public int framesToWait;
     public int framesWaited = 0;
 
@@ -62,7 +66,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
         HumanBlackPlayer = new HumanPlayer(boardUI, ref board, Piece.Black);
 
         AlphaBetaAIWhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 4, boardUI);
-        AlphaBetaAIBlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 4, boardUI);
+        AlphaBetaAIBlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 5, boardUI);
 
         MCTSAIWhitePlayer = new MCTSAIPlayer(board, Piece.White, boardUI);
         MCTSAIBlackPlayer = new MCTSAIPlayer(board, Piece.Black, boardUI);
@@ -97,6 +101,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
                     WhitePlayer = HumanWhitePlayer;
                     break;
                 case PlayerType.AlphaBetaAI:
+                    AlphaBetaAIWhitePlayer.skipDuckSearch = ABSkipDuckSearchWhite;
                     WhitePlayer = AlphaBetaAIWhitePlayer;
                     break;
                 case PlayerType.MCTSAI:
@@ -114,6 +119,7 @@ public class UITurnManager : MonoBehaviour, ITurnManager
                     BlackPlayer = HumanBlackPlayer;
                     break;
                 case PlayerType.AlphaBetaAI:
+                    AlphaBetaAIBlackPlayer.skipDuckSearch = ABSkipDuckSearchBlack;
                     BlackPlayer = AlphaBetaAIBlackPlayer;
                     break;
                 case PlayerType.MCTSAI:
