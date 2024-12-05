@@ -130,7 +130,7 @@ namespace DuckChess
             for (int i = 0; i < pieceLocations.Length; i++)
             {
                 int pieceType = Piece.PieceType(pieceLocations[i].piece);
-                totalMaterial += GetPieceValue(pieceType) * pieceLocations.Length;
+                totalMaterial += GetPieceValue(pieceType) * pieceLocations[i].Length;
             }
             return totalMaterial < threshold;
         }
