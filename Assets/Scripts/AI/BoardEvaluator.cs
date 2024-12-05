@@ -121,11 +121,25 @@ namespace DuckChess
         private static readonly HashSet<int> CenterSquares = new HashSet<int> { 27, 28, 35, 36 }; // d4, d5, e4, e5
 
         // Helper function to determine if it's endgame based on material
+        public static bool IsEndGame(Board board)
+        {
+            Board.PieceList[] pieceLocations = board.AllPieceLocations;
+            // Simple criteria: if total material is below a threshold, consider it endgame
+            const int threshold =
+                (PawnValue * 8 + KnightValue * 2 + BishopValue * 2 + RookValue * 3 + QueenValue * 1);
+            int totalMaterial = 0;
+            for (int i = 0; i < pieceLocations.Length; i++)
+            {
+                int pieceType = Piece.PieceType(pieceLocations[i].piece);
+                totalMaterial += GetPieceValue(pieceType) * pieceLocations.Length;
+            }
+            return totalMaterial < threshold;
+        }
         private static bool IsEndGame(Board board, Board.PieceList[] pieceLocations)
         {
             // Simple criteria: if total material is below a threshold, consider it endgame
             const int threshold =
-                (PawnValue * 8 + KnightValue * 4 + BishopValue * 4 + RookValue * 4 + QueenValue * 2);
+                (PawnValue * 8 + KnightValue * 2 + BishopValue * 2 + RookValue * 3 + QueenValue * 1);
             int totalMaterial = 0;
             for (int i = 0; i < pieceLocations.Length; i++)
             {

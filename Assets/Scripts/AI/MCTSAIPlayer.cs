@@ -13,7 +13,7 @@ namespace DuckChess
 
         private const int NumSimulationsPerTurn = 50000;
 
-        private const int maxSimulationDepth = 5; // Adjust as needed
+        private const int maxSimulationDepth = 10; // Adjust as needed
 
         private Board board;
         private BoardUI boardUI;
