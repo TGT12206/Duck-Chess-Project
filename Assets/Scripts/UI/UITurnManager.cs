@@ -11,6 +11,8 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     public AlphaBetaAIPlayer AlphaBetaAIBlackPlayer;
     public MCTSAIPlayer MCTSAIWhitePlayer;
     public MCTSAIPlayer MCTSAIBlackPlayer;
+    public MixedAIPlayer MixedAIWhitePlayer;
+    public MixedAIPlayer MixedAIBlackPlayer;
 
     public RealTimePlayer PlayerToMove;
     public BoardUI boardUI;
@@ -23,7 +25,8 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     {
         Human,
         AlphaBetaAI,
-        MCTSAI
+        MCTSAI,
+        MixedAI
     }
 
     public PlayerType WhitePlayerType;
@@ -66,10 +69,13 @@ public class UITurnManager : MonoBehaviour, ITurnManager
         HumanBlackPlayer = new HumanPlayer(boardUI, ref board, Piece.Black);
 
         AlphaBetaAIWhitePlayer = new AlphaBetaAIPlayer(board, Piece.White, maxDepth: 4, boardUI);
-        AlphaBetaAIBlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 5, boardUI);
+        AlphaBetaAIBlackPlayer = new AlphaBetaAIPlayer(board, Piece.Black, maxDepth: 4, boardUI);
 
         MCTSAIWhitePlayer = new MCTSAIPlayer(board, Piece.White, boardUI);
         MCTSAIBlackPlayer = new MCTSAIPlayer(board, Piece.Black, boardUI);
+
+        MixedAIWhitePlayer = new MixedAIPlayer(board, Piece.White, 4, boardUI);
+        MixedAIBlackPlayer = new MixedAIPlayer(board, Piece.Black, 4, boardUI);
 
         // Set the MakeMove method to be called whenever any player makes a move
         HumanWhitePlayer.OnMoveChosen.AddListener(MakeMove);
@@ -80,6 +86,9 @@ public class UITurnManager : MonoBehaviour, ITurnManager
 
         MCTSAIWhitePlayer.OnMoveChosen.AddListener(MakeMove);
         MCTSAIBlackPlayer.OnMoveChosen.AddListener(MakeMove);
+
+        MixedAIWhitePlayer.OnMoveChosen.AddListener(MakeMove);
+        MixedAIBlackPlayer.OnMoveChosen.AddListener(MakeMove);
 
         haltForError = false;
     }
@@ -107,6 +116,9 @@ public class UITurnManager : MonoBehaviour, ITurnManager
                 case PlayerType.MCTSAI:
                     WhitePlayer = MCTSAIWhitePlayer;
                     break;
+                case PlayerType.MixedAI:
+                    WhitePlayer = MixedAIWhitePlayer;
+                    break;
                 default:
                     WhitePlayer = HumanWhitePlayer;
                     break;
@@ -124,6 +136,9 @@ public class UITurnManager : MonoBehaviour, ITurnManager
                     break;
                 case PlayerType.MCTSAI:
                     BlackPlayer = MCTSAIBlackPlayer;
+                    break;
+                case PlayerType.MixedAI:
+                    BlackPlayer = MixedAIBlackPlayer;
                     break;
                 default:
                     BlackPlayer = HumanBlackPlayer;

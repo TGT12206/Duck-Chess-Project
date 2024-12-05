@@ -1064,10 +1064,12 @@ MonoBehaviour:
   haltForError: 0
   framesToWaitWhite: 1
   framesToWaitBlack: 1
-  WhitePlayerType: 2
-  BlackPlayerType: 1
+  WhitePlayerType: 1
+  BlackPlayerType: 3
   showWhiteSearchBoard: 0
   showBlackSearchBoard: 0
+  ABSkipDuckSearchWhite: 1
+  ABSkipDuckSearchBlack: 1
   framesToWait: 1
   framesWaited: 0
 --- !u!4 &1854159110

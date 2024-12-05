@@ -99,6 +99,10 @@ namespace DuckChess
             rootNode = new MCTSNode(null, Move.Invalid, searchBoard, Color);
             startSearch = false;
             isEndGame = BoardEvaluator.IsEndGame(board);
+            if (isEndGame)
+            {
+                Debug.Log("Mixed AI will switch to Alpha Beta");
+            }
         }
 
         private MCTSNode Selection()

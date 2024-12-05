@@ -126,12 +126,12 @@ namespace DuckChess
             Board.PieceList[] pieceLocations = board.AllPieceLocations;
             // Simple criteria: if total material is below a threshold, consider it endgame
             const int threshold =
-                (PawnValue * 8 + KnightValue * 2 + BishopValue * 2 + RookValue * 3 + QueenValue * 1);
+                (PawnValue * 8 + KnightValue * 2 + BishopValue * 2 + RookValue * 4 + QueenValue * 2);
             int totalMaterial = 0;
             for (int i = 0; i < pieceLocations.Length; i++)
             {
                 int pieceType = Piece.PieceType(pieceLocations[i].piece);
-                totalMaterial += GetPieceValue(pieceType) * pieceLocations.Length;
+                totalMaterial += GetPieceValue(pieceType) * pieceLocations[i].Length;
             }
             return totalMaterial < threshold;
         }
@@ -139,12 +139,12 @@ namespace DuckChess
         {
             // Simple criteria: if total material is below a threshold, consider it endgame
             const int threshold =
-                (PawnValue * 8 + KnightValue * 2 + BishopValue * 2 + RookValue * 3 + QueenValue * 1);
+                (PawnValue * 8 + KnightValue * 2 + BishopValue * 2 + RookValue * 4 + QueenValue * 2);
             int totalMaterial = 0;
             for (int i = 0; i < pieceLocations.Length; i++)
             {
                 int pieceType = Piece.PieceType(pieceLocations[i].piece);
-                totalMaterial += GetPieceValue(pieceType) * pieceLocations.Length;
+                totalMaterial += GetPieceValue(pieceType) * pieceLocations[i].Length;
             }
             return totalMaterial < threshold;
         }
