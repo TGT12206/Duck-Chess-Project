@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DuckChess;
+using TMPro;
 using UnityEngine;
 
 public class UITurnManager : MonoBehaviour, ITurnManager
@@ -18,16 +19,13 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     public bool haltForError;
     public int framesToWaitWhite = 1;
     public int framesToWaitBlack = 1;
+    public TMP_Dropdown WhitePlayerDropdown;
+    public TMP_Dropdown BlackPlayerDropdown;
+    public List<string> PlayerTypes;
 
-    public enum PlayerType
-    {
-        Human,
-        AlphaBetaAI,
-        MCTSAI
-    }
-
-    public PlayerType WhitePlayerType;
-    public PlayerType BlackPlayerType;
+    private const int HUMAN = 0;
+    private const int ABAI = 1;
+    private const int MCTSAI = 2;
 
     public bool showWhiteSearchBoard;
     public bool showBlackSearchBoard;
@@ -81,6 +79,13 @@ public class UITurnManager : MonoBehaviour, ITurnManager
         MCTSAIWhitePlayer.OnMoveChosen.AddListener(MakeMove);
         MCTSAIBlackPlayer.OnMoveChosen.AddListener(MakeMove);
 
+        // Create the dropdown options
+        WhitePlayerDropdown.options.Clear();
+        BlackPlayerDropdown.options.Clear();
+
+        WhitePlayerDropdown.AddOptions(PlayerTypes);
+        BlackPlayerDropdown.AddOptions(PlayerTypes);
+
         haltForError = false;
     }
 
@@ -95,16 +100,16 @@ public class UITurnManager : MonoBehaviour, ITurnManager
             RealTimePlayer BlackPlayer;
 
             // Select the appropriate player for white
-            switch (WhitePlayerType)
+            switch (WhitePlayerDropdown.value)
             {
-                case PlayerType.Human:
+                case HUMAN:
                     WhitePlayer = HumanWhitePlayer;
                     break;
-                case PlayerType.AlphaBetaAI:
+                case ABAI:
                     AlphaBetaAIWhitePlayer.skipDuckSearch = ABSkipDuckSearchWhite;
                     WhitePlayer = AlphaBetaAIWhitePlayer;
                     break;
-                case PlayerType.MCTSAI:
+                case MCTSAI:
                     WhitePlayer = MCTSAIWhitePlayer;
                     break;
                 default:
@@ -113,16 +118,16 @@ public class UITurnManager : MonoBehaviour, ITurnManager
             }
 
             // Select the appropriate player for black
-            switch (BlackPlayerType)
+            switch (BlackPlayerDropdown.value)
             {
-                case PlayerType.Human:
+                case HUMAN:
                     BlackPlayer = HumanBlackPlayer;
                     break;
-                case PlayerType.AlphaBetaAI:
+                case ABAI:
                     AlphaBetaAIBlackPlayer.skipDuckSearch = ABSkipDuckSearchBlack;
                     BlackPlayer = AlphaBetaAIBlackPlayer;
                     break;
-                case PlayerType.MCTSAI:
+                case MCTSAI:
                     BlackPlayer = MCTSAIBlackPlayer;
                     break;
                 default:
@@ -131,12 +136,12 @@ public class UITurnManager : MonoBehaviour, ITurnManager
             }
 
             // Set showSearchBoard flags if needed
-            AlphaBetaAIWhitePlayer.showSearchBoard = (WhitePlayerType == PlayerType.AlphaBetaAI) && showWhiteSearchBoard;
-            AlphaBetaAIBlackPlayer.showSearchBoard = (BlackPlayerType == PlayerType.AlphaBetaAI) && showBlackSearchBoard;
+            AlphaBetaAIWhitePlayer.showSearchBoard = showWhiteSearchBoard;
+            AlphaBetaAIBlackPlayer.showSearchBoard = showBlackSearchBoard;
 
             // If MCTSAIPlayer has a showSearchBoard property, set it
-            MCTSAIWhitePlayer.showSearchBoard = (WhitePlayerType == PlayerType.MCTSAI) && showWhiteSearchBoard;
-            MCTSAIBlackPlayer.showSearchBoard = (BlackPlayerType == PlayerType.MCTSAI) && showBlackSearchBoard;
+            MCTSAIWhitePlayer.showSearchBoard = showWhiteSearchBoard;
+            MCTSAIBlackPlayer.showSearchBoard = showBlackSearchBoard;
 
             PlayerToMove = board.turnColor == Piece.White ? WhitePlayer : BlackPlayer;
             try
