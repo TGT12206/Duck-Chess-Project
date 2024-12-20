@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DuckChess;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UITurnManager : MonoBehaviour, ITurnManager
 {
@@ -21,6 +22,8 @@ public class UITurnManager : MonoBehaviour, ITurnManager
     public int framesToWaitBlack = 1;
     public TMP_Dropdown WhitePlayerDropdown;
     public TMP_Dropdown BlackPlayerDropdown;
+    public Slider sliderForWhite;
+    public Slider sliderForBlack;
     public List<string> PlayerTypes;
 
     private const int HUMAN = 0;
@@ -108,9 +111,13 @@ public class UITurnManager : MonoBehaviour, ITurnManager
                 case ABAI:
                     AlphaBetaAIWhitePlayer.skipDuckSearch = ABSkipDuckSearchWhite;
                     WhitePlayer = AlphaBetaAIWhitePlayer;
+                    Debug.Log("slider: " + sliderForWhite.value);
+                    AlphaBetaAIWhitePlayer.maxDepth = (int) sliderForWhite.value;
+                    Debug.Log("Depth: " + AlphaBetaAIWhitePlayer.maxDepth);
                     break;
                 case MCTSAI:
                     WhitePlayer = MCTSAIWhitePlayer;
+                    MCTSAIWhitePlayer.NumSimulationsPerTurn = (int) sliderForWhite.value * 10000;
                     break;
                 default:
                     WhitePlayer = HumanWhitePlayer;
@@ -126,9 +133,11 @@ public class UITurnManager : MonoBehaviour, ITurnManager
                 case ABAI:
                     AlphaBetaAIBlackPlayer.skipDuckSearch = ABSkipDuckSearchBlack;
                     BlackPlayer = AlphaBetaAIBlackPlayer;
+                    AlphaBetaAIBlackPlayer.maxDepth = (int) sliderForBlack.value;
                     break;
                 case MCTSAI:
                     BlackPlayer = MCTSAIBlackPlayer;
+                    MCTSAIBlackPlayer.NumSimulationsPerTurn = (int) sliderForBlack.value * 10000;
                     break;
                 default:
                     BlackPlayer = HumanBlackPlayer;

@@ -14,7 +14,7 @@ namespace DuckChess
 
         private Board board;
         private BoardUI boardUI;
-        private int maxDepth;
+        public int maxDepth;
         private Move bestMove;
         private bool startSearch;
         private List<Move> legalMoves;

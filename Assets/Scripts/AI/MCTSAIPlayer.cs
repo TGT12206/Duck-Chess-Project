@@ -11,9 +11,9 @@ namespace DuckChess
 
         private const int NumSimulationsPerFrame = 100;
 
-        private const int NumSimulationsPerTurn = 50000;
+        public int NumSimulationsPerTurn = 50000;
 
-        private const int maxSimulationDepth = 5; // Adjust as needed
+        private int maxSimulationDepth = 5; // Adjust as needed
 
         private Board board;
         private BoardUI boardUI;
